@@ -32,5 +32,8 @@ build/
 ### VS Code ###
 .vscode/
 
+### claude ###
+.claude/
+
 ### assets ###
 src/main/resources/static/assets/*
