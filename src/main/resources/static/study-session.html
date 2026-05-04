@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>스터디 세션 — Watchman</title>
+  <link rel="stylesheet" href="css/global.css" />
+  <link rel="stylesheet" href="css/study-session.css" />
+</head>
+<body>
+<div class="session-page">
+
+  <!-- Distraction overlay (hidden by default) -->
+  <div class="distraction-fullscreen-overlay" id="distraction-overlay" style="display:none"></div>
+
+  <!-- Navbar -->
+  <nav class="session-nav">
+    <a href="main.html" class="session-nav-logo" id="btn-home">
+      <img src="assets/icon.svg" alt="Watchman" class="session-nav-icon" />
+      <span>Watchman</span>
+    </a>
+    <div class="session-nav-center">
+      <div class="session-status-pill idle" id="status-pill">
+        <span class="session-status-dot"></span>
+        <span id="status-label">대기 중</span>
+      </div>
+    </div>
+    <div class="session-nav-right">
+      <span class="session-nav-timer" id="nav-timer" style="display:none">00:00</span>
+      <a href="main.html" class="btn-session-exit">홈</a>
+    </div>
+  </nav>
+
+  <!-- Body -->
+  <div class="session-body">
+
+    <!-- Camera -->
+    <div class="session-camera-wrap">
+      <div class="session-camera-frame" id="camera-frame">
+        <video id="webcam-video" class="session-video" muted playsinline></video>
+
+        <div class="session-cam-off" id="cam-off-msg">
+          <span>📷</span>
+          <p>카메라가 꺼져 있어요</p>
+        </div>
+        <div class="session-loading" id="cam-loading" style="display:none">
+          <div class="session-spinner"></div>
+          <span>카메라 연결 중...</span>
+        </div>
+        <span class="session-badge" id="focus-badge" style="display:none"></span>
+      </div>
+      <p class="session-error" id="cam-error" style="display:none"></p>
+
+      <div class="main-controls">
+        <button class="btn-cam-main active" id="btn-cam" onclick="handleCamBtn()">카메라 켜기</button>
+        <button class="btn-study-main inactive" id="btn-study" onclick="handleStudyBtn()" disabled>스터디 시작하기</button>
+      </div>
+      <p class="controls-hint" id="controls-hint">카메라를 켜면 스터디를 시작할 수 있어요</p>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="session-sidebar">
+
+      <!-- 음악 플레이어 -->
+      <div class="music-card">
+        <div class="music-card-header">
+          <span class="ssc-label" style="margin-bottom:0">음악 트랙</span>
+          <span class="music-badge">독립 채널</span>
+        </div>
+        <div class="music-track-info">
+          <div class="music-thumb">🎵</div>
+          <div>
+            <div class="music-track-name" id="music-track-name">Midnight Study Session</div>
+            <div class="music-track-artist" id="music-track-artist">Lofi Fruits Music</div>
+          </div>
+        </div>
+        <div class="music-controls">
+          <button class="music-btn" onclick="musicPrev()">◀◀</button>
+          <button class="music-btn" id="btn-music-play" onclick="toggleMusic()">▶ 재생</button>
+          <button class="music-btn" onclick="musicNext()">▶▶</button>
+          <button class="music-btn" id="btn-shuffle" onclick="toggleShuffle()">셔플</button>
+        </div>
+        <div class="music-volume-row">
+          <span>♪</span>
+          <span class="music-vol-label">음악 볼륨</span>
+          <input type="range" class="music-slider" id="music-volume" min="0" max="100" value="60" oninput="setMusicVolume(this.value)" />
+          <span class="music-vol-pct" id="music-vol-pct">60%</span>
+        </div>
+      </div>
+
+      <!-- 앰비언스 믹서 -->
+      <div class="music-card">
+        <div class="music-card-header">
+          <span class="ssc-label" style="margin-bottom:0">앰비언스 믹서</span>
+          <span class="music-badge music-badge-green">독립 채널</span>
+        </div>
+        <div class="ambient-rows">
+          <div class="ambient-row">
+            <span class="ambient-icon">🌧</span>
+            <span class="ambient-label">빗소리</span>
+            <input type="range" class="music-slider" min="0" max="100" value="0" oninput="setAmbient('rain',this.value)" />
+            <span class="ambient-pct" id="pct-rain">0%</span>
+          </div>
+          <div class="ambient-row">
+            <span class="ambient-icon">☕</span>
+            <span class="ambient-label">카페 소음</span>
+            <input type="range" class="music-slider" min="0" max="100" value="0" oninput="setAmbient('cafe',this.value)" />
+            <span class="ambient-pct" id="pct-cafe">0%</span>
+          </div>
+          <div class="ambient-row">
+            <span class="ambient-icon">🌿</span>
+            <span class="ambient-label">자연 소리</span>
+            <input type="range" class="music-slider" min="0" max="100" value="0" oninput="setAmbient('nature',this.value)" />
+            <span class="ambient-pct" id="pct-nature">0%</span>
+          </div>
+          <div class="ambient-row">
+            <span class="ambient-icon">🔥</span>
+            <span class="ambient-label">장작불</span>
+            <input type="range" class="music-slider" min="0" max="100" value="0" oninput="setAmbient('fire',this.value)" />
+            <span class="ambient-pct" id="pct-fire">0%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 타이머 카드 -->
+      <div class="session-timer-card">
+        <div class="ssc-label">스터디 시간</div>
+        <div class="timer-display" id="timer-display">00:00</div>
+        <div class="timer-sub" id="timer-sub">카메라를 켜고 시작해보세요</div>
+      </div>
+
+      <!-- 세션 통계 -->
+      <div class="session-stat-card">
+        <div class="ssc-label">이번 세션</div>
+        <div class="ssc-rows">
+          <div class="ssc-row">
+            <span class="ssc-row-label"><span class="ssc-dot green"></span>집중 시간</span>
+            <span class="ssc-row-val" id="stat-focused-time">00:00</span>
+          </div>
+          <div class="ssc-row">
+            <span class="ssc-row-label"><span class="ssc-dot red"></span>딴짓 시간</span>
+            <span class="ssc-row-val" id="stat-distracted-time">00:00</span>
+          </div>
+          <div class="ssc-row">
+            <span class="ssc-row-label"><span class="ssc-dot orange"></span>집중률</span>
+            <span class="ssc-row-val" id="stat-focus-rate">0%</span>
+          </div>
+        </div>
+        <div class="ssc-bar-wrap" style="margin-top:12px">
+          <div class="ssc-bar-fill good" id="focus-rate-bar" style="width:0%"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="js/study-session.js"></script>
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>어떻게 작동하나요 — Watchman</title>
+  <link rel="stylesheet" href="css/global.css" />
+  <link rel="stylesheet" href="css/landing.css" />
+  <link rel="stylesheet" href="css/how-it-works.css" />
+</head>
+<body>
+<div class="hiw-page">
+
+  <!-- Navbar -->
+  <nav class="hiw-nav">
+    <a href="index.html" class="hiw-back">
+      <span class="hiw-back-arrow">←</span>
+      돌아가기
+    </a>
+    <a href="index.html" class="nav-logo">
+      <img src="assets/icon.svg" alt="Watchman 로고" width="32" height="32" />
+      <span>Watchman</span>
+    </a>
+    <a href="login.html" class="nav-cta">시작하기</a>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hiw-hero">
+    <p class="section-sub">How it works</p>
+    <h1 class="hiw-hero-title">어떻게 작동하나요?</h1>
+    <p class="hiw-hero-desc">
+      Watchman은 브라우저 카메라와 AI를 이용해서<br />
+      공부 중 딴짓을 감지하고 알려드립니다.<br />
+      영상은 절대 저장되지 않아요.
+    </p>
+  </section>
+
+  <!-- Step-by-step Flow -->
+  <section class="hiw-flow">
+    <div class="hiw-flow-inner">
+      <div class="section-header" style="text-align:center">
+        <p class="section-sub">Process</p>
+        <h2 class="section-title">전체 흐름</h2>
+      </div>
+      <div class="hiw-flow-steps">
+        <div class="hiw-flow-step">
+          <div class="hiw-flow-icon icon-orange">📷</div>
+          <div class="hiw-flow-content">
+            <h3>카메라 권한 허용</h3>
+            <p>시작하기 버튼을 누르면 브라우저가 카메라 권한을 요청합니다. 허용하면 바로 시작돼요. 앱 설치는 필요 없어요.</p>
+          </div>
+        </div>
+        <div class="hiw-flow-connector"></div>
+        <div class="hiw-flow-step">
+          <div class="hiw-flow-icon icon-amber">🤖</div>
+          <div class="hiw-flow-content">
+            <h3>AI가 얼굴을 인식</h3>
+            <p>MediaPipe라는 구글의 AI 기술이 실시간으로 얼굴 위치를 파악합니다. 분석은 모두 <strong>브라우저 안에서만</strong> 이루어져요. 서버로는 아무것도 안 가요.</p>
+          </div>
+        </div>
+        <div class="hiw-flow-connector"></div>
+        <div class="hiw-flow-step">
+          <div class="hiw-flow-icon icon-rose">👀</div>
+          <div class="hiw-flow-content">
+            <h3>딴짓 감지</h3>
+            <p>고개를 오랫동안 옆으로 돌리거나, 자리를 비우면 딴짓으로 판단합니다. 가끔 고개를 돌리는 건 괜찮아요 — 일정 시간 이상 지속될 때만 감지해요.</p>
+          </div>
+        </div>
+        <div class="hiw-flow-connector"></div>
+        <div class="hiw-flow-step">
+          <div class="hiw-flow-icon icon-green">🔔</div>
+          <div class="hiw-flow-content">
+            <h3>부드러운 알림</h3>
+            <p>딴짓이 감지되면 화면 알림이나 소리로 살짝 알려드립니다. 무섭게 혼내는 게 아니라, 다시 집중할 수 있게 도와주는 거예요.</p>
+          </div>
+        </div>
+        <div class="hiw-flow-connector"></div>
+        <div class="hiw-flow-step">
+          <div class="hiw-flow-icon icon-blue">📊</div>
+          <div class="hiw-flow-content">
+            <h3>집중 리포트 확인</h3>
+            <p>공부가 끝나면 오늘 몇 시간 집중했는지, 얼마나 딴짓했는지 솔직한 숫자로 보여줍니다. 뿌듯할 수도, 반성할 수도 있어요.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Detection Detail -->
+  <section class="hiw-detail">
+    <div class="hiw-detail-inner">
+      <div class="section-header">
+        <p class="section-sub">Detection</p>
+        <h2 class="section-title">어떻게 딴짓을 알아챌까요?</h2>
+        <p class="section-desc">AI가 실시간으로 아래 신호들을 감지합니다.</p>
+      </div>
+      <div class="hiw-detect-grid">
+        <div class="hiw-detect-card">
+          <span class="hiw-detect-emoji">🤔</span>
+          <h4>고개 방향</h4>
+          <p>얼굴이 화면 밖으로 오래 향하면 감지합니다. 짧은 시선 이동은 무시해요.</p>
+        </div>
+        <div class="hiw-detect-card">
+          <span class="hiw-detect-emoji">👤</span>
+          <h4>자리 비움</h4>
+          <p>카메라에서 얼굴이 사라지면 자리를 비운 걸로 인식합니다.</p>
+        </div>
+        <div class="hiw-detect-card">
+          <span class="hiw-detect-emoji">⏰</span>
+          <h4>지속 시간 기준</h4>
+          <p>일시적인 움직임은 무시하고, 일정 시간 이상 지속될 때만 알림을 보냅니다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Privacy -->
+  <section class="hiw-privacy">
+    <div class="hiw-privacy-inner">
+      <div class="hiw-privacy-badge">🔒 개인정보 보호</div>
+      <h2 class="hiw-privacy-title">영상은 저장되지 않아요</h2>
+      <p class="hiw-privacy-desc">
+        카메라 영상은 브라우저를 벗어나지 않습니다.<br />
+        서버에 전송되거나 저장되는 데이터는 없어요.<br />
+        AI 분석도 전부 여러분의 기기에서만 처리됩니다.
+      </p>
+      <div class="hiw-privacy-cards">
+        <div class="hiw-privacy-card"><span>✓</span> 영상 서버 전송 없음</div>
+        <div class="hiw-privacy-card"><span>✓</span> 얼굴 데이터 저장 없음</div>
+        <div class="hiw-privacy-card"><span>✓</span> 모든 처리는 내 기기에서</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="hiw-faq">
+    <div class="hiw-faq-inner">
+      <div class="section-header" style="text-align:center">
+        <p class="section-sub">FAQ</p>
+        <h2 class="section-title">자주 묻는 질문</h2>
+      </div>
+      <div class="hiw-faq-list">
+        <div class="hiw-faq-item">
+          <h4>💬 안경을 써도 감지되나요?</h4>
+          <p>네, 안경이나 마스크를 착용해도 잘 작동합니다. MediaPipe는 다양한 얼굴 상태를 지원해요.</p>
+        </div>
+        <div class="hiw-faq-item">
+          <h4>💬 어두운 환경에서도 되나요?</h4>
+          <p>어느 정도는 됩니다. 하지만 조명이 너무 어두우면 인식 정확도가 낮아질 수 있어요. 적당한 조명 아래에서 쓰는 게 좋아요.</p>
+        </div>
+        <div class="hiw-faq-item">
+          <h4>💬 알림 소리를 끌 수 있나요?</h4>
+          <p>네, 공부 세션 화면에서 소리 알림을 끄고 화면 알림만 받을 수 있습니다.</p>
+        </div>
+        <div class="hiw-faq-item">
+          <h4>💬 모바일에서도 되나요?</h4>
+          <p>브라우저 카메라를 지원하는 기기라면 모바일에서도 이용할 수 있습니다. 다만 PC 환경이 더 안정적이에요.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="hiw-cta">
+    <div class="cta-texture"></div>
+    <h2 class="cta-title">이제 직접 써볼까요?</h2>
+    <p class="cta-desc">카메라 켜는 데 30초도 안 걸려요.<br />설명보다 경험이 빠릅니다.</p>
+    <a href="login.html" class="btn-primary btn-large" style="position:relative">
+      지금 시작하기 <span class="btn-arrow">→</span>
+    </a>
+    <p class="cta-note">가입 불필요 · 영상 저장 없음 · 완전 무료</p>
+  </section>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <nav class="footer-links">
+      <a href="service-intro.html" class="footer-link">서비스 소개</a>
+      <span class="footer-divider">|</span>
+      <a href="terms.html" class="footer-link">이용약관</a>
+      <span class="footer-divider">|</span>
+      <a href="privacy.html" class="footer-link">개인정보처리방침</a>
+      <span class="footer-divider">|</span>
+      <a href="contact.html" class="footer-link">문의하기</a>
+    </nav>
+    <div class="footer-separator"></div>
+    <div class="footer-copy">
+      <img src="assets/icon.svg" alt="Watchman" width="18" height="18" />
+      <span>Watchman © 2026 — 당신의 집중을 응원합니다.</span>
+    </div>
+  </footer>
+</div>
+</body>
+</html>

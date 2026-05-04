@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>플래너 — Watchman</title>
+  <link rel="stylesheet" href="css/global.css" />
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/planner.css" />
+</head>
+<body>
+<div class="main-page">
+
+  <!-- Navbar -->
+  <nav class="main-nav">
+    <div class="main-nav-inner">
+      <a href="main.html" class="main-nav-logo">
+        <img src="assets/icon.svg" alt="Watchman" width="24" height="24" />
+        <span>Watchman</span>
+      </a>
+      <div class="main-nav-links">
+        <a href="main.html" class="nav-link">홈</a>
+        <a href="stats.html" class="nav-link">내 통계</a>
+        <a href="study-group.html" class="nav-link">스터디 그룹</a>
+        <a href="planner.html" class="nav-link active">플래너</a>
+        <a href="notice.html" class="nav-link">공지사항</a>
+      </div>
+      <div class="main-nav-right">
+        <a href="mypage.html" class="nav-avatar"><span>😊</span></a>
+        <a href="mypage.html" class="nav-nickname" id="nav-nickname">사용자</a>
+        <button class="btn-nav-exit" onclick="handleExit()">로그아웃</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Planner Content -->
+  <div class="planner-page">
+
+    <!-- 헤더 -->
+    <div class="planner-header">
+      <p class="page-sub-label">Planner</p>
+      <h1 class="planner-title">플래너</h1>
+      <div class="page-header-divider"></div>
+    </div>
+
+    <div class="planner-body">
+
+      <!-- 통계 칩 -->
+      <div class="planner-stats-row">
+        <div class="planner-stat-chip">
+          <span class="planner-chip-icon">📚</span>
+          <span class="planner-chip-label">오늘 할 일</span>
+          <span class="planner-chip-val" id="stat-todo-total">0개</span>
+        </div>
+        <div class="planner-stat-chip">
+          <span class="planner-chip-icon">✅</span>
+          <span class="planner-chip-label">완료</span>
+          <span class="planner-chip-val" id="stat-todo-done">0개</span>
+        </div>
+        <div class="planner-stat-chip">
+          <span class="planner-chip-icon">📆</span>
+          <span class="planner-chip-label">D-Day</span>
+          <span class="planner-chip-val" id="stat-dday">없음</span>
+        </div>
+      </div>
+
+      <div class="planner-grid">
+
+        <!-- 달력 -->
+        <div class="planner-calendar-card">
+          <div class="calendar-nav">
+            <button class="cal-nav-btn" onclick="changeMonth(-1)">&#8592;</button>
+            <span class="cal-month-label" id="cal-month-label">2026년 4월</span>
+            <button class="cal-nav-btn" onclick="changeMonth(1)">&#8594;</button>
+          </div>
+          <div class="calendar-grid" id="calendar-grid">
+            <!-- JS로 채워짐 -->
+          </div>
+        </div>
+
+        <!-- 노트북 뷰 -->
+        <div class="planner-notebook">
+          <div class="notebook-header">
+            <div class="notebook-date-big" id="nb-day">20</div>
+            <div class="notebook-date-detail">
+              <span id="nb-weekday">일요일</span>
+              <span id="nb-month-year">2026년 4월</span>
+            </div>
+          </div>
+
+          <div class="notebook-body">
+            <!-- 할 일 목록 -->
+            <div class="notebook-todo">
+              <div class="notebook-section-title">할 일</div>
+              <div class="todo-list" id="todo-list">
+                <!-- JS로 채워짐 -->
+              </div>
+              <div class="todo-add-row">
+                <input type="text" class="todo-add-input" id="todo-input" placeholder="할 일 추가..." onkeydown="if(event.key==='Enter') addTodo()" />
+                <button class="todo-add-btn" onclick="addTodo()">+</button>
+              </div>
+            </div>
+
+            <!-- 시간표 -->
+            <div class="notebook-timetable">
+              <div class="notebook-section-title">시간표</div>
+              <div class="timetable-grid" id="timetable-grid">
+                <!-- JS로 채워짐 -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- D-Day 섹션 -->
+      <div class="planner-dday-section">
+        <div class="planner-section-title">D-Day 관리</div>
+        <div class="dday-add-row">
+          <input type="text" class="dday-name-input" id="dday-name" placeholder="이벤트 이름 (예: 수능, 면접)" />
+          <input type="date" class="dday-date-input" id="dday-date" />
+          <button class="dday-add-btn" onclick="addDday()">추가</button>
+        </div>
+        <div class="dday-list" id="dday-list">
+          <!-- JS로 채워짐 -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <nav class="footer-links">
+      <a href="service-intro.html" class="footer-link">서비스 소개</a>
+      <span class="footer-divider">|</span>
+      <a href="terms.html" class="footer-link">이용약관</a>
+      <span class="footer-divider">|</span>
+      <a href="privacy.html" class="footer-link">개인정보처리방침</a>
+      <span class="footer-divider">|</span>
+      <a href="contact.html" class="footer-link">문의하기</a>
+    </nav>
+    <div class="footer-separator"></div>
+    <div class="footer-copy">
+      <img src="assets/icon.svg" alt="Watchman" width="18" height="18" />
+      <span>Watchman © 2026 — 당신의 집중을 응원합니다.</span>
+    </div>
+  </footer>
+</div>
+<script src="js/planner.js"></script>
+</body>
+</html>

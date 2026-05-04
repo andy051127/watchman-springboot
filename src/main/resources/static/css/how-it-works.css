@@ -1,0 +1,149 @@
+/* ─── How It Works Page ──────────────────────────────────── */
+.hiw-page { min-height: 100vh; background: var(--bg); overflow-x: hidden; }
+.hiw-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 48px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  animation: fadeDown 0.4s ease both;
+}
+
+/* Hero */
+.hiw-hero {
+  text-align: center;
+  padding: 80px 32px 64px;
+  max-width: 720px;
+  margin: 0 auto;
+  animation: fadeUp 0.5s ease both;
+}
+.hiw-hero-title {
+  font-size: clamp(28px, 5vw, 52px);
+  font-weight: 800;
+  letter-spacing: -2px;
+  line-height: 1.15;
+  margin: 12px 0 20px;
+  color: var(--text);
+}
+.hiw-hero-desc { font-size: 16px; line-height: 1.75; color: var(--text-muted); }
+
+/* Flow Section */
+.hiw-flow { padding: 80px 32px; background: var(--bg-white); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.hiw-flow-inner { max-width: 720px; margin: 0 auto; }
+.hiw-flow-steps { display: flex; flex-direction: column; gap: 0; margin-top: 40px; }
+.hiw-flow-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 28px 0;
+  animation: fadeUp 0.4s ease both;
+}
+.hiw-flow-connector { width: 2px; height: 24px; background: var(--border); margin-left: 26px; }
+.hiw-flow-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.hiw-flow-content { flex: 1; padding-top: 8px; }
+.hiw-flow-content h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.2px; }
+.hiw-flow-content p { font-size: 14px; color: var(--text-muted); line-height: 1.7; }
+.hiw-flow-content p strong { color: var(--text); }
+
+/* Detection Detail */
+.hiw-detail { padding: 80px 32px; }
+.hiw-detail-inner { max-width: 900px; margin: 0 auto; }
+.hiw-detect-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 40px;
+}
+.hiw-detect-card {
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 20px;
+  text-align: center;
+  animation: fadeUp 0.4s ease both;
+  transition: transform 0.2s, border-color 0.2s;
+}
+.hiw-detect-card:hover { transform: translateY(-3px); border-color: var(--primary-border); }
+.hiw-detect-emoji { font-size: 32px; display: block; margin-bottom: 14px; }
+.hiw-detect-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+.hiw-detect-card p { font-size: 13px; color: var(--text-muted); line-height: 1.65; }
+
+/* Privacy */
+.hiw-privacy { padding: 80px 32px; background: var(--bg-dark); }
+.hiw-privacy-inner { max-width: 600px; margin: 0 auto; text-align: center; }
+.hiw-privacy-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+  background: rgba(232,93,4,0.1);
+  border: 1px solid rgba(232,93,4,0.2);
+  padding: 6px 16px;
+  border-radius: var(--radius-full);
+  margin-bottom: 20px;
+  letter-spacing: 0.5px;
+}
+.hiw-privacy-title { font-size: clamp(22px, 4vw, 36px); font-weight: 800; color: var(--bg); letter-spacing: -1px; margin-bottom: 16px; }
+.hiw-privacy-desc { font-size: 15px; color: #78716c; line-height: 1.75; margin-bottom: 32px; }
+.hiw-privacy-cards { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.hiw-privacy-card {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #a8a29e;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.hiw-privacy-card span { color: var(--primary); }
+
+/* FAQ */
+.hiw-faq { padding: 80px 32px; }
+.hiw-faq-inner { max-width: 720px; margin: 0 auto; }
+.hiw-faq-list { display: flex; flex-direction: column; gap: 14px; margin-top: 40px; }
+.hiw-faq-item {
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  animation: fadeUp 0.4s ease both;
+}
+.hiw-faq-item h4 { font-size: 15px; font-weight: 700; margin-bottom: 10px; color: var(--text); }
+.hiw-faq-item p { font-size: 14px; color: var(--text-muted); line-height: 1.7; }
+
+/* CTA */
+.hiw-cta {
+  text-align: center;
+  padding: 80px 32px;
+  background: var(--bg-dark);
+  position: relative;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .hiw-detect-grid { grid-template-columns: 1fr; }
+  .hiw-nav { padding: 12px 16px; }
+  .hiw-hero { padding: 52px 16px 40px; }
+  .hiw-flow { padding: 48px 16px; }
+}
+@media (min-width: 769px) and (max-width: 1024px) {
+  .hiw-detect-grid { grid-template-columns: repeat(2, 1fr); }
+}

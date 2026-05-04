@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>공지사항 — Watchman</title>
+  <link rel="stylesheet" href="css/global.css" />
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/inner-pages.css" />
+</head>
+<body>
+<div class="main-page">
+
+  <!-- Navbar -->
+  <nav class="main-nav">
+    <div class="main-nav-inner">
+      <a href="main.html" class="main-nav-logo">
+        <img src="assets/icon.svg" alt="Watchman" width="24" height="24" />
+        <span>Watchman</span>
+      </a>
+      <div class="main-nav-links">
+        <a href="main.html" class="nav-link">홈</a>
+        <a href="stats.html" class="nav-link">내 통계</a>
+        <a href="study-group.html" class="nav-link">스터디 그룹</a>
+        <a href="planner.html" class="nav-link">플래너</a>
+        <a href="notice.html" class="nav-link active">공지사항</a>
+      </div>
+      <div class="main-nav-right">
+        <a href="mypage.html" class="nav-avatar"><span>😊</span></a>
+        <a href="mypage.html" class="nav-nickname" id="nav-nickname">사용자</a>
+        <button class="btn-nav-exit" onclick="handleExit()">로그아웃</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Notice Page -->
+  <div class="notice-page">
+    <div class="notice-header">
+      <p class="page-sub-label">Notice</p>
+      <h1 class="notice-title">공지사항</h1>
+      <div class="page-header-divider"></div>
+    </div>
+    <div class="notice-body">
+      <div class="notice-list" id="notice-list">
+        <!-- JS로 채워짐 -->
+      </div>
+      <p class="notice-footer" id="notice-footer"></p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <nav class="footer-links">
+      <a href="service-intro.html" class="footer-link">서비스 소개</a>
+      <span class="footer-divider">|</span>
+      <a href="terms.html" class="footer-link">이용약관</a>
+      <span class="footer-divider">|</span>
+      <a href="privacy.html" class="footer-link">개인정보처리방침</a>
+      <span class="footer-divider">|</span>
+      <a href="contact.html" class="footer-link">문의하기</a>
+    </nav>
+    <div class="footer-separator"></div>
+    <div class="footer-copy">
+      <img src="assets/icon.svg" alt="Watchman" width="18" height="18" />
+      <span>Watchman © 2026 — 당신의 집중을 응원합니다.</span>
+    </div>
+  </footer>
+</div>
+<script src="js/notice.js"></script>
+</body>
+</html>

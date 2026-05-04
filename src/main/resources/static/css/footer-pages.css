@@ -1,0 +1,89 @@
+/* ─── Footer Static Pages ────────────────────────────────── */
+.fp-page { min-height: 100vh; background: var(--bg); }
+.fp-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 48px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.fp-content { max-width: 760px; margin: 0 auto; padding: 60px 40px 80px; }
+.fp-eyebrow { font-size: 13px; font-weight: 700; color: var(--primary); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; }
+.fp-title { font-size: clamp(26px, 4vw, 44px); font-weight: 800; letter-spacing: -1.5px; margin-bottom: 16px; line-height: 1.15; }
+.fp-subtitle { font-size: 16px; color: var(--text-muted); line-height: 1.65; margin-bottom: 48px; }
+.fp-divider { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+
+.fp-section { margin-bottom: 40px; }
+.fp-section-title { font-size: 17px; font-weight: 700; margin-bottom: 14px; color: var(--text); }
+.fp-section p { font-size: 15px; color: var(--text-muted); line-height: 1.8; margin-bottom: 12px; }
+.fp-section ul { padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+.fp-section li { font-size: 15px; color: var(--text-muted); line-height: 1.7; }
+.fp-section h4 { font-size: 15px; font-weight: 700; color: var(--text); margin: 20px 0 8px; }
+
+/* Service Intro Feature Cards */
+.fp-feature-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 24px 0; }
+.fp-feature-card {
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  transition: transform 0.2s, border-color 0.2s;
+}
+.fp-feature-card:hover { transform: translateY(-2px); border-color: var(--primary-border); }
+.fp-feature-icon { font-size: 24px; margin-bottom: 10px; }
+.fp-feature-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.fp-feature-card p { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin: 0; }
+
+/* Contact Form */
+.fp-contact-form { display: flex; flex-direction: column; gap: 16px; margin-top: 32px; }
+.fp-form-field { display: flex; flex-direction: column; gap: 6px; }
+.fp-form-label { font-size: 13px; font-weight: 600; color: var(--text); }
+.fp-form-input {
+  padding: 11px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  width: 100%;
+  transition: border-color 0.2s;
+  background: var(--bg-white);
+  font-family: inherit;
+}
+.fp-form-input:focus { outline: none; border-color: var(--primary); }
+.fp-form-textarea { min-height: 140px; resize: vertical; }
+.fp-form-submit {
+  padding: 13px 28px;
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+  align-self: flex-start;
+}
+.fp-form-submit:hover { background: #292524; }
+
+/* Contact Info Cards */
+.fp-contact-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 32px; }
+.fp-contact-card {
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  text-align: center;
+}
+.fp-contact-card-icon { font-size: 24px; margin-bottom: 10px; }
+.fp-contact-card-label { font-size: 12px; color: var(--text-light); margin-bottom: 4px; }
+.fp-contact-card-value { font-size: 14px; font-weight: 600; color: var(--text); }
+
+@media (max-width: 768px) {
+  .fp-content { padding: 40px 16px 60px; }
+  .fp-nav { padding: 12px 16px; }
+  .fp-feature-grid { grid-template-columns: 1fr; }
+  .fp-contact-cards { grid-template-columns: 1fr; }
+}

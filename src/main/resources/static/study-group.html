@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>스터디 그룹 — Watchman</title>
+  <link rel="stylesheet" href="css/global.css" />
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/inner-pages.css" />
+</head>
+<body>
+<div class="main-page">
+
+  <!-- Navbar -->
+  <nav class="main-nav">
+    <div class="main-nav-inner">
+      <a href="main.html" class="main-nav-logo">
+        <img src="assets/icon.svg" alt="Watchman" width="24" height="24" />
+        <span>Watchman</span>
+      </a>
+      <div class="main-nav-links">
+        <a href="main.html" class="nav-link">홈</a>
+        <a href="stats.html" class="nav-link">내 통계</a>
+        <a href="study-group.html" class="nav-link active">스터디 그룹</a>
+        <a href="planner.html" class="nav-link">플래너</a>
+        <a href="notice.html" class="nav-link">공지사항</a>
+      </div>
+      <div class="main-nav-right">
+        <a href="mypage.html" class="nav-avatar"><span>😊</span></a>
+        <a href="mypage.html" class="nav-nickname" id="nav-nickname">사용자</a>
+        <button class="btn-nav-exit" onclick="handleExit()">로그아웃</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Panel: 그룹 목록 (기본) -->
+  <div class="sg-page" id="panel-list">
+    <div class="sg-header">
+      <div>
+        <p class="page-sub-label">Study Group</p>
+        <h1 class="sg-title">스터디 그룹</h1>
+      </div>
+      <div class="page-header-divider" style="display:none"></div>
+    </div>
+    <div class="sg-body">
+      <div class="sg-action-row">
+        <button class="sg-action-btn primary" onclick="showPanel('create')">
+          <span>➕</span> 그룹 만들기
+        </button>
+        <button class="sg-action-btn" onclick="showPanel('join')">
+          <span>🔑</span> 코드로 참여
+        </button>
+      </div>
+      <div id="group-list-content">
+        <div class="sg-empty">
+          <span>👥</span>
+          <p>아직 참여한 그룹이 없어요.</p>
+          <p class="sg-empty-sub">그룹을 만들거나 초대 코드로 참여해 보세요!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel: 그룹 만들기 -->
+  <div class="sg-page" id="panel-create" style="display:none">
+    <div class="sg-header">
+      <button class="sg-back" onclick="showPanel('list')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        취소
+      </button>
+      <h1 class="sg-title">그룹 만들기</h1>
+      <div style="width:80px"></div>
+    </div>
+    <div class="sg-body">
+      <div class="sg-form-card">
+        <div class="sg-form-field">
+          <label class="sg-form-label">그룹 이름 *</label>
+          <input class="sg-input" id="new-group-name" placeholder="예: 공시생 모여라, 취준 스터디..." maxlength="30" />
+        </div>
+        <div class="sg-form-field">
+          <label class="sg-form-label">소개 (선택)</label>
+          <textarea class="sg-textarea" id="new-group-desc" placeholder="그룹 목표나 규칙을 입력해 주세요." maxlength="100" rows="3"></textarea>
+        </div>
+        <p class="sg-msg err" id="create-msg" style="display:none"></p>
+        <button class="sg-submit-btn" onclick="handleCreateGroup()">그룹 만들기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel: 코드로 참여 -->
+  <div class="sg-page" id="panel-join" style="display:none">
+    <div class="sg-header">
+      <button class="sg-back" onclick="showPanel('list')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        취소
+      </button>
+      <h1 class="sg-title">그룹 참여</h1>
+      <div style="width:80px"></div>
+    </div>
+    <div class="sg-body">
+      <div class="sg-form-card">
+        <div class="sg-join-icon">🔑</div>
+        <p class="sg-join-hint">친구에게 초대 코드를 받아서 입력해 주세요.</p>
+        <div class="sg-form-field">
+          <label class="sg-form-label">초대 코드</label>
+          <input class="sg-input sg-code-input" id="join-code" placeholder="예: AB12CD" maxlength="6" oninput="this.value=this.value.toUpperCase()" />
+        </div>
+        <p class="sg-msg err" id="join-msg" style="display:none"></p>
+        <button class="sg-submit-btn" onclick="handleJoinGroup()">참여하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel: 그룹 상세 -->
+  <div class="sg-page" id="panel-detail" style="display:none">
+    <div class="sg-header">
+      <button class="sg-back" onclick="showPanel('list')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        목록으로
+      </button>
+      <h1 class="sg-title" id="detail-group-name">그룹</h1>
+      <div style="width:80px"></div>
+    </div>
+    <div class="sg-body" id="detail-body">
+      <!-- JS로 채워짐 -->
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <nav class="footer-links">
+      <a href="service-intro.html" class="footer-link">서비스 소개</a>
+      <span class="footer-divider">|</span>
+      <a href="terms.html" class="footer-link">이용약관</a>
+      <span class="footer-divider">|</span>
+      <a href="privacy.html" class="footer-link">개인정보처리방침</a>
+      <span class="footer-divider">|</span>
+      <a href="contact.html" class="footer-link">문의하기</a>
+    </nav>
+    <div class="footer-separator"></div>
+    <div class="footer-copy">
+      <img src="assets/icon.svg" alt="Watchman" width="18" height="18" />
+      <span>Watchman © 2026 — 당신의 집중을 응원합니다.</span>
+    </div>
+  </footer>
+</div>
+<script src="js/study-group.js"></script>
+</body>
+</html>

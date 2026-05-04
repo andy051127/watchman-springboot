@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>내 통계 — Watchman</title>
+  <link rel="stylesheet" href="css/global.css" />
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/stats.css" />
+</head>
+<body>
+<div class="main-page">
+
+  <!-- Navbar -->
+  <nav class="main-nav">
+    <div class="main-nav-inner">
+      <a href="main.html" class="main-nav-logo">
+        <img src="assets/icon.svg" alt="Watchman" width="24" height="24" />
+        <span>Watchman</span>
+      </a>
+      <div class="main-nav-links">
+        <a href="main.html" class="nav-link">홈</a>
+        <a href="stats.html" class="nav-link active">내 통계</a>
+        <a href="study-group.html" class="nav-link">스터디 그룹</a>
+        <a href="planner.html" class="nav-link">플래너</a>
+        <a href="notice.html" class="nav-link">공지사항</a>
+      </div>
+      <div class="main-nav-right">
+        <a href="mypage.html" class="nav-avatar"><span>😊</span></a>
+        <a href="mypage.html" class="nav-nickname" id="nav-nickname">사용자</a>
+        <button class="btn-nav-exit" onclick="handleExit()">로그아웃</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Stats Page Content -->
+  <div class="stats-page">
+
+    <!-- Banner -->
+    <div class="stats-banner">
+      <div class="stats-banner-inner">
+        <div class="stats-banner-text">
+          <p class="stats-banner-sub">My Stats</p>
+          <h1 class="stats-banner-title">내 공부 통계</h1>
+          <p class="stats-banner-desc">지금까지의 집중 기록을 한눈에 확인하세요.</p>
+        </div>
+        <div class="stats-banner-chips">
+          <div class="stats-banner-chip">
+            <span class="stats-banner-chip-label">총 공부 시간</span>
+            <span class="stats-banner-chip-val" id="banner-total-time">0분</span>
+          </div>
+          <div class="stats-banner-chip">
+            <span class="stats-banner-chip-label">총 세션</span>
+            <span class="stats-banner-chip-val" id="banner-total-sessions">0회</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-content">
+
+      <!-- KPI 4개 -->
+      <div class="stats-kpi-row">
+        <div class="stats-kpi-card">
+          <div class="stats-kpi-icon">📚</div>
+          <div>
+            <div class="stats-kpi-label">총 공부 시간</div>
+            <div class="stats-kpi-value" id="kpi-total-time">-</div>
+            <div class="stats-kpi-sub" id="kpi-today-time">오늘 0분</div>
+          </div>
+        </div>
+        <div class="stats-kpi-card">
+          <div class="stats-kpi-icon">⚡</div>
+          <div>
+            <div class="stats-kpi-label">평균 집중률</div>
+            <div class="stats-kpi-value" id="kpi-avg-rate">-</div>
+            <div class="stats-kpi-sub">전체 세션 평균</div>
+          </div>
+        </div>
+        <div class="stats-kpi-card">
+          <div class="stats-kpi-icon">🗓</div>
+          <div>
+            <div class="stats-kpi-label">총 세션 수</div>
+            <div class="stats-kpi-value" id="kpi-total-sessions">-</div>
+            <div class="stats-kpi-sub" id="kpi-today-sessions">오늘 0회</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2컬럼 그리드 -->
+      <div class="stats-grid">
+        <!-- 주간 차트 -->
+        <div class="stats-card stats-card-chart">
+          <div class="stats-card-header">
+            <div>
+              <div class="stats-card-title">이번 주 공부 시간</div>
+              <div class="stats-card-desc">요일별 집중 시간 분포</div>
+            </div>
+          </div>
+          <div class="stats-chart" id="weekly-chart">
+            <!-- JS로 채워짐 -->
+            <div class="stats-empty">
+              <span>📭</span>
+              <p>아직 공부 기록이 없어요</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 오른쪽 -->
+        <div class="stats-side-col">
+          <div class="stats-card">
+            <div class="stats-card-header">
+              <div class="stats-card-title">오늘 공부 현황</div>
+            </div>
+            <div id="today-sessions-content">
+              <div class="stats-empty-sm">아직 오늘 세션이 없어요.</div>
+            </div>
+          </div>
+          <div class="stats-card">
+            <div class="stats-card-title">최고 집중 세션</div>
+            <div id="best-session-content">
+              <div class="stats-empty-sm">세션을 시작해보세요.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 세션 기록 테이블 -->
+      <div class="stats-card">
+        <div class="stats-card-header">
+          <div>
+            <div class="stats-card-title">세션 기록</div>
+            <div class="stats-card-desc" id="table-desc">최근 0개 세션</div>
+          </div>
+        </div>
+        <div id="sessions-table-content">
+          <div class="stats-empty">
+            <span>📋</span>
+            <p>아직 세션 기록이 없어요. 공부를 시작해보세요!</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <nav class="footer-links">
+      <a href="service-intro.html" class="footer-link">서비스 소개</a>
+      <span class="footer-divider">|</span>
+      <a href="terms.html" class="footer-link">이용약관</a>
+      <span class="footer-divider">|</span>
+      <a href="privacy.html" class="footer-link">개인정보처리방침</a>
+      <span class="footer-divider">|</span>
+      <a href="contact.html" class="footer-link">문의하기</a>
+    </nav>
+    <div class="footer-separator"></div>
+    <div class="footer-copy">
+      <img src="assets/icon.svg" alt="Watchman" width="18" height="18" />
+      <span>Watchman © 2026 — 당신의 집중을 응원합니다.</span>
+    </div>
+  </footer>
+</div>
+<script src="js/stats.js"></script>
+</body>
+</html>

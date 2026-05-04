@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>로그인 — Watchman</title>
+  <link rel="stylesheet" href="css/global.css" />
+  <link rel="stylesheet" href="css/login.css" />
+</head>
+<body>
+<div class="login-page">
+
+  <!-- Navbar -->
+  <nav class="login-nav">
+    <a href="index.html" class="hiw-back">
+      <span class="hiw-back-arrow">←</span>
+      돌아가기
+    </a>
+    <a href="index.html" class="nav-logo">
+      <img src="assets/icon.svg" alt="Watchman 로고" width="32" height="32" />
+      <span>Watchman</span>
+    </a>
+    <div style="width:110px"></div>
+  </nav>
+
+  <!-- Card -->
+  <div class="login-center">
+    <div class="login-card">
+      <img src="assets/icon.svg" alt="Watchman 로고" width="32" height="32" style="border-radius:16px" />
+      <h1 class="login-title">Watchman</h1>
+      <p class="login-subtitle" id="login-subtitle">다시 오셨군요! 반가워요.</p>
+
+      <!-- Tabs -->
+      <div class="login-tabs">
+        <button class="login-tab active" id="tab-login" onclick="switchTab('login')">로그인</button>
+        <button class="login-tab" id="tab-signup" onclick="switchTab('signup')">회원가입</button>
+      </div>
+
+      <!-- 로그인 폼 -->
+      <form id="form-login" class="login-form" onsubmit="handleLogin(event)">
+        <div class="login-field">
+          <label>이메일</label>
+          <input type="text" id="login-email" placeholder="이메일을 입력해 주세요" required />
+        </div>
+        <div class="login-field">
+          <label>비밀번호</label>
+          <div class="pw-wrap">
+            <input type="password" id="login-pw" placeholder="비밀번호를 입력해 주세요" required />
+            <button type="button" class="pw-eye" onclick="togglePw('login-pw', this)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="login-options">
+          <label class="login-checkbox">
+            <input type="checkbox" id="save-id" />
+            <span>아이디 저장</span>
+          </label>
+          <label class="login-checkbox">
+            <input type="checkbox" id="remember-me" />
+            <span>로그인 상태 유지</span>
+          </label>
+        </div>
+        <p class="login-error" id="login-error" style="display:none"></p>
+        <button type="submit" class="login-submit">
+          로그인 <span>→</span>
+        </button>
+        <p class="login-switch">
+          계정이 없으신가요?
+          <button type="button" onclick="switchTab('signup')">회원가입</button>
+        </p>
+      </form>
+
+      <!-- 회원가입 폼 -->
+      <form id="form-signup" class="login-form" style="display:none" onsubmit="handleSignup(event)">
+        <div class="login-field">
+          <label>닉네임</label>
+          <input type="text" id="signup-nickname" placeholder="공부할 때 불릴 이름이에요" required />
+        </div>
+        <div class="login-field">
+          <label>이메일</label>
+          <div class="email-row">
+            <input type="text" class="email-local" id="signup-email-local" placeholder="이메일 아이디" required />
+            <span class="email-at">@</span>
+            <select class="email-domain" id="signup-email-domain" onchange="checkCustomDomain()">
+              <option value="naver.com">naver.com</option>
+              <option value="gmail.com">gmail.com</option>
+              <option value="kakao.com">kakao.com</option>
+              <option value="daum.net">daum.net</option>
+              <option value="hanmail.net">hanmail.net</option>
+              <option value="nate.com">nate.com</option>
+              <option value="직접입력">직접입력</option>
+            </select>
+          </div>
+          <input type="text" id="signup-email-custom" class="email-custom-input" placeholder="도메인 직접 입력 (예: outlook.com)" style="display:none;margin-top:6px" />
+        </div>
+        <div class="login-field">
+          <label>비밀번호</label>
+          <div class="pw-wrap">
+            <input type="password" id="signup-pw" placeholder="6자 이상" required />
+            <button type="button" class="pw-eye" onclick="togglePw('signup-pw', this)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="login-field">
+          <label>비밀번호 확인</label>
+          <div class="pw-wrap">
+            <input type="password" id="signup-pw-confirm" placeholder="비밀번호를 다시 입력해 주세요" required />
+            <button type="button" class="pw-eye" onclick="togglePw('signup-pw-confirm', this)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <p class="login-error" id="signup-error" style="display:none"></p>
+        <button type="submit" class="login-submit">
+          가입하고 시작하기 <span>→</span>
+        </button>
+        <p class="login-switch">
+          이미 계정이 있으신가요?
+          <button type="button" onclick="switchTab('login')">로그인</button>
+        </p>
+      </form>
+
+      <div class="login-divider"><span>또는</span></div>
+      <button class="login-guest" onclick="window.location.href='main.html?guest=1'">
+        비회원으로 시작하기
+      </button>
+      <p class="login-guest-note">스터디는 이용 가능하나 포인트·기록은 저장되지 않아요</p>
+      <p class="login-note">영상 저장 없음 · 완전 무료</p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <nav class="footer-links">
+      <a href="service-intro.html" class="footer-link">서비스 소개</a>
+      <span class="footer-divider">|</span>
+      <a href="terms.html" class="footer-link">이용약관</a>
+      <span class="footer-divider">|</span>
+      <a href="privacy.html" class="footer-link">개인정보처리방침</a>
+      <span class="footer-divider">|</span>
+      <a href="contact.html" class="footer-link">문의하기</a>
+    </nav>
+    <div class="footer-separator"></div>
+    <div class="footer-copy">
+      <img src="assets/icon.svg" alt="Watchman" width="18" height="18" />
+      <span>Watchman © 2026 — 당신의 집중을 응원합니다.</span>
+    </div>
+  </footer>
+</div>
+
+<script src="js/login.js"></script>
+</body>
+</html>
