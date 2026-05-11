@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>관리자 — Watchman</title>
+  <link rel="stylesheet" href="css/global.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+
+<!-- ── 로그인 화면 ──────────────────────────────────────── -->
+<div class="admin-login" id="login-screen">
+  <div class="admin-login-card">
+    <div class="admin-login-logo">
+      <img src="assets/icon.svg" alt="Watchman" width="28" height="28" style="border-radius:8px" />
+      Watchman
+    </div>
+    <p class="admin-login-sub">관리자 전용 페이지입니다.</p>
+    <label class="admin-login-label">비밀번호</label>
+    <input type="password" class="admin-login-input" id="admin-pw"
+      placeholder="관리자 비밀번호 입력"
+      onkeydown="if(event.key==='Enter') tryLogin()" />
+    <button class="admin-login-btn" onclick="tryLogin()">로그인</button>
+    <p class="admin-login-error" id="login-error">비밀번호가 올바르지 않습니다.</p>
+  </div>
+</div>
+
+<!-- ── 대시보드 ─────────────────────────────────────────── -->
+<div class="admin-page" id="admin-dashboard">
+
+  <!-- 헤더 -->
+  <header class="admin-header">
+    <div class="admin-header-logo">
+      <img src="assets/icon.svg" alt="Watchman" width="24" height="24" style="border-radius:6px" />
+      Watchman
+      <span class="admin-header-badge">ADMIN</span>
+    </div>
+    <button class="admin-logout-btn" onclick="adminLogout()">로그아웃</button>
+  </header>
+
+  <!-- 통계 바 -->
+  <div class="admin-stats">
+    <div class="admin-stat">
+      <div class="admin-stat-label">전체 사용자</div>
+      <div class="admin-stat-val" id="stat-users">-</div>
+    </div>
+    <div class="admin-stat">
+      <div class="admin-stat-label">전체 문의</div>
+      <div class="admin-stat-val" id="stat-contacts">-</div>
+    </div>
+    <div class="admin-stat">
+      <div class="admin-stat-label">미처리 문의</div>
+      <div class="admin-stat-val" id="stat-pending">-</div>
+    </div>
+  </div>
+
+  <!-- 탭 -->
+  <div class="admin-tabs">
+    <button class="admin-tab active" onclick="switchTab('contacts', this)">📬 문의 관리</button>
+    <button class="admin-tab" onclick="switchTab('users', this)">👤 사용자 관리</button>
+  </div>
+
+  <div class="admin-content">
+
+    <!-- 문의 관리 패널 -->
+    <div class="admin-panel active" id="panel-contacts">
+      <div class="admin-panel-header">
+        <div>
+          <div class="admin-panel-title">문의 관리</div>
+          <div class="admin-panel-count" id="contacts-count"></div>
+        </div>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>이름</th>
+              <th>이메일</th>
+              <th>유형</th>
+              <th>내용</th>
+              <th>접수일</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="contacts-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 사용자 관리 패널 -->
+    <div class="admin-panel" id="panel-users">
+      <div class="admin-panel-header">
+        <div>
+          <div class="admin-panel-title">사용자 관리</div>
+          <div class="admin-panel-count" id="users-count"></div>
+        </div>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>번호</th>
+              <th>사용자 ID</th>
+              <th>닉네임</th>
+              <th>이메일</th>
+              <th>가입일</th>
+              <th>연속 공부</th>
+              <th>역할</th>
+              <th>삭제</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── 로그인 ────────────────────────────────────────────────
+async function tryLogin() {
+  const pw  = document.getElementById('admin-pw').value;
+  const err = document.getElementById('login-error');
+  err.style.display = 'none';
+
+  try {
+    const res = await fetch('/watchman/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw })
+    });
+
+    if (res.ok) {
+      document.getElementById('login-screen').style.display    = 'none';
+      document.getElementById('admin-dashboard').style.display = 'flex';
+      loadData();
+    } else {
+      err.textContent = '비밀번호가 올바르지 않습니다.';
+      err.style.display = 'block';
+      document.getElementById('admin-pw').value = '';
+      document.getElementById('admin-pw').focus();
+    }
+  } catch (e) {
+    err.textContent = '서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.';
+    err.style.display = 'block';
+  }
+}
+
+async function adminLogout() {
+  await fetch('/watchman/api/admin/logout', { method: 'POST' });
+  document.getElementById('login-screen').style.display    = 'flex';
+  document.getElementById('admin-dashboard').style.display = 'none';
+  document.getElementById('admin-pw').value = '';
+  document.getElementById('login-error').style.display = 'none';
+}
+
+// ── 탭 전환 ──────────────────────────────────────────────
+function switchTab(panel, btn) {
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-' + panel).classList.add('active');
+}
+
+// ── 데이터 로드 ──────────────────────────────────────────
+async function loadData() {
+  const [cRes, uRes] = await Promise.all([
+    fetch('/watchman/api/admin/contacts'),
+    fetch('/watchman/api/admin/users')
+  ]);
+  const contacts = await cRes.json();
+  const users    = await uRes.json();
+
+  renderContacts(contacts);
+  renderUsers(users);
+  document.getElementById('stat-users').textContent    = users.length;
+  document.getElementById('stat-contacts').textContent = contacts.length;
+  document.getElementById('stat-pending').textContent  =
+    contacts.filter(c => c.type === 'bug' || c.type === 'account').length;
+}
+
+// ── 문의 렌더링 ──────────────────────────────────────────
+const TYPE_MAP = {
+  bug:     { label: '버그 신고',  cls: 'admin-badge-bug'     },
+  feature: { label: '기능 제안',  cls: 'admin-badge-feature' },
+  account: { label: '계정 문의',  cls: 'admin-badge-account' },
+  general: { label: '일반 문의',  cls: 'admin-badge-general' },
+  other:   { label: '기타',       cls: 'admin-badge-general' },
+};
+
+function renderContacts(contacts) {
+  const tbody = document.getElementById('contacts-tbody');
+  document.getElementById('contacts-count').textContent = `총 ${contacts.length}건`;
+
+  if (contacts.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7">
+      <div class="admin-empty"><span class="admin-empty-icon">📭</span>접수된 문의가 없습니다.</div>
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = contacts.map((c, i) => {
+    const t   = TYPE_MAP[c.type] || TYPE_MAP.other;
+    const date = c.createdAt ? c.createdAt.split('T')[0] : '';
+    return `
+      <tr>
+        <td style="color:var(--text-light)">${i + 1}</td>
+        <td><div class="admin-td-main">${esc(c.name)}</div></td>
+        <td><a href="mailto:${esc(c.email)}" style="color:var(--primary)">${esc(c.email)}</a></td>
+        <td><span class="admin-badge ${t.cls}">${t.label}</span></td>
+        <td>
+          <div class="admin-contact-preview" onclick="toggleContent(this)">${esc(c.content)}</div>
+          <div class="admin-contact-full">${esc(c.content)}</div>
+        </td>
+        <td style="white-space:nowrap">${date}</td>
+        <td><button class="admin-del-btn" onclick="deleteContact(${c.contactId})">삭제</button></td>
+      </tr>`;
+  }).join('');
+}
+
+function toggleContent(el) {
+  const full = el.nextElementSibling;
+  const isOpen = full.style.display === 'block';
+  full.style.display = isOpen ? 'none' : 'block';
+  el.style.display   = isOpen ? '' : 'none';
+}
+
+async function deleteContact(id) {
+  if (!confirm('이 문의를 삭제하시겠습니까?')) return;
+  await fetch(`/watchman/api/admin/contacts/${id}`, { method: 'DELETE' });
+  loadData();
+}
+
+// ── 사용자 렌더링 ─────────────────────────────────────────
+function renderUsers(users) {
+  const tbody = document.getElementById('users-tbody');
+  document.getElementById('users-count').textContent = `총 ${users.length}명`;
+
+  if (users.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6">
+      <div class="admin-empty"><span class="admin-empty-icon">👤</span>등록된 사용자가 없습니다.</div>
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = users.map((u, i) => {
+    const date = u.createdAt ? String(u.createdAt).split('T')[0] : '';
+    return `
+      <tr>
+        <td style="color:var(--text-light)">${i + 1}</td>
+        <td><span class="admin-uid-badge">UID ${u.userId}</span></td>
+        <td><div class="admin-td-main">${esc(u.nickname)}</div></td>
+        <td>${esc(u.email)}</td>
+        <td>${date}</td>
+        <td>${u.streak > 0 ? `🔥 ${u.streak}일` : '-'}</td>
+        <td>
+          <select class="admin-role-select" onchange="changeRole(${u.userId}, this.value)">
+            <option value="user"  ${u.role === 'user'  ? 'selected' : ''}>👤 일반 계정</option>
+            <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>⚙️ 어드민 계정</option>
+          </select>
+        </td>
+        <td><button class="admin-del-btn" onclick="deleteUser(${u.userId})">삭제</button></td>
+      </tr>`;
+  }).join('');
+}
+
+async function changeRole(id, role) {
+  await fetch(`/watchman/api/admin/users/${id}/role`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role })
+  });
+  loadData();
+}
+
+async function deleteUser(id) {
+  if (!confirm('이 사용자를 삭제하시겠습니까?\n삭제된 계정은 복구할 수 없습니다.')) return;
+  await fetch(`/watchman/api/admin/users/${id}`, { method: 'DELETE' });
+  loadData();
+}
+
+function esc(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+</script>
+</body>
+</html>

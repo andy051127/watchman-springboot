@@ -43,15 +43,15 @@
     <form class="fp-contact-form" onsubmit="handleContactSubmit(event)">
       <div class="fp-form-field">
         <label class="fp-form-label">이름</label>
-        <input type="text" class="fp-form-input" placeholder="이름을 입력해 주세요" required />
+        <input type="text" id="c-name" class="fp-form-input" placeholder="이름을 입력해 주세요" required />
       </div>
       <div class="fp-form-field">
         <label class="fp-form-label">이메일</label>
-        <input type="email" class="fp-form-input" placeholder="답변받을 이메일 주소" required />
+        <input type="email" id="c-email" class="fp-form-input" placeholder="답변받을 이메일 주소" required />
       </div>
       <div class="fp-form-field">
         <label class="fp-form-label">문의 유형</label>
-        <select class="fp-form-input">
+        <select id="c-type" class="fp-form-input" required>
           <option value="">선택해 주세요</option>
           <option value="bug">버그 신고</option>
           <option value="feature">기능 제안</option>
@@ -62,10 +62,11 @@
       </div>
       <div class="fp-form-field">
         <label class="fp-form-label">내용</label>
-        <textarea class="fp-form-input fp-form-textarea" placeholder="문의 내용을 자세히 적어주세요." required></textarea>
+        <textarea id="c-content" class="fp-form-input fp-form-textarea" placeholder="문의 내용을 자세히 적어주세요." required></textarea>
       </div>
       <p id="contact-success" style="display:none;color:var(--good);font-size:14px;font-weight:600">✓ 문의가 접수되었습니다. 빠른 시일 내에 답변 드리겠습니다.</p>
-      <button type="submit" class="fp-form-submit">문의 보내기</button>
+      <p id="contact-error" style="display:none;color:var(--bad);font-size:14px;font-weight:600">✗ 문의 전송에 실패했습니다. 다시 시도해 주세요.</p>
+      <button type="submit" id="c-submit" class="fp-form-submit">문의 보내기</button>
     </form>
   </div>
   <footer class="app-footer">
@@ -86,10 +87,37 @@
   </footer>
 </div>
 <script>
-function handleContactSubmit(e) {
+async function handleContactSubmit(e) {
   e.preventDefault();
-  document.getElementById('contact-success').style.display = 'block';
-  e.target.reset();
+  const btn = document.getElementById('c-submit');
+  btn.disabled = true;
+  btn.textContent = '전송 중...';
+  document.getElementById('contact-success').style.display = 'none';
+  document.getElementById('contact-error').style.display   = 'none';
+
+  try {
+    const res = await fetch('/watchman/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name:    document.getElementById('c-name').value.trim(),
+        email:   document.getElementById('c-email').value.trim(),
+        type:    document.getElementById('c-type').value,
+        content: document.getElementById('c-content').value.trim()
+      })
+    });
+    if (res.ok) {
+      document.getElementById('contact-success').style.display = 'block';
+      e.target.reset();
+    } else {
+      document.getElementById('contact-error').style.display = 'block';
+    }
+  } catch {
+    document.getElementById('contact-error').style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '문의 보내기';
+  }
 }
 </script>
 </body>

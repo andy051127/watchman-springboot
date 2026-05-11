@@ -24,17 +24,20 @@ public class AuthController {
     // 성공: 세션에 userId 저장 후 200 + { userId, nickname, avatar } 반환
     // 실패: 401 Unauthorized
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> body, HttpSession session) {
-        String email    = body.get("email");
-        String password = body.get("password");
+    public ResponseEntity<?> login(@RequestBody Map<String, Object> body, HttpSession session) {
+        String email      = (String) body.get("email");
+        String password   = (String) body.get("password");
+        boolean rememberMe = Boolean.TRUE.equals(body.get("rememberMe"));
 
         User user = this.userService.login(email, password);
         if (user == null) {
             return ResponseEntity.status(401).body(Map.of("message", "이메일 또는 비밀번호가 올바르지 않습니다."));
         }
 
-        // 세션에 userId 저장 → 이후 모든 요청에서 꺼내 씀
         session.setAttribute("userId", user.getUserId());
+
+        // 로그인 상태 유지: 7일 / 일반: 30분
+        session.setMaxInactiveInterval(rememberMe ? 7 * 24 * 60 * 60 : 30 * 60);
 
         return ResponseEntity.ok(Map.of(
                 "userId",   user.getUserId(),

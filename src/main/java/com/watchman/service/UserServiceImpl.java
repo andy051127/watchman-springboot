@@ -86,4 +86,22 @@ public class UserServiceImpl implements UserService {
 		}
 		this.userRepository.delete(userId);
 	}
+
+	// 전체 유저 목록 조회 (관리자용)
+	@Override
+	public java.util.List<User> getAllUsers() {
+		return this.userRepository.findAll();
+	}
+
+	// 관리자 직접 삭제 (비밀번호 확인 없음)
+	@Override
+	public void adminDeleteUser(Long userId) {
+		this.userRepository.delete(userId);
+	}
+
+	// 역할 변경 (user ↔ admin)
+	@Override
+	public void updateUserRole(Long userId, String role) {
+		this.userRepository.updateRole(userId, role);
+	}
 }

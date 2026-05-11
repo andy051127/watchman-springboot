@@ -24,4 +24,13 @@ public interface UserService {
 
 	// 회원 탈퇴: 비밀번호 확인 후 삭제 (불일치 시 예외)
 	void deleteUser(Long userId, String password);
+
+	// 전체 유저 목록 조회 (관리자용)
+	java.util.List<User> getAllUsers();
+
+	// 관리자가 직접 유저 삭제 (비밀번호 확인 없음)
+	void adminDeleteUser(Long userId);
+
+	// 역할 변경 (user ↔ admin)
+	void updateUserRole(Long userId, String role);
 }

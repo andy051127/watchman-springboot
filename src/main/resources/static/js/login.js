@@ -1,5 +1,19 @@
 // login.js — 로그인 / 회원가입 UI
 
+// ── 페이지 로드 시 저장된 값 복원 ────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // 아이디 저장: localStorage에 이메일이 있으면 불러와서 입력 + 체크박스 체크
+  const savedEmail = localStorage.getItem('saved-email');
+  if (savedEmail) {
+    document.getElementById('login-email').value = savedEmail;
+    document.getElementById('save-id').checked = true;
+  }
+
+  // 로그인 상태 유지: 체크 여부 복원
+  const rememberMe = localStorage.getItem('remember-me') === 'true';
+  document.getElementById('remember-me').checked = rememberMe;
+});
+
 // ── 탭 전환 ───────────────────────────────────────────────────────────────────
 // 로그인 탭과 회원가입 탭 사이를 전환한다.
 // tab: 'login' 또는 'signup'
@@ -59,41 +73,45 @@ function checkCustomDomain() {
 async function handleLogin(e) {
   e.preventDefault();
 
-  const email   = document.getElementById('login-email').value.trim();
-  const pw      = document.getElementById('login-pw').value;
-  const errorEl = document.getElementById('login-error');
+  const email      = document.getElementById('login-email').value.trim();
+  const pw         = document.getElementById('login-pw').value;
+  const saveId     = document.getElementById('save-id').checked;
+  const rememberMe = document.getElementById('remember-me').checked;
+  const errorEl    = document.getElementById('login-error');
 
-  // 빈 값 클라이언트 검증 (서버 호출 전 차단)
   if (!email || !pw) {
     showError(errorEl, '이메일과 비밀번호를 입력해 주세요.');
     return;
   }
 
+  // 아이디 저장: 체크 시 이메일 저장, 해제 시 삭제
+  if (saveId) {
+    localStorage.setItem('saved-email', email);
+  } else {
+    localStorage.removeItem('saved-email');
+  }
+
+  // 로그인 상태 유지 선택 여부 저장
+  localStorage.setItem('remember-me', rememberMe);
+
   try {
-    // 로그인 API 호출
     const res = await fetch('/watchman/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password: pw })
+      body: JSON.stringify({ email, password: pw, rememberMe })
     });
 
     if (res.ok) {
-      // 로그인 성공: 서버가 세션 쿠키를 자동 발급
-      // 응답 데이터를 sessionStorage에 저장해 다른 페이지에서 닉네임/아바타에 활용
       const data = await res.json();
       sessionStorage.setItem('userId',   data.userId);
       sessionStorage.setItem('nickname', data.nickname);
       sessionStorage.setItem('avatar',   data.avatar);
-
-      // 메인 페이지로 이동
       window.location.href = 'main.html';
     } else {
-      // 로그인 실패: 401 Unauthorized
       const data = await res.json();
       showError(errorEl, data.message || '이메일 또는 비밀번호가 올바르지 않습니다.');
     }
   } catch (err) {
-    // 네트워크 오류 또는 서버 다운
     showError(errorEl, '서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.');
   }
 }

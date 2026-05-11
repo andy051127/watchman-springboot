@@ -67,6 +67,20 @@ public class UserRepositoryImpl implements UserRepository {
 		this.template.update(sql, avatar, userId);
 	}
 
+	// 전체 유저 조회 (관리자용)
+	@Override
+	public java.util.List<User> findAll() {
+		String sql = "SELECT user_id, email, nickname, avatar, streak, role, created_at FROM users ORDER BY created_at DESC";
+		return this.template.query(sql, BeanPropertyRowMapper.newInstance(User.class));
+	}
+
+	// 역할 변경 (관리자용)
+	@Override
+	public void updateRole(Long userId, String role) {
+		String sql = "UPDATE users SET role = ? WHERE user_id = ?";
+		this.template.update(sql, role, userId);
+	}
+
 	// 유저 DELETE — sessions, todos, ddays 등 연관 데이터도 CASCADE로 함께 삭제됨
 	@Override
 	public void delete(Long userId) {
