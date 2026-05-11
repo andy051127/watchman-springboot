@@ -14,6 +14,9 @@ public interface PlannerService {
     // 특정 날짜의 할 일 목록 조회
     List<Todo> getTodos(Long userId, LocalDate date);
 
+    // 특정 월의 할 일 전체 조회 (달력 미리보기용)
+    List<Todo> getTodosByMonth(Long userId, int year, int month);
+
     // 할 일 추가
     void addTodo(Todo todo);
 

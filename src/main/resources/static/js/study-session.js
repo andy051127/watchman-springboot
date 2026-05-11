@@ -162,9 +162,16 @@ function setAmbient(type, val) {
 
 let faceLandmarker = null;
 let detectionRafId = null;
+let distractionSince = null; // 이탈 시작 시각 (유예 판정용)
 
-const YAW_THRESHOLD   = 25; // ±도: 좌우 회전 이탈 기준
-const PITCH_THRESHOLD = 20; // ±도: 상하 회전 이탈 기준
+// 방향별 비대칭 임계값 (도)
+// 오른쪽: 보조 모니터 참고 허용 → 좌측보다 관대
+// 아래쪽: 공책 필기 허용 → 위쪽보다 관대
+const YAW_LEFT_THRESHOLD   = 55;  // 좌측 이탈 기준
+const YAW_RIGHT_THRESHOLD  = 55;  // 우측 이탈 기준 (보조 모니터 허용)
+const PITCH_DOWN_THRESHOLD = 40;  // 아래쪽 이탈 기준 (필기 허용)
+const PITCH_UP_THRESHOLD   = 25;  // 위쪽 이탈 기준
+const DISTRACTION_DELAY_MS = 2000; // 딴짓 판정 유예 시간 — 순간 시선 이동 무시
 
 // import URL과 WASM 경로를 동일 버전으로 고정해 불일치를 방지합니다.
 const MEDIAPIPE_VERSION = '0.10.3';
@@ -274,17 +281,30 @@ function startDetectionLoop() {
 
       if (results.faceLandmarks && results.faceLandmarks.length > 0) {
         const { yaw, pitch } = computeHeadAngles(results.faceLandmarks[0]);
-        const distracted = Math.abs(yaw) > YAW_THRESHOLD || Math.abs(pitch) > PITCH_THRESHOLD;
 
-        if (distracted) {
-          console.log(
-            `[Watchman] 이탈 감지 — Yaw: ${yaw.toFixed(1)}°, Pitch: ${pitch.toFixed(1)}°`
-          );
+        // yaw > 0: 사용자 기준 좌측 / yaw < 0: 우측(보조 모니터 방향)
+        // pitch > 0: 아래(필기) / pitch < 0: 위쪽
+        const rawDistracted =
+          yaw   >  YAW_LEFT_THRESHOLD   ||
+          yaw   < -YAW_RIGHT_THRESHOLD  ||
+          pitch >  PITCH_DOWN_THRESHOLD ||
+          pitch < -PITCH_UP_THRESHOLD;
+
+        if (rawDistracted) {
+          if (distractionSince === null) {
+            distractionSince = performance.now(); // 이탈 시작 기록
+          } else if (performance.now() - distractionSince >= DISTRACTION_DELAY_MS) {
+            // 유예 시간 초과 시에만 딴짓으로 판정
+            console.log(`[Watchman] 딴짓 판정 — Yaw: ${yaw.toFixed(1)}°, Pitch: ${pitch.toFixed(1)}°`);
+            applyFocusState(false);
+          }
+        } else {
+          distractionSince = null; // 시선 복귀 시 유예 타이머 리셋
+          applyFocusState(true);
         }
-
-        applyFocusState(!distracted);
       } else {
-        // 얼굴 미감지(자리 비움) → 이탈로 처리
+        // 얼굴 미감지(자리 비움) → 즉시 이탈로 처리
+        distractionSince = null;
         applyFocusState(false);
       }
     }
@@ -300,6 +320,7 @@ function stopDetectionLoop() {
     cancelAnimationFrame(detectionRafId);
     detectionRafId = null;
   }
+  distractionSince = null;
 }
 
 // 상태가 바뀔 때만 UI를 업데이트해 불필요한 DOM 조작을 억제합니다.

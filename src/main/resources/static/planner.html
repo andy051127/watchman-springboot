@@ -64,21 +64,22 @@
         </div>
       </div>
 
-      <div class="planner-grid">
-
-        <!-- 달력 -->
-        <div class="planner-calendar-card">
-          <div class="calendar-nav">
-            <button class="cal-nav-btn" onclick="changeMonth(-1)">&#8592;</button>
-            <span class="cal-month-label" id="cal-month-label">2026년 4월</span>
-            <button class="cal-nav-btn" onclick="changeMonth(1)">&#8594;</button>
-          </div>
-          <div class="calendar-grid" id="calendar-grid">
-            <!-- JS로 채워짐 -->
-          </div>
+      <!-- 달력 뷰 -->
+      <div id="view-calendar" class="planner-calendar-card">
+        <div class="calendar-nav">
+          <button class="cal-nav-btn" onclick="changeMonth(-1)">&#8592;</button>
+          <span class="cal-month-label" id="cal-month-label">2026년 4월</span>
+          <button class="cal-nav-btn" onclick="changeMonth(1)">&#8594;</button>
         </div>
+        <div class="calendar-grid" id="calendar-grid">
+          <!-- JS로 채워짐 -->
+        </div>
+        <p class="cal-hint">날짜를 선택하면 플래너가 열려요</p>
+      </div>
 
-        <!-- 노트북 뷰 -->
+      <!-- 노트북 뷰 (날짜 클릭 시 전환) -->
+      <div id="view-notebook" style="display:none">
+        <button class="notebook-back-btn" onclick="showCalendar()">← 달력으로 돌아가기</button>
         <div class="planner-notebook">
           <div class="notebook-header">
             <div class="notebook-date-big" id="nb-day">20</div>
@@ -87,30 +88,35 @@
               <span id="nb-month-year">2026년 4월</span>
             </div>
           </div>
-
+          <!-- 하루 메모 -->
+          <div class="notebook-memo">
+            <div class="notebook-memo-label">오늘의 메모</div>
+            <textarea class="notebook-memo-input" id="nb-memo"
+              placeholder="오늘의 목표나 한마디를 적어보세요..."
+              oninput="saveMemo(this.value)" rows="2"></textarea>
+          </div>
           <div class="notebook-body">
             <!-- 할 일 목록 -->
             <div class="notebook-todo">
-              <div class="notebook-section-title">할 일</div>
-              <div class="todo-list" id="todo-list">
-                <!-- JS로 채워짐 -->
+              <div class="notebook-section-title">
+                <span>할 일</span>
+                <span class="todo-count" id="todo-count-display"></span>
               </div>
+              <div class="todo-list" id="todo-list"></div>
               <div class="todo-add-row">
-                <input type="text" class="todo-add-input" id="todo-input" placeholder="할 일 추가..." onkeydown="if(event.key==='Enter') addTodo()" />
-                <button class="todo-add-btn" onclick="addTodo()">+</button>
+                <div class="todo-add-circle">+</div>
+                <input type="text" class="todo-add-input" id="todo-input"
+                  placeholder="할 일을 입력하고 Enter"
+                  onkeydown="if(event.key==='Enter') addTodo()" />
               </div>
             </div>
-
-            <!-- 시간표 -->
+            <!-- 타임 테이블 -->
             <div class="notebook-timetable">
-              <div class="notebook-section-title">시간표</div>
-              <div class="timetable-grid" id="timetable-grid">
-                <!-- JS로 채워짐 -->
-              </div>
+              <div class="notebook-section-title">타임 테이블</div>
+              <div class="timetable-grid" id="timetable-grid"></div>
             </div>
           </div>
         </div>
-
       </div>
 
       <!-- D-Day 섹션 -->

@@ -18,6 +18,7 @@ async function initPage() {
     // API를 호출하지 않고 제한된 UI를 표시한다.
     nicknameEl.textContent = '비회원';
     nicknameEl.classList.add('nav-guest');
+    nicknameEl.removeAttribute('href');
     document.getElementById('nav-avatar').removeAttribute('href');
     exitBtn.textContent = '나가기';
 

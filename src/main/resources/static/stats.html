@@ -59,7 +59,7 @@
 
     <div class="stats-content">
 
-      <!-- KPI 4개 -->
+      <!-- KPI 3개 -->
       <div class="stats-kpi-row">
         <div class="stats-kpi-card">
           <div class="stats-kpi-icon">📚</div>
@@ -87,46 +87,42 @@
         </div>
       </div>
 
-      <!-- 2컬럼 그리드 -->
-      <div class="stats-grid">
-        <!-- 주간 차트 -->
-        <div class="stats-card stats-card-chart">
-          <div class="stats-card-header">
-            <div>
-              <div class="stats-card-title">이번 주 공부 시간</div>
-              <div class="stats-card-desc">요일별 집중 시간 분포</div>
-            </div>
-          </div>
-          <div class="stats-chart" id="weekly-chart">
-            <!-- JS로 채워짐 -->
-            <div class="stats-empty">
-              <span>📭</span>
-              <p>아직 공부 기록이 없어요</p>
-            </div>
+      <!-- 주간 차트 (full-width) -->
+      <div class="stats-card">
+        <div class="stats-card-header">
+          <div>
+            <div class="stats-card-title">이번 주 공부 시간</div>
+            <div class="stats-card-desc">요일별 집중 시간 분포</div>
           </div>
         </div>
-
-        <!-- 오른쪽 -->
-        <div class="stats-side-col">
-          <div class="stats-card">
-            <div class="stats-card-header">
-              <div class="stats-card-title">오늘 공부 현황</div>
-            </div>
-            <div id="today-sessions-content">
-              <div class="stats-empty-sm">아직 오늘 세션이 없어요.</div>
-            </div>
+        <div class="stats-chart" id="weekly-chart">
+          <div class="stats-empty">
+            <span>📭</span>
+            <p>아직 공부 기록이 없어요</p>
           </div>
-          <div class="stats-card">
-            <div class="stats-card-title">최고 집중 세션</div>
-            <div id="best-session-content">
-              <div class="stats-empty-sm">세션을 시작해보세요.</div>
-            </div>
+        </div>
+      </div>
+
+      <!-- 오늘 현황 + 최고 세션 (2컬럼) -->
+      <div class="stats-info-grid">
+        <div class="stats-card">
+          <div class="stats-card-header">
+            <div class="stats-card-title">오늘 공부 현황</div>
+          </div>
+          <div id="today-sessions-content">
+            <div class="stats-empty-sm">아직 오늘 세션이 없어요.</div>
+          </div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-card-title" style="margin-bottom:12px">최고 집중 세션</div>
+          <div id="best-session-content">
+            <div class="stats-empty-sm">세션을 시작해보세요.</div>
           </div>
         </div>
       </div>
 
       <!-- 세션 기록 테이블 -->
-      <div class="stats-card">
+      <div class="stats-card" id="session-table-card">
         <div class="stats-card-header">
           <div>
             <div class="stats-card-title">세션 기록</div>

@@ -195,12 +195,13 @@ function renderSessionTable(sessions) {
   allSessionsCache = sessions;
   document.getElementById('table-desc').textContent
     = `최근 ${Math.min(sessions.length, PAGE_SIZE)}개 세션`;
-  renderPage(1);
+  renderPage(1, false);
 }
 
 // 페이지 단위로 세션 테이블을 렌더링한다.
 // PAGE_SIZE(10)개씩 잘라 표시하며, 여러 페이지면 페이지네이션 버튼을 추가한다.
-function renderPage(page) {
+// scroll=true: 페이지 전환 시 테이블 상단으로 스크롤 (초기 렌더 시 false)
+function renderPage(page, scroll = true) {
   currentPage = page;
   const container  = document.getElementById('sessions-table-content');
 
@@ -250,6 +251,11 @@ function renderPage(page) {
 
   html += '</div>';
   container.innerHTML = html;
+
+  if (scroll) {
+    document.getElementById('session-table-card')
+      .scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 }
 
 // ── 로그아웃 처리 ─────────────────────────────────────────────────────────────

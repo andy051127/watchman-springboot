@@ -28,6 +28,14 @@ public class PlannerServiceImpl implements PlannerService {
         return this.plannerRepository.findTodosByDate(userId, date);
     }
 
+    // 특정 월의 할 일 전체 조회
+    @Override
+    public List<Todo> getTodosByMonth(Long userId, int year, int month) {
+        LocalDate start = LocalDate.of(year, month, 1);
+        LocalDate end   = start.withDayOfMonth(start.lengthOfMonth());
+        return this.plannerRepository.findTodosByMonth(userId, start, end);
+    }
+
     // 할 일 추가
     @Override
     public void addTodo(Todo todo) {

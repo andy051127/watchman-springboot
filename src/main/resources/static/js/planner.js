@@ -19,30 +19,46 @@ document.addEventListener('DOMContentLoaded', async () => {
   const now = new Date();
   currentYear  = now.getFullYear();
   currentMonth = now.getMonth();
-  selectedDate = toDateStr(now);
+  selectedDate = null; // 날짜를 클릭해야 노트북이 열림
 
   // 닉네임: 로그인 시 sessionStorage에 저장된 값 사용 (API 재호출 불필요)
   const nickEl = document.getElementById('nav-nickname');
   if (nickEl) nickEl.textContent = sessionStorage.getItem('nickname') || '';
 
-  // 오늘 날짜의 데이터와 D-Day를 병렬로 로드
-  await Promise.all([
-    loadTodos(selectedDate),
-    loadDDays(),
-    loadTimetable(selectedDate)
-  ]);
-
+  await Promise.all([loadDDays(), loadMonthTodos()]);
   initCalendar();
-  renderNotebook();
 });
+
+// ── 월별 할 일 일괄 로드 (달력 미리보기용) ────────────────────────────────────
+// 현재 달의 모든 할 일을 한 번에 가져와 todos 캐시에 날짜별로 저장한다.
+async function loadMonthTodos() {
+  try {
+    const res = await fetch(`/watchman/api/planner/todos/month?year=${currentYear}&month=${currentMonth + 1}`);
+    if (res.status === 401) { window.location.href = 'login.html'; return; }
+    const data = await res.json();
+
+    // 기존 이 달의 캐시를 초기화하고 날짜별로 재구성
+    data.forEach(t => {
+      const dateStr = t.todoDate; // "YYYY-MM-DD"
+      if (!todos[dateStr]) todos[dateStr] = [];
+      // 중복 방지: 같은 todoId가 없을 때만 추가
+      if (!todos[dateStr].find(x => x.id === t.todoId)) {
+        todos[dateStr].push({ id: t.todoId, text: t.content, done: t.done });
+      }
+    });
+  } catch (err) {
+    console.error('월별 할 일 로드 실패:', err);
+  }
+}
 
 // ── 달력 ──────────────────────────────────────────────────────────────────────
 
 // 이전/다음 달로 이동한다.
-function changeMonth(delta) {
+async function changeMonth(delta) {
   currentMonth += delta;
   if (currentMonth < 0)  { currentMonth = 11; currentYear--; }
   if (currentMonth > 11) { currentMonth = 0;  currentYear++; }
+  await loadMonthTodos();
   initCalendar();
 }
 
@@ -67,20 +83,27 @@ function initCalendar() {
   }
 
   for (let d = 1; d <= daysInMonth; d++) {
-    const dateStr  = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    const dow      = new Date(currentYear, currentMonth, d).getDay();
-    const isToday  = dateStr === today;
-    const isSel    = dateStr === selectedDate;
-    const hasTodos = (todos[dateStr] || []).length > 0;
-    const cls      = ['cal-day',
+    const dateStr   = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const dow       = new Date(currentYear, currentMonth, d).getDay();
+    const isToday   = dateStr === today;
+    const isSel     = dateStr === selectedDate;
+    const dayTodos  = todos[dateStr] || [];
+    const cls       = ['cal-day',
       dow === 0 ? 'sunday' : dow === 6 ? 'saturday' : '',
       isToday && !isSel ? 'today' : '',
       isSel ? 'selected' : ''
     ].filter(Boolean).join(' ');
 
+    // 미리보기: 최대 2개 표시, 초과분은 "+N개" 표시
+    const preview = dayTodos.slice(0, 2).map(t =>
+      `<div class="cal-preview-item${t.done ? ' done' : ''}">${escHtml(t.text)}</div>`
+    ).join('');
+    const more = dayTodos.length > 2
+      ? `<div class="cal-preview-more">+${dayTodos.length - 2}개</div>` : '';
+
     html += `<div class="${cls}" onclick="selectDate('${dateStr}')">
       <span class="cal-day-num">${d}</span>
-      ${hasTodos ? '<div class="cal-day-dot"></div>' : ''}
+      ${preview}${more}
     </div>`;
   }
 
@@ -106,6 +129,19 @@ async function selectDate(dateStr) {
 
   initCalendar();
   renderNotebook();
+  showNotebook();
+}
+
+async function showCalendar() {
+  document.getElementById('view-calendar').style.display = 'block';
+  document.getElementById('view-notebook').style.display = 'none';
+  await loadMonthTodos(); // 노트북에서 변경된 할 일 반영
+  initCalendar();
+}
+
+function showNotebook() {
+  document.getElementById('view-calendar').style.display = 'none';
+  document.getElementById('view-notebook').style.display = 'block';
 }
 
 // Date → 'YYYY-MM-DD' 문자열 변환 유틸
@@ -121,12 +157,34 @@ const MONTHS_KR = ['1월','2월','3월','4월','5월','6월','7월','8월','9월
 // 선택된 날짜 정보를 노트북 헤더에 표시하고 할 일·시간표를 렌더링한다.
 function renderNotebook() {
   const d = new Date(selectedDate + 'T00:00:00');
-  document.getElementById('nb-day').textContent       = d.getDate();
-  document.getElementById('nb-weekday').textContent   = WEEKDAYS[d.getDay()];
+  document.getElementById('nb-day').textContent        = d.getDate();
+  document.getElementById('nb-weekday').textContent    = WEEKDAYS[d.getDay()];
   document.getElementById('nb-month-year').textContent = `${d.getFullYear()}년 ${MONTHS_KR[d.getMonth()]}`;
 
+  renderMemo();
   renderTodoList();
   renderTimetable();
+}
+
+// ── 하루 메모 ─────────────────────────────────────────────────────────────────
+// 메모는 localStorage에 날짜별로 저장된다 (서버 저장 없음).
+
+function renderMemo() {
+  const el = document.getElementById('nb-memo');
+  if (!el) return;
+  el.value = localStorage.getItem(`planner-memo-${selectedDate}`) || '';
+}
+
+let memoDebounce = null;
+function saveMemo(value) {
+  clearTimeout(memoDebounce);
+  memoDebounce = setTimeout(() => {
+    if (value.trim()) {
+      localStorage.setItem(`planner-memo-${selectedDate}`, value);
+    } else {
+      localStorage.removeItem(`planner-memo-${selectedDate}`);
+    }
+  }, 400);
 }
 
 // ── 할 일 ─────────────────────────────────────────────────────────────────────
@@ -153,13 +211,23 @@ function renderTodoList() {
   const list      = todos[selectedDate] || [];
   const container = document.getElementById('todo-list');
 
-  container.innerHTML = list.map((item, i) => `
+  container.innerHTML = list.length === 0
+    ? `<div style="padding:20px 0;font-size:13px;color:var(--text-light);text-align:center">아직 할 일이 없어요</div>`
+    : list.map((item, i) => `
     <div class="todo-item">
       <input type="checkbox" class="todo-checkbox" ${item.done ? 'checked' : ''}
         onchange="toggleTodo(${i})" />
       <span class="todo-text ${item.done ? 'done' : ''}">${escHtml(item.text)}</span>
       <button class="todo-delete-btn" onclick="deleteTodo(${i})">✕</button>
     </div>`).join('');
+
+  // 완료 카운트 표시
+  const countEl = document.getElementById('todo-count-display');
+  if (countEl) {
+    const done = list.filter(t => t.done).length;
+    countEl.textContent = list.length > 0 ? `${done} / ${list.length}` : '';
+    countEl.style.display = list.length > 0 ? 'inline' : 'none';
+  }
 
   updateStats();
 }
@@ -252,26 +320,72 @@ async function loadTimetable(date) {
   }
 }
 
-// 6시 ~ 23시 슬롯을 렌더링한다.
-// 내용이 있는 슬롯은 filled 클래스로 강조한다.
+// 하이라이트 색상 팔레트
+const TT_COLORS = [
+  { value: 'edit',    label: '✏️',  bg: 'none' },
+  { value: 'erase',   label: '✕',   bg: 'none' },
+  { value: '#fecaca', label: '',    bg: '#fecaca' },
+  { value: '#fed7aa', label: '',    bg: '#fed7aa' },
+  { value: '#fef08a', label: '',    bg: '#fef08a' },
+  { value: '#bbf7d0', label: '',    bg: '#bbf7d0' },
+  { value: '#bfdbfe', label: '',    bg: '#bfdbfe' },
+  { value: '#e9d5ff', label: '',    bg: '#e9d5ff' },
+];
+let ttMode = 'edit'; // 'edit' | 'erase' | '#hex'
+
+// 0시 ~ 23시(24시간) 슬롯 렌더링. 색상 팔레트 + 하이라이트 지원.
 function renderTimetable() {
   const container = document.getElementById('timetable-grid');
   const dayTable  = timetable[selectedDate] || {};
-  let html = '';
 
-  for (let h = 6; h <= 23; h++) {
-    const entry = dayTable[h];
-    const val   = entry ? entry.content : '';
-    html += `
-      <div class="timetable-row">
-        <span class="timetable-hour">${h}시</span>
-        <div class="timetable-cell ${val ? 'filled' : ''}" onclick="editTimetableCell(${h}, this)">
+  const palette = `
+    <div class="tt-palette">
+      ${TT_COLORS.map(c => `
+        <button class="tt-swatch${ttMode === c.value ? ' active' : ''}"
+          style="${c.bg !== 'none' ? `background:${c.bg}` : ''}"
+          onclick="setTtMode('${c.value}')"
+          title="${c.label || c.value}">${c.label}</button>
+      `).join('')}
+    </div>`;
+
+  let rows = '';
+  for (let h = 0; h <= 23; h++) {
+    const entry   = dayTable[h];
+    const val     = entry ? entry.content : '';
+    const hlColor = localStorage.getItem(`tt-hl-${selectedDate}-${h}`) || '';
+    const rowStyle = hlColor ? `background:${hlColor}` : '';
+
+    rows += `
+      <div class="timetable-row${hlColor ? ' hl' : ''}" style="${rowStyle}"
+           onclick="handleTtRowClick(${h}, event)">
+        <span class="timetable-hour">${String(h).padStart(2, '0')}:00</span>
+        <div class="timetable-cell${val ? ' filled' : ''}" id="tt-cell-${h}">
           ${val ? escHtml(val) : ''}
         </div>
       </div>`;
   }
 
-  container.innerHTML = html;
+  container.innerHTML = palette + rows;
+}
+
+function setTtMode(mode) {
+  ttMode = mode;
+  renderTimetable();
+}
+
+function handleTtRowClick(hour, event) {
+  if (ttMode === 'edit') {
+    // 텍스트 입력 모드: 셀 클릭 시 편집
+    const cell = document.getElementById(`tt-cell-${hour}`);
+    editTimetableCell(hour, cell);
+  } else if (ttMode === 'erase') {
+    localStorage.removeItem(`tt-hl-${selectedDate}-${hour}`);
+    renderTimetable();
+  } else {
+    // 색상 적용
+    localStorage.setItem(`tt-hl-${selectedDate}-${hour}`, ttMode);
+    renderTimetable();
+  }
 }
 
 // 시간표 셀을 클릭하면 인라인 input으로 전환하고,

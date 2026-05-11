@@ -1,5 +1,5 @@
 /* ─── Landing Page ───────────────────────────────────────── */
-.landing { min-height: 100vh; background: var(--bg); overflow-x: hidden; }
+.landing { min-height: 100vh; background: var(--bg); overflow-x: hidden; display: flex; flex-direction: column; }
 
 /* Nav */
 .landing-nav {

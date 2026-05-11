@@ -42,7 +42,7 @@
 /* KPI Row */
 .stats-kpi-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 14px;
 }
 .stats-kpi-card {
@@ -61,13 +61,12 @@
 .stats-kpi-value { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 3px; }
 .stats-kpi-sub { font-size: 11px; color: var(--text-light); }
 
-/* Grid */
-.stats-grid {
+/* Info Grid (오늘 현황 + 최고 세션) */
+.stats-info-grid {
   display: grid;
-  grid-template-columns: 1fr 340px;
+  grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
-.stats-side-col { display: flex; flex-direction: column; gap: 16px; }
 .stats-card {
   background: var(--bg-white);
   border: 1px solid var(--border);
@@ -81,9 +80,9 @@
 /* Chart */
 .stats-chart {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   align-items: flex-end;
-  height: 180px;
+  height: 220px;
   padding: 0 4px;
 }
 .stats-chart-col {
@@ -206,6 +205,12 @@
 .stats-page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 .stats-page-arrow { font-size: 15px; }
 
-@media (max-width: 1024px) { .stats-kpi-row { grid-template-columns: repeat(2, 1fr); } .stats-grid { grid-template-columns: 1fr; } }
-@media (max-width: 768px) { .stats-content { padding: 20px 16px 0; } .stats-banner { padding: 32px 16px; } .stats-banner-inner { flex-direction: column; gap: 20px; } .stats-banner-chips { width: 100%; } }
+@media (max-width: 1024px) { .stats-kpi-row { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 768px) {
+  .stats-content { padding: 20px 16px 0; }
+  .stats-banner { padding: 32px 16px; }
+  .stats-banner-inner { flex-direction: column; gap: 20px; }
+  .stats-banner-chips { width: 100%; }
+  .stats-info-grid { grid-template-columns: 1fr; }
+}
 @media (max-width: 560px) { .stats-kpi-row { grid-template-columns: 1fr 1fr; } }

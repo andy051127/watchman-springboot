@@ -45,6 +45,21 @@ public class PlannerController {
         return ResponseEntity.ok(todos);
     }
 
+    // 특정 월 전체 할 일 조회 (달력 미리보기용)
+    // GET /api/planner/todos/month?year=2026&month=5
+    @GetMapping("/todos/month")
+    public ResponseEntity<?> getTodosByMonth(
+            @RequestParam int year,
+            @RequestParam int month,
+            HttpSession session) {
+        Long userId = getSessionUserId(session);
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
+        }
+        List<Todo> todos = this.plannerService.getTodosByMonth(userId, year, month);
+        return ResponseEntity.ok(todos);
+    }
+
     // 할 일 추가
     // POST /api/planner/todos
     // body: { "todoDate": "2026-04-29", "content": "수학 공부" }

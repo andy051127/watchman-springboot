@@ -14,6 +14,9 @@ public interface PlannerRepository {
 	// 특정 날짜의 할 일 목록 조회 (플래너 달력에서 날짜 클릭 시 사용)
 	List<Todo> findTodosByDate(Long userId, LocalDate date);
 
+	// 특정 월의 할 일 전체 조회 (달력 미리보기용)
+	List<Todo> findTodosByMonth(Long userId, LocalDate monthStart, LocalDate monthEnd);
+
 	// 새 할 일 추가
 	void saveTodo(Todo todo);
 

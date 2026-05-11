@@ -34,6 +34,15 @@ public class PlannerRepositoryImpl implements PlannerRepository {
 				BeanPropertyRowMapper.newInstance(Todo.class), userId, date);
 	}
 
+	// 특정 월의 할 일 전체 조회 (달력 미리보기용)
+	@Override
+	public List<Todo> findTodosByMonth(Long userId, LocalDate monthStart, LocalDate monthEnd) {
+		String sql = "SELECT todo_id, user_id, todo_date, content, done " +
+				     "FROM todos WHERE user_id = ? AND todo_date BETWEEN ? AND ? ORDER BY todo_date, todo_id";
+		return this.template.query(sql,
+				BeanPropertyRowMapper.newInstance(Todo.class), userId, monthStart, monthEnd);
+	}
+
 	// 새 할 일 INSERT
 	// done 컬럼은 DEFAULT 0(미완료)이므로 별도 입력 불필요
 	@Override

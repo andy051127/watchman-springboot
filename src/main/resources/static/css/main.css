@@ -100,6 +100,7 @@
 .banner-section {
   background: var(--bg-dark);
   padding: 0;
+  overflow: hidden;
 }
 .banner-inner {
   max-width: 1200px;
@@ -110,15 +111,14 @@
   justify-content: space-between;
   gap: 40px;
   position: relative;
-  overflow: hidden;
 }
 .banner-glow {
   position: absolute;
-  top: -40px;
-  left: -60px;
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, rgba(232,93,4,0.18) 0%, transparent 70%);
+  top: -60px;
+  left: -80px;
+  width: 500px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(232,93,4,0.15) 0%, transparent 65%);
   pointer-events: none;
 }
 .banner-text { position: relative; flex: 1; min-width: 0; }
@@ -183,7 +183,7 @@
 /* Stats Row */
 .stats-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 14px;
   margin-bottom: 24px;
 }
@@ -211,7 +211,21 @@
 
 /* Howto Steps */
 .howto-steps { display: flex; flex-direction: column; gap: 14px; }
+.howto-steps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
 .howto-step { display: flex; align-items: flex-start; gap: 12px; }
+.howto-step-grid {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 16px;
+  background: var(--bg);
+  border-radius: var(--radius-md);
+}
 .howto-num {
   width: 26px;
   height: 26px;
@@ -289,11 +303,15 @@
 .guest-lock-state p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
 .guest-lock-sub { font-size: 12px; color: var(--text-light); margin-top: 6px; }
 
-@media (max-width: 1024px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 860px) { .main-grid { grid-template-columns: 1fr; } .banner-right { display: none; } }
+@media (max-width: 1024px) { .stats-row { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 860px) {
+  .main-grid { grid-template-columns: 1fr; }
+  .banner-right { display: none; }
+  .howto-steps-grid { grid-template-columns: 1fr; }
+}
 @media (max-width: 768px) {
   .main-nav-links { display: none; }
   .banner-inner { padding: 36px 20px; }
   .page-container { padding: 20px 16px 40px; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
 }
-@media (max-width: 560px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }

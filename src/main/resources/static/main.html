@@ -31,7 +31,7 @@
         <a href="mypage.html" class="nav-avatar" id="nav-avatar" title="마이페이지">
           <span id="nav-avatar-emoji">😊</span>
         </a>
-        <span class="nav-nickname" id="nav-nickname"></span>
+        <a href="mypage.html" class="nav-nickname" id="nav-nickname"></a>
         <button class="btn-nav-exit" id="btn-exit" onclick="handleExit()">로그아웃</button>
       </div>
     </div>
@@ -95,42 +95,19 @@
 
     <!-- Main Grid -->
     <div class="main-grid">
-      <div style="display:flex;flex-direction:column;gap:16px">
 
-        <!-- 이렇게 쓰면 돼요 -->
-        <div class="dashboard-card">
-          <div class="card-title">이렇게 쓰면 돼요</div>
-          <div class="howto-steps">
-            <div class="howto-step">
-              <div class="howto-num">1</div>
-              <div class="howto-step-text"><strong>공부 시작하기</strong>를 누르고 카메라 권한을 허용해 주세요.</div>
-            </div>
-            <div class="howto-step">
-              <div class="howto-num">2</div>
-              <div class="howto-step-text">얼굴이 카메라에 잘 보이도록 자리를 잡고 <strong>평소처럼 공부</strong>하면 됩니다.</div>
-            </div>
-            <div class="howto-step">
-              <div class="howto-num">3</div>
-              <div class="howto-step-text">딴짓이 감지되면 바로 알림이 와요. 세션 후엔 <strong>집중 리포트</strong>를 확인하세요.</div>
-            </div>
+      <!-- 최근 세션 -->
+      <div class="dashboard-card">
+        <div class="card-title-row">
+          <div class="card-title">최근 세션</div>
+          <a href="stats.html" class="card-more-btn" id="btn-all-sessions" style="display:none">전체 보기 →</a>
+        </div>
+        <div id="recent-sessions-content">
+          <div class="empty-state">
+            <span class="empty-state-icon">📋</span>
+            아직 세션 기록이 없어요.<br />첫 번째 공부 세션을 시작해보세요!
           </div>
         </div>
-
-        <!-- 최근 세션 -->
-        <div class="dashboard-card">
-          <div class="card-title-row">
-            <div class="card-title">최근 세션</div>
-            <a href="stats.html" class="card-more-btn" id="btn-all-sessions" style="display:none">전체 보기 →</a>
-          </div>
-          <div id="recent-sessions-content">
-            <!-- JS로 채워짐 -->
-            <div class="empty-state">
-              <span class="empty-state-icon">📋</span>
-              아직 세션 기록이 없어요.<br />첫 번째 공부 세션을 시작해보세요!
-            </div>
-          </div>
-        </div>
-
       </div>
 
       <!-- 오른쪽 사이드바 -->
@@ -156,6 +133,25 @@
               <span>딴짓했다고 자책하지 마세요. 알아채는 것이 첫걸음이에요.</span>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 이렇게 쓰면 돼요 (full-width 가로 3단) -->
+    <div class="dashboard-card" style="margin-top:16px">
+      <div class="card-title" style="margin-bottom:16px">이렇게 쓰면 돼요</div>
+      <div class="howto-steps-grid">
+        <div class="howto-step-grid">
+          <div class="howto-num">1</div>
+          <div class="howto-step-text"><strong>공부 시작하기</strong>를 누르고 카메라 권한을 허용해 주세요.</div>
+        </div>
+        <div class="howto-step-grid">
+          <div class="howto-num">2</div>
+          <div class="howto-step-text">얼굴이 카메라에 잘 보이도록 자리를 잡고 <strong>평소처럼 공부</strong>하면 됩니다.</div>
+        </div>
+        <div class="howto-step-grid">
+          <div class="howto-num">3</div>
+          <div class="howto-step-text">딴짓이 감지되면 바로 알림이 와요. 세션 후엔 <strong>집중 리포트</strong>를 확인하세요.</div>
         </div>
       </div>
     </div>

@@ -131,6 +131,7 @@ input, textarea, select { font-family: inherit; }
   background: var(--bg-dark);
   padding: 28px 48px 24px;
   text-align: center;
+  margin-top: auto;
 }
 .footer-links {
   display: flex;
