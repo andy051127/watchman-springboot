@@ -199,8 +199,18 @@ async function loadData() {
     return;
   }
 
+  if (!cRes.ok || !uRes.ok) {
+    alert('서버 오류가 발생했습니다.\nDB 테이블/컬럼이 누락됐을 수 있습니다.\nREADME 5-3의 테이블 생성 SQL을 실행해 주세요.');
+    return;
+  }
+
   const contacts = await cRes.json();
   const users    = await uRes.json();
+
+  if (!Array.isArray(contacts) || !Array.isArray(users)) {
+    alert('데이터 형식 오류입니다. 서버 로그를 확인해 주세요.');
+    return;
+  }
 
   renderContacts(contacts);
   renderUsers(users);
