@@ -26,7 +26,7 @@
         <a href="notice.html" class="nav-link active">공지사항</a>
       </div>
       <div class="main-nav-right">
-        <a href="mypage.html" class="nav-avatar"><span>😊</span></a>
+        <a href="mypage.html" class="nav-avatar"><span id="nav-avatar-emoji">😊</span></a>
         <a href="mypage.html" class="nav-nickname" id="nav-nickname">사용자</a>
         <button class="btn-nav-exit" onclick="handleExit()">로그아웃</button>
       </div>
@@ -36,15 +36,65 @@
   <!-- Notice Page -->
   <div class="notice-page">
     <div class="notice-header">
-      <p class="page-sub-label">Notice</p>
-      <h1 class="notice-title">공지사항</h1>
+      <div class="notice-header-row">
+        <div>
+          <p class="page-sub-label">Notice</p>
+          <h1 class="notice-title">공지사항</h1>
+        </div>
+        <!-- 관리자만 표시 -->
+        <button class="notice-write-btn" id="btn-write" style="display:none" onclick="openModal()">
+          ✏️ 글 쓰기
+        </button>
+      </div>
       <div class="page-header-divider"></div>
     </div>
     <div class="notice-body">
       <div class="notice-list" id="notice-list">
-        <!-- JS로 채워짐 -->
+        <div style="text-align:center;padding:40px;color:var(--text-light)">불러오는 중...</div>
       </div>
       <p class="notice-footer" id="notice-footer"></p>
+    </div>
+  </div>
+
+  <!-- 글쓰기/수정 모달 -->
+  <div class="notice-modal-bg" id="notice-modal" style="display:none" onclick="closeModalBg(event)">
+    <div class="notice-modal">
+      <div class="notice-modal-header">
+        <h2 class="notice-modal-title" id="modal-title-text">공지 작성</h2>
+        <button class="notice-modal-close" onclick="closeModal()">✕</button>
+      </div>
+
+      <div class="notice-modal-body">
+        <div class="notice-form-row">
+          <div class="notice-form-field" style="flex:1">
+            <label class="notice-form-label">태그</label>
+            <select class="notice-form-select" id="modal-tag">
+              <option value="공지">공지</option>
+              <option value="업데이트">업데이트</option>
+              <option value="이벤트">이벤트</option>
+            </select>
+          </div>
+          <label class="notice-pin-check">
+            <input type="checkbox" id="modal-pinned" />
+            <span>📌 상단 고정</span>
+          </label>
+        </div>
+
+        <div class="notice-form-field">
+          <label class="notice-form-label">제목 *</label>
+          <input class="notice-form-input" id="modal-title" placeholder="공지 제목을 입력하세요" maxlength="200" />
+        </div>
+
+        <div class="notice-form-field">
+          <label class="notice-form-label">내용 *</label>
+          <textarea class="notice-form-textarea" id="modal-content" placeholder="공지 내용을 입력하세요. 줄바꿈은 Enter로 할 수 있습니다." rows="10"></textarea>
+        </div>
+      </div>
+
+      <div class="notice-modal-footer">
+        <button class="notice-modal-cancel" onclick="closeModal()">취소</button>
+        <button class="notice-modal-submit" id="modal-submit" onclick="submitNotice()">등록</button>
+      </div>
     </div>
   </div>
 

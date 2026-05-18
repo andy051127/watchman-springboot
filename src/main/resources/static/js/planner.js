@@ -23,7 +23,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 닉네임: 로그인 시 sessionStorage에 저장된 값 사용 (API 재호출 불필요)
   const nickEl = document.getElementById('nav-nickname');
-  if (nickEl) nickEl.textContent = sessionStorage.getItem('nickname') || '';
+  const cached = sessionStorage.getItem('nickname');
+  if (cached) {
+    if (nickEl) nickEl.textContent = cached;
+  } else {
+    try {
+      const res = await fetch('/watchman/api/users/me');
+      if (res.ok) {
+        const user = await res.json();
+        if (nickEl) nickEl.textContent = user.nickname;
+        sessionStorage.setItem('nickname', user.nickname);
+        sessionStorage.setItem('userId',   user.userId);
+        sessionStorage.setItem('avatar',   user.avatar || '');
+      }
+    } catch (e) {}
+  }
 
   await Promise.all([loadDDays(), loadMonthTodos()]);
   initCalendar();

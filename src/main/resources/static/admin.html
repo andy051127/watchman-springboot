@@ -171,6 +171,13 @@ async function loadData() {
     fetch('/watchman/api/admin/contacts'),
     fetch('/watchman/api/admin/users')
   ]);
+
+  if (cRes.status === 401 || uRes.status === 401) {
+    alert('세션이 만료됐습니다. 다시 로그인해 주세요.');
+    adminLogout();
+    return;
+  }
+
   const contacts = await cRes.json();
   const users    = await uRes.json();
 
@@ -268,12 +275,17 @@ function renderUsers(users) {
 }
 
 async function changeRole(id, role) {
-  await fetch(`/watchman/api/admin/users/${id}/role`, {
+  const res = await fetch(`/watchman/api/admin/users/${id}/role`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ role })
   });
-  loadData();
+  if (res.ok) {
+    await loadData();
+  } else {
+    alert('역할 변경에 실패했습니다. 다시 시도해 주세요.');
+    await loadData(); // 원래 값으로 복구
+  }
 }
 
 async function deleteUser(id) {

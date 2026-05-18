@@ -22,7 +22,7 @@ public class UserRepositoryImpl implements UserRepository {
 	// BeanPropertyRowMapper: 컬럼명(snake_case) → 필드명(camelCase) 자동 매핑
 	@Override
 	public User findByEmail(String email) {
-		String sql = "SELECT user_id, email, password, nickname, avatar, streak, created_at " +
+		String sql = "SELECT user_id, email, password, nickname, avatar, streak, role, created_at " +
 				     "FROM users WHERE email = ?";
 		return this.template.queryForObject(sql,
 				BeanPropertyRowMapper.newInstance(User.class), email);
@@ -31,7 +31,7 @@ public class UserRepositoryImpl implements UserRepository {
 	// user_id로 유저 1명 조회
 	@Override
 	public User findById(Long userId) {
-		String sql = "SELECT user_id, email, password, nickname, avatar, streak, created_at " +
+		String sql = "SELECT user_id, email, password, nickname, avatar, streak, role, created_at " +
 				     "FROM users WHERE user_id = ?";
 		return this.template.queryForObject(sql,
 				BeanPropertyRowMapper.newInstance(User.class), userId);

@@ -2,6 +2,8 @@ package com.watchman.controller;
 
 import com.watchman.domain.User;
 import com.watchman.service.UserService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,9 +26,11 @@ public class AuthController {
     // 성공: 세션에 userId 저장 후 200 + { userId, nickname, avatar } 반환
     // 실패: 401 Unauthorized
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, Object> body, HttpSession session) {
-        String email      = (String) body.get("email");
-        String password   = (String) body.get("password");
+    public ResponseEntity<?> login(@RequestBody Map<String, Object> body,
+                                   HttpSession session,
+                                   HttpServletResponse response) {
+        String email       = (String) body.get("email");
+        String password    = (String) body.get("password");
         boolean rememberMe = Boolean.TRUE.equals(body.get("rememberMe"));
 
         User user = this.userService.login(email, password);
@@ -36,8 +40,17 @@ public class AuthController {
 
         session.setAttribute("userId", user.getUserId());
 
-        // 로그인 상태 유지: 7일 / 일반: 30분
-        session.setMaxInactiveInterval(rememberMe ? 7 * 24 * 60 * 60 : 30 * 60);
+        if (rememberMe) {
+            // 로그인 상태 유지: 서버 세션 30일 + 브라우저 종료 후에도 유지되는 영구 쿠키
+            int maxAge = 30 * 24 * 60 * 60;
+            session.setMaxInactiveInterval(maxAge);
+            Cookie cookie = new Cookie("JSESSIONID", session.getId());
+            cookie.setMaxAge(maxAge);
+            cookie.setPath("/watchman");
+            cookie.setHttpOnly(true);
+            response.addCookie(cookie);
+        }
+        // 미체크: application.properties의 기본값(8시간) 사용 — 브라우저 세션 쿠키
 
         return ResponseEntity.ok(Map.of(
                 "userId",   user.getUserId(),

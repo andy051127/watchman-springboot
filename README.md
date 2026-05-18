@@ -167,6 +167,40 @@ CREATE TABLE contacts (
     created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (contact_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 공지사항 테이블
+CREATE TABLE notices (
+    notice_id       BIGINT       NOT NULL AUTO_INCREMENT,
+    tag             VARCHAR(20)  NOT NULL DEFAULT '공지',   -- 공지 / 업데이트 / 이벤트
+    title           VARCHAR(200) NOT NULL,
+    content         TEXT         NOT NULL,
+    pinned          TINYINT(1)   NOT NULL DEFAULT 0,
+    writer_nickname VARCHAR(100) NOT NULL DEFAULT '관리자',
+    created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (notice_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 스터디 그룹 테이블
+CREATE TABLE study_groups (
+    group_id    BIGINT       NOT NULL AUTO_INCREMENT,
+    name        VARCHAR(50)  NOT NULL,
+    description VARCHAR(200) DEFAULT NULL,
+    invite_code VARCHAR(6)   NOT NULL UNIQUE,
+    leader_id   BIGINT       NOT NULL,
+    created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (group_id),
+    FOREIGN KEY (leader_id) REFERENCES users(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 스터디 그룹 멤버 테이블
+CREATE TABLE group_members (
+    group_id  BIGINT    NOT NULL,
+    user_id   BIGINT    NOT NULL,
+    joined_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (group_id, user_id),
+    FOREIGN KEY (group_id) REFERENCES study_groups(group_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id)  REFERENCES users(user_id)         ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 ---

@@ -26,8 +26,21 @@ async function initStats() {
     const todaySessions = await todayRes.json();
 
     // 네브바 닉네임: 로그인 시 sessionStorage에 저장된 값 사용 (API 재호출 불필요)
-    document.getElementById('nav-nickname').textContent
-      = sessionStorage.getItem('nickname') || '';
+    const cached = sessionStorage.getItem('nickname');
+    if (cached) {
+      document.getElementById('nav-nickname').textContent = cached;
+    } else {
+      try {
+        const uRes = await fetch('/watchman/api/users/me');
+        if (uRes.ok) {
+          const u = await uRes.json();
+          document.getElementById('nav-nickname').textContent = u.nickname;
+          sessionStorage.setItem('nickname', u.nickname);
+          sessionStorage.setItem('userId',   u.userId);
+          sessionStorage.setItem('avatar',   u.avatar || '');
+        }
+      } catch (e) {}
+    }
 
     renderBanner(allSessions);
     renderKPI(allSessions, todaySessions);
