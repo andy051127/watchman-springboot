@@ -122,7 +122,7 @@ function renderWeeklyChart(weekSessions) {
   const hasData = buckets.some(b => b.seconds > 0);
 
   if (!hasData) {
-    container.innerHTML = `<div class="stats-empty"><span>📭</span><p>아직 공부 기록이 없어요</p></div>`;
+    container.innerHTML = `<div class="stats-empty"><p>아직 공부 기록이 없어요</p></div>`;
     return;
   }
 

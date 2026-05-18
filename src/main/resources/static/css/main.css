@@ -169,7 +169,58 @@
 }
 .banner-chip-label { font-size: 11px; color: #a8a29e; margin-bottom: 4px; letter-spacing: 0.5px; }
 .banner-chip-value { font-size: 18px; font-weight: 800; color: var(--bg); }
-.banner-illust { font-size: 48px; }
+/* Banner visual — camera indicator */
+.banner-visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  animation: fadeUp 0.7s ease 0.3s both;
+}
+.banner-cam-wrap {
+  position: relative;
+  width: 88px;
+  height: 88px;
+}
+.banner-cam-pulse {
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  border: 2px solid rgba(232, 93, 4, 0.35);
+  animation: camPulse 2.2s ease-in-out infinite;
+}
+.banner-cam-inner {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 32px rgba(232, 93, 4, 0.12);
+}
+.banner-live-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #78716c;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+.banner-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: liveBlink 1.6s ease-in-out infinite;
+}
+
+/* Banner entry animations */
+.banner-text { animation: fadeUp 0.6s ease 0.1s both; }
+.banner-stat-chips { animation: fadeUp 0.6s ease 0.25s both; }
 
 /* Page Content */
 .page-container {
