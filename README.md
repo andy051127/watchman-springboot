@@ -91,117 +91,14 @@ GRANT ALL PRIVILEGES ON watchman.* TO 'watchman_db'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
-#### 5-3. 테이블 생성
+#### 5-3. 테이블 생성 — 자동 처리됨
 
-`USE watchman;` 실행 후 아래 DDL을 전체 복사해 실행합니다.
+**별도로 실행할 필요 없습니다.**
 
-```sql
-USE watchman;
+서버를 시작하면 `src/main/resources/schema.sql` 파일이 자동으로 실행되어 필요한 테이블이 모두 생성됩니다.
+모두 `CREATE TABLE IF NOT EXISTS`로 작성되어 있어 이미 테이블이 존재하면 건너뛰고, 기존 데이터는 유지됩니다.
 
--- 사용자 테이블
-CREATE TABLE users (
-    user_id    BIGINT       NOT NULL AUTO_INCREMENT,
-    email      VARCHAR(255) NOT NULL UNIQUE,
-    password   VARCHAR(255) NOT NULL,
-    nickname   VARCHAR(100) NOT NULL,
-    avatar     VARCHAR(50)  DEFAULT NULL,
-    streak     INT          NOT NULL DEFAULT 0,
-    created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (user_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 스터디 세션 테이블
-CREATE TABLE sessions (
-    session_id      BIGINT  NOT NULL AUTO_INCREMENT,
-    user_id         BIGINT  NOT NULL,
-    focused_time    INT     NOT NULL DEFAULT 0,   -- 집중 시간(초)
-    distracted_time INT     NOT NULL DEFAULT 0,   -- 이탈 시간(초)
-    focus_rate      DOUBLE  NOT NULL DEFAULT 0,   -- 집중률(%)
-    started_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (session_id),
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 할 일(Todo) 테이블
-CREATE TABLE todos (
-    todo_id   BIGINT       NOT NULL AUTO_INCREMENT,
-    user_id   BIGINT       NOT NULL,
-    todo_date DATE         NOT NULL,
-    content   VARCHAR(500) NOT NULL,
-    done      TINYINT(1)   NOT NULL DEFAULT 0,
-    PRIMARY KEY (todo_id),
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- D-Day 테이블
-CREATE TABLE ddays (
-    dday_id   BIGINT       NOT NULL AUTO_INCREMENT,
-    user_id   BIGINT       NOT NULL,
-    name      VARCHAR(200) NOT NULL,
-    dday_date DATE         NOT NULL,
-    PRIMARY KEY (dday_id),
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 시간표 테이블
-CREATE TABLE timetable (
-    timetable_id BIGINT       NOT NULL AUTO_INCREMENT,
-    user_id      BIGINT       NOT NULL,
-    table_date   DATE         NOT NULL,
-    hour_slot    INT          NOT NULL,   -- 0(00시) ~ 23(23시)
-    content      VARCHAR(500) NOT NULL,
-    PRIMARY KEY (timetable_id),
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 관리자: 사용자 역할 컬럼 추가 (users 테이블 생성 후 실행)
-ALTER TABLE users ADD COLUMN role VARCHAR(20) NOT NULL DEFAULT 'user';
-
--- 관리자: 문의 테이블
-CREATE TABLE contacts (
-    contact_id BIGINT       NOT NULL AUTO_INCREMENT,
-    name       VARCHAR(100) NOT NULL,
-    email      VARCHAR(200) NOT NULL,
-    type       VARCHAR(50)  NOT NULL,   -- bug / feature / account / general / other
-    content    TEXT         NOT NULL,
-    created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (contact_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 공지사항 테이블
-CREATE TABLE notices (
-    notice_id       BIGINT       NOT NULL AUTO_INCREMENT,
-    tag             VARCHAR(20)  NOT NULL DEFAULT '공지',   -- 공지 / 업데이트 / 이벤트
-    title           VARCHAR(200) NOT NULL,
-    content         TEXT         NOT NULL,
-    pinned          TINYINT(1)   NOT NULL DEFAULT 0,
-    writer_nickname VARCHAR(100) NOT NULL DEFAULT '관리자',
-    created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (notice_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 스터디 그룹 테이블
-CREATE TABLE study_groups (
-    group_id    BIGINT       NOT NULL AUTO_INCREMENT,
-    name        VARCHAR(50)  NOT NULL,
-    description VARCHAR(200) DEFAULT NULL,
-    invite_code VARCHAR(6)   NOT NULL UNIQUE,
-    leader_id   BIGINT       NOT NULL,
-    created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (group_id),
-    FOREIGN KEY (leader_id) REFERENCES users(user_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 스터디 그룹 멤버 테이블
-CREATE TABLE group_members (
-    group_id  BIGINT    NOT NULL,
-    user_id   BIGINT    NOT NULL,
-    joined_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (group_id, user_id),
-    FOREIGN KEY (group_id) REFERENCES study_groups(group_id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id)  REFERENCES users(user_id)         ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-```
+> 생성되는 테이블: `users`, `sessions`, `todos`, `ddays`, `timetable`, `contacts`, `notices`, `study_groups`, `group_members`
 
 ---
 
