@@ -164,14 +164,28 @@ let faceLandmarker = null;
 let detectionRafId = null;
 let distractionSince = null; // 이탈 시작 시각 (유예 판정용)
 
-// 방향별 비대칭 임계값 (도)
-// 오른쪽: 보조 모니터 참고 허용 → 좌측보다 관대
-// 아래쪽: 공책 필기 허용 → 위쪽보다 관대
-const YAW_LEFT_THRESHOLD   = 55;  // 좌측 이탈 기준
-const YAW_RIGHT_THRESHOLD  = 55;  // 우측 이탈 기준 (보조 모니터 허용)
-const PITCH_DOWN_THRESHOLD = 40;  // 아래쪽 이탈 기준 (필기 허용)
-const PITCH_UP_THRESHOLD   = 25;  // 위쪽 이탈 기준
 const DISTRACTION_DELAY_MS = 2000; // 딴짓 판정 유예 시간 — 순간 시선 이동 무시
+
+// ── 캘리브레이션 임계값 ────────────────────────────────────
+// 캘리브레이션 전까지는 기본값을 사용하고,
+// 캘리브레이션 완료 후 사용자 환경에 맞게 덮어씁니다.
+const BASE_THRESHOLDS = { yawLeft: 55, yawRight: 55, pitchDown: 40, pitchUp: 25 };
+
+// 보정 페이지에서 측정한 값을 불러옵니다. 없으면 기본값을 사용합니다.
+let calibYawLeft   = parseFloat(sessionStorage.getItem('watchman_calib_yaw_left'))   || BASE_THRESHOLDS.yawLeft;
+let calibYawRight  = parseFloat(sessionStorage.getItem('watchman_calib_yaw_right'))  || BASE_THRESHOLDS.yawRight;
+let calibPitchDown = parseFloat(sessionStorage.getItem('watchman_calib_pitch_down')) || BASE_THRESHOLDS.pitchDown;
+let calibPitchUp   = parseFloat(sessionStorage.getItem('watchman_calib_pitch_up'))   || BASE_THRESHOLDS.pitchUp;
+
+// ── 캘리브레이션 상태 ──────────────────────────────────────
+const CALIB_DURATION_MS = 10000; // 측정 시간(ms)
+const CALIB_BUFFER_DEG  = 15;    // 측정 범위에 더하는 여유각(도)
+const RING_CIRCUMFERENCE = 314;  // 2π × r(50) ≈ 314
+
+let calibRafId        = null;
+let calibStartTime    = null;
+let calibYawSamples   = [];
+let calibPitchSamples = [];
 
 // import URL과 WASM 경로를 동일 버전으로 고정해 불일치를 방지합니다.
 const MEDIAPIPE_VERSION = '0.10.3';
@@ -282,13 +296,12 @@ function startDetectionLoop() {
       if (results.faceLandmarks && results.faceLandmarks.length > 0) {
         const { yaw, pitch } = computeHeadAngles(results.faceLandmarks[0]);
 
-        // yaw > 0: 사용자 기준 좌측 / yaw < 0: 우측(보조 모니터 방향)
-        // pitch > 0: 아래(필기) / pitch < 0: 위쪽
+        // 캘리브레이션이 끝난 뒤에는 개인화된 임계값을 사용합니다.
         const rawDistracted =
-          yaw   >  YAW_LEFT_THRESHOLD   ||
-          yaw   < -YAW_RIGHT_THRESHOLD  ||
-          pitch >  PITCH_DOWN_THRESHOLD ||
-          pitch < -PITCH_UP_THRESHOLD;
+          yaw   >  calibYawLeft   ||
+          yaw   < -calibYawRight  ||
+          pitch >  calibPitchDown ||
+          pitch < -calibPitchUp;
 
         if (rawDistracted) {
           if (distractionSince === null) {
@@ -434,10 +447,151 @@ function handleStudyBtn() {
   }
 }
 
+// ── 캘리브레이션 ───────────────────────────────────────────
+
+/**
+ * 캘리브레이션 오버레이를 열고 측정 루프를 시작합니다.
+ * 10초간 yaw/pitch 샘플을 수집한 뒤 개인화 임계값을 계산합니다.
+ */
+function startCalibration() {
+  calibYawSamples   = [];
+  calibPitchSamples = [];
+  calibStartTime    = null;
+
+  setState('calibrating');
+
+  const overlay = document.getElementById('calib-overlay');
+  overlay.style.display = 'flex';
+  document.getElementById('calib-countdown').textContent = '10';
+  document.getElementById('calib-ring-fill').style.strokeDashoffset = RING_CIRCUMFERENCE;
+  document.getElementById('calib-status').textContent =
+    faceLandmarker ? '측정 중...' : 'FaceLandmarker 준비 중...';
+
+  // tip 초기화
+  ['center', 'side', 'down'].forEach(k => {
+    document.getElementById(`calib-tip-${k}`).classList.remove('done');
+  });
+
+  runCalibrationLoop();
+}
+
+function runCalibrationLoop() {
+  const video = document.getElementById('webcam-video');
+
+  function sample(ts) {
+    if (!calibStartTime) calibStartTime = ts;
+
+    const elapsed  = ts - calibStartTime;
+    const progress = Math.min(elapsed / CALIB_DURATION_MS, 1);
+    const secLeft  = Math.ceil((CALIB_DURATION_MS - elapsed) / 1000);
+
+    // 링 애니메이션 업데이트
+    const offset = RING_CIRCUMFERENCE * (1 - progress);
+    document.getElementById('calib-ring-fill').style.strokeDashoffset = offset;
+    document.getElementById('calib-countdown').textContent = secLeft > 0 ? secLeft : '0';
+
+    // 팁 단계별 하이라이트 (3~4구간마다 하나씩)
+    const step = Math.floor(progress * 3);
+    if (step >= 1) document.getElementById('calib-tip-center').classList.add('done');
+    if (step >= 2) document.getElementById('calib-tip-side').classList.add('done');
+
+    // 샘플 수집
+    if (faceLandmarker && video.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) {
+      try {
+        const res = faceLandmarker.detectForVideo(video, performance.now());
+        if (res.faceLandmarks && res.faceLandmarks.length > 0) {
+          const { yaw, pitch } = computeHeadAngles(res.faceLandmarks[0]);
+          calibYawSamples.push(yaw);
+          calibPitchSamples.push(pitch);
+        }
+      } catch (_) { /* 무시 */ }
+    }
+
+    document.getElementById('calib-status').textContent =
+      faceLandmarker
+        ? `측정 중... (샘플 ${calibYawSamples.length}개)`
+        : 'FaceLandmarker 로딩 대기 중...';
+
+    if (progress < 1) {
+      calibRafId = requestAnimationFrame(sample);
+    } else {
+      finishCalibration();
+    }
+  }
+
+  calibRafId = requestAnimationFrame(sample);
+}
+
+/** 수집된 샘플로 개인화 임계값을 계산하고 세션을 시작합니다. */
+function finishCalibration() {
+  document.getElementById('calib-tip-down').classList.add('done');
+
+  if (calibYawSamples.length >= 20) {
+    const yaw   = calibPercentileRange(calibYawSamples);
+    const pitch = calibPercentileRange(calibPitchSamples);
+
+    // 관측 범위 + 여유각, 단 기본값보다 작아지지 않도록 하한을 유지합니다.
+    calibYawLeft   = Math.max(BASE_THRESHOLDS.yawLeft,   yaw.p95  + CALIB_BUFFER_DEG);
+    calibYawRight  = Math.max(BASE_THRESHOLDS.yawRight,  -yaw.p5  + CALIB_BUFFER_DEG);
+    calibPitchDown = Math.max(BASE_THRESHOLDS.pitchDown, pitch.p95 + CALIB_BUFFER_DEG);
+    calibPitchUp   = Math.max(BASE_THRESHOLDS.pitchUp,  -pitch.p5 + CALIB_BUFFER_DEG);
+
+    console.log(
+      `[Watchman] 캘리브레이션 완료 — ` +
+      `좌 ${calibYawLeft.toFixed(1)}° / 우 ${calibYawRight.toFixed(1)}° / ` +
+      `상 ${calibPitchUp.toFixed(1)}° / 하 ${calibPitchDown.toFixed(1)}°`
+    );
+
+    document.getElementById('calib-countdown').textContent = '✓';
+    document.getElementById('calib-status').textContent =
+      `보정 완료 · 좌 ${calibYawLeft.toFixed(0)}° 우 ${calibYawRight.toFixed(0)}°` +
+      ` 상 ${calibPitchUp.toFixed(0)}° 하 ${calibPitchDown.toFixed(0)}°`;
+  } else {
+    // 샘플 부족(모델 미로드 등) → 기본값 유지
+    document.getElementById('calib-countdown').textContent = '!';
+    document.getElementById('calib-status').textContent = '샘플 부족 — 기본값으로 시작합니다';
+  }
+
+  setTimeout(() => {
+    document.getElementById('calib-overlay').style.display = 'none';
+    beginActualStudy();
+  }, 1400);
+}
+
+/**
+ * 샘플 배열의 5·95 백분위수를 반환합니다.
+ * 극단 이상치(눈 깜박임 등 일시적 오차)를 제거하기 위해 사용합니다.
+ */
+function calibPercentileRange(samples) {
+  const sorted = [...samples].sort((a, b) => a - b);
+  const p5  = sorted[Math.max(0, Math.floor(sorted.length * 0.05))];
+  const p95 = sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.95))];
+  return { p5, p95 };
+}
+
+/** 건너뛰기 버튼 — 기본값 그대로 세션을 시작합니다. */
+function skipCalibration() {
+  if (calibRafId !== null) { cancelAnimationFrame(calibRafId); calibRafId = null; }
+  calibYawLeft   = BASE_THRESHOLDS.yawLeft;
+  calibYawRight  = BASE_THRESHOLDS.yawRight;
+  calibPitchDown = BASE_THRESHOLDS.pitchDown;
+  calibPitchUp   = BASE_THRESHOLDS.pitchUp;
+  document.getElementById('calib-overlay').style.display = 'none';
+  beginActualStudy();
+}
+
+// ── 스터디 시작 ────────────────────────────────────────────
+
 function startStudy() {
+  // 보정은 calibration.html에서 미리 수행합니다.
+  // sessionStorage에 저장된 보정값은 파일 상단에서 이미 로드되었습니다.
+  beginActualStudy();
+}
+
+function beginActualStudy() {
   setState('studying');
   lastFocusedState = null;
-  updateFocusUI(true); // 초기 상태: 집중
+  updateFocusUI(true);
   startTimer();
   startDetectionLoop();
 }
@@ -584,6 +738,15 @@ function setState(state) {
     timerSub.textContent = '스터디 시작 버튼을 눌러보세요';
     statusPill.className  = 'session-status-pill';
     statusLabel.textContent = '대기 중';
+  } else if (state === 'calibrating') {
+    camBtn.textContent   = '카메라 끄기';
+    studyBtn.textContent = '보정 중...';
+    studyBtn.className   = 'btn-study-main inactive';
+    studyBtn.disabled    = true;
+    hint.textContent     = '공부 환경을 측정하고 있어요. 잠시만 기다려 주세요!';
+    timerSub.textContent = '보정 완료 후 자동으로 시작됩니다';
+    statusPill.className  = 'session-status-pill';
+    statusLabel.textContent = '보정 중';
   } else if (state === 'studying') {
     camBtn.textContent   = '카메라 끄기 / 일시정지';
     studyBtn.textContent = '스터디 종료';

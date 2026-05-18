@@ -13,6 +13,43 @@
   <!-- Distraction overlay (hidden by default) -->
   <div class="distraction-fullscreen-overlay" id="distraction-overlay" style="display:none"></div>
 
+  <!-- Calibration overlay -->
+  <div class="calib-overlay" id="calib-overlay" style="display:none">
+    <div class="calib-modal">
+      <div class="calib-icon">🎯</div>
+      <h2 class="calib-title">공부 환경 보정</h2>
+      <p class="calib-desc">
+        평소 공부할 때처럼 <strong>10초간 자연스럽게</strong> 움직여 주세요.<br>
+        태블릿, 책, 노트 등을 실제로 봐도 됩니다.
+      </p>
+
+      <div class="calib-countdown-wrap">
+        <svg class="calib-ring" viewBox="0 0 120 120">
+          <circle class="calib-ring-bg" cx="60" cy="60" r="50"/>
+          <circle class="calib-ring-fill" id="calib-ring-fill" cx="60" cy="60" r="50"
+                  stroke-dasharray="314" stroke-dashoffset="314"/>
+        </svg>
+        <span class="calib-countdown" id="calib-countdown">10</span>
+      </div>
+
+      <div class="calib-tips">
+        <div class="calib-tip-item" id="calib-tip-center">
+          <span class="calib-tip-dot" id="dot-center"></span>정면 화면 바라보기
+        </div>
+        <div class="calib-tip-item" id="calib-tip-side">
+          <span class="calib-tip-dot" id="dot-side"></span>옆 자료 (태블릿·책) 보기
+        </div>
+        <div class="calib-tip-item" id="calib-tip-down">
+          <span class="calib-tip-dot" id="dot-down"></span>아래 노트 내려보기
+        </div>
+      </div>
+
+      <p class="calib-status" id="calib-status">FaceLandmarker 준비 중...</p>
+
+      <button class="calib-skip-btn" onclick="skipCalibration()">건너뛰고 기본값으로 시작</button>
+    </div>
+  </div>
+
   <!-- Navbar -->
   <nav class="session-nav">
     <a href="main.html" class="session-nav-logo" id="btn-home">
@@ -54,6 +91,11 @@
       <div class="main-controls">
         <button class="btn-cam-main active" id="btn-cam" onclick="handleCamBtn()">카메라 켜기</button>
         <button class="btn-study-main inactive" id="btn-study" onclick="handleStudyBtn()" disabled>스터디 시작하기</button>
+      </div>
+      <div class="calib-shortcut">
+        <a href="calibration.html" class="btn-calib-shortcut" id="btn-go-calib">
+          🎯 보정하기
+        </a>
       </div>
       <p class="controls-hint" id="controls-hint">카메라를 켜면 스터디를 시작할 수 있어요</p>
     </div>

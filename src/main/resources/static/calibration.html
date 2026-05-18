@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>보정 — Watchman</title>
+  <link rel="stylesheet" href="css/global.css" />
+  <link rel="stylesheet" href="css/calibration.css" />
+</head>
+<body>
+<div class="calib-page">
+
+  <!-- Navigation -->
+  <nav class="calib-nav" aria-label="보정 페이지 내비게이션">
+    <a href="main.html" class="calib-nav-logo">
+      <img src="assets/icon.svg" alt="Watchman" class="calib-nav-icon" />
+      <span>Watchman</span>
+    </a>
+    <h1 class="calib-nav-title">공부 환경 보정</h1>
+    <button class="calib-nav-skip" onclick="skipAndStart()">건너뛰기</button>
+  </nav>
+
+  <!-- Main body: two-column layout -->
+  <main class="calib-body">
+
+    <!-- LEFT: Camera column -->
+    <section class="calib-camera-col" aria-label="카메라 미리보기">
+
+      <!-- Camera frame -->
+      <div class="calib-camera-frame" id="calib-camera-frame">
+        <video id="calib-video" muted playsinline></video>
+
+        <!-- Loading overlay (shown until camera + model ready) -->
+        <div class="calib-cam-overlay" id="calib-cam-overlay" aria-live="polite">
+          <div class="calib-spinner" role="status" aria-label="로딩 중"></div>
+          <span id="calib-cam-overlay-text">카메라 연결 중...</span>
+        </div>
+
+        <!-- Angle HUD (hidden until model ready) -->
+        <div class="calib-angle-hud" id="calib-angle-hud" style="display:none" aria-hidden="true">
+          <!-- Yaw row -->
+          <div class="calib-angle-row">
+            <span class="calib-angle-label">Yaw</span>
+            <div class="calib-angle-bar-wrap">
+              <div class="calib-angle-center"></div>
+              <div class="calib-angle-fill" id="hud-yaw-fill"></div>
+            </div>
+            <span class="calib-angle-val" id="hud-yaw-val">0°</span>
+          </div>
+          <!-- Pitch row -->
+          <div class="calib-angle-row">
+            <span class="calib-angle-label">Pitch</span>
+            <div class="calib-angle-bar-wrap">
+              <div class="calib-angle-center"></div>
+              <div class="calib-angle-fill" id="hud-pitch-fill"></div>
+            </div>
+            <span class="calib-angle-val" id="hud-pitch-val">0°</span>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- RIGHT: Step panels column -->
+    <aside class="calib-control-col" aria-label="보정 단계">
+
+      <!-- Step: Loading -->
+      <div class="calib-step" id="step-loading" role="status" aria-live="polite">
+        <div class="calib-step-icon" aria-hidden="true">
+          <div class="calib-loader"></div>
+        </div>
+        <h2>준비 중...</h2>
+        <p id="calib-load-status">카메라와 얼굴 감지 모델을 불러오고 있어요</p>
+      </div>
+
+      <!-- Step: Ready -->
+      <div class="calib-step" id="step-ready" style="display:none">
+        <div class="calib-step-icon" aria-hidden="true">✅</div>
+        <h2>보정 준비 완료</h2>
+        <p>아래 팁을 참고해 10초간 자연스럽게 움직여 주세요.</p>
+
+        <ul class="calib-tips-list" role="list">
+          <li class="calib-tip-item">
+            <span aria-hidden="true">🖥️</span>
+            <span>정면 화면 바라보기</span>
+          </li>
+          <li class="calib-tip-item">
+            <span aria-hidden="true">📱</span>
+            <span>옆 태블릿·책이 있으면 봐 주세요</span>
+          </li>
+          <li class="calib-tip-item">
+            <span aria-hidden="true">📓</span>
+            <span>아래 노트나 책을 내려봐 주세요</span>
+          </li>
+        </ul>
+
+        <button class="calib-start-btn" onclick="beginCalibration()">보정 시작하기</button>
+        <button class="calib-skip-link" onclick="skipAndStart()">건너뛰고 기본값으로 시작</button>
+      </div>
+
+      <!-- Step: Measuring -->
+      <div class="calib-step" id="step-measuring" style="display:none" role="status" aria-live="polite">
+        <!-- SVG ring countdown -->
+        <div class="calib-ring-wrap">
+          <svg class="calib-ring" viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="calib-ring-bg" cx="60" cy="60" r="50" />
+            <circle class="calib-ring-fill" id="calib-ring-fill" cx="60" cy="60" r="50"
+                    stroke-dasharray="314" stroke-dashoffset="314" />
+          </svg>
+          <span class="calib-sec" id="calib-sec" aria-label="남은 시간">10</span>
+        </div>
+
+        <p class="calib-inst" id="calib-inst">측정을 준비하고 있어요</p>
+        <p class="calib-sample-count" id="calib-sample-count">샘플 수집 중...</p>
+      </div>
+
+      <!-- Step: Done -->
+      <div class="calib-step" id="step-done" style="display:none">
+        <div class="calib-step-icon" aria-hidden="true">🎉</div>
+        <h2>보정 완료!</h2>
+        <p>내 공부 환경에 맞게 감지 범위가 조정되었어요.</p>
+
+        <!-- Result card with 4 computed angles -->
+        <div class="calib-result-card" aria-label="보정 결과">
+          <div class="calib-result-item">
+            <span class="calib-result-label">좌</span>
+            <span class="calib-result-val" id="result-yaw-left">—</span>
+          </div>
+          <div class="calib-result-item">
+            <span class="calib-result-label">우</span>
+            <span class="calib-result-val" id="result-yaw-right">—</span>
+          </div>
+          <div class="calib-result-item">
+            <span class="calib-result-label">상</span>
+            <span class="calib-result-val" id="result-pitch-up">—</span>
+          </div>
+          <div class="calib-result-item">
+            <span class="calib-result-label">하</span>
+            <span class="calib-result-val" id="result-pitch-down">—</span>
+          </div>
+        </div>
+
+        <button class="calib-start-btn" onclick="goToStudy()">스터디 시작하기</button>
+      </div>
+
+    </aside>
+  </main>
+
+</div>
+<script src="js/calibration.js"></script>
+</body>
+</html>
