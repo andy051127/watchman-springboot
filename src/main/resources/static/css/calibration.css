@@ -44,8 +44,6 @@
   font-weight: 700;
   color: var(--text);
   letter-spacing: -0.2px;
-  /* heading rendered as h1 but styled small for nav context */
-  font-size: 15px;
   line-height: 1;
 }
 
@@ -71,7 +69,6 @@
   max-width: 1100px;
   margin: 0 auto;
   width: 100%;
-  /* stretch so the step card fills remaining height */
   flex: 1;
   align-items: flex-start;
 }
@@ -116,7 +113,7 @@
   font-size: 13px;
 }
 
-/* Spinner — same as .session-spinner */
+/* Spinner */
 .calib-spinner {
   width: 32px;
   height: 32px;
@@ -187,7 +184,6 @@
   background: var(--primary);
   border-radius: 3px;
   transition: left 0.1s linear, width 0.1s linear;
-  /* Default: zero width at center */
   left: 50%;
   width: 0;
 }
@@ -202,15 +198,14 @@
 
 /* ── Control column (right) ──────────────────────────────── */
 .calib-control-col {
-  width: 340px;
+  width: 360px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  /* Stretch to camera column height so steps fill the card */
   align-self: stretch;
 }
 
-/* ── Step panels ─────────────────────────────────────────── */
+/* ── Loading step panel ──────────────────────────────────── */
 .calib-step {
   display: flex;
   flex-direction: column;
@@ -221,18 +216,9 @@
   background: var(--bg-white);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  /* Fill the column height so it doesn't look short */
   flex: 1;
   justify-content: center;
   min-height: 360px;
-}
-
-.calib-step-icon {
-  font-size: 48px;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .calib-step h2 {
@@ -250,7 +236,7 @@
   margin: 0;
 }
 
-/* Inline loader (replaces icon in step-loading) */
+/* Inline loader (loading step) */
 .calib-loader {
   width: 36px;
   height: 36px;
@@ -260,26 +246,122 @@
   animation: spin 0.8s linear infinite;
 }
 
-/* ── Tips list (step-ready) ──────────────────────────────── */
-.calib-tips-list {
+/* ── Main calibration panel ──────────────────────────────── */
+.calib-main {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  text-align: left;
-  background: #faf8f6;
-  border-radius: var(--radius-sm);
-  padding: 14px 16px;
-  width: 100%;
-  list-style: none;
+  gap: 10px;
+  padding: 22px 20px;
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  flex: 1;
 }
 
-.calib-tip-item {
+.calib-main-header { margin-bottom: 4px; }
+.calib-main-header h2 {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 4px;
+  letter-spacing: -0.3px;
+}
+.calib-main-header p {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Calibration cards ───────────────────────────────────── */
+.calib-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.2s;
+}
+.calib-card:has(.status-measuring) { border-color: var(--primary); }
+
+.calib-card-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.calib-card-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+.calib-card-icon { font-size: 22px; flex-shrink: 0; line-height: 1; }
+.calib-card-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.calib-card-title {
   font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.calib-card-desc { font-size: 11.5px; color: var(--text-muted); line-height: 1.4; }
+
+.calib-card-action { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+/* ── Status badge ────────────────────────────────────────── */
+.calib-status-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 99px;
+  white-space: nowrap;
+  background: #f3f4f6;
   color: var(--text-muted);
-  line-height: 1.4;
+}
+.calib-status-badge.status-measuring { background: #fef3c7; color: #d97706; }
+.calib-status-badge.status-done      { background: #dcfce7; color: #16a34a; }
+.calib-status-badge.status-failed    { background: #fee2e2; color: #dc2626; }
+
+/* ── Tags ────────────────────────────────────────────────── */
+.calib-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 99px;
+}
+.calib-tag-required { background: #fee2e2; color: #dc2626; }
+.calib-tag-optional { background: #f3f4f6; color: var(--text-muted); }
+
+/* ── Card action button ──────────────────────────────────── */
+.btn-calib-do {
+  padding: 6px 12px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.btn-calib-do:hover:not(:disabled) { background: var(--primary-dark); }
+.btn-calib-do:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── Progress bar at bottom of card ─────────────────────── */
+.calib-card-progress { height: 4px; background: #f3f4f6; }
+.calib-card-progress-bar {
+  height: 100%;
+  background: var(--primary);
+  width: 0%;
+  transition: width 0.1s linear;
+  border-radius: 0 2px 2px 0;
 }
 
 /* ── Buttons ─────────────────────────────────────────────── */
@@ -296,13 +378,20 @@
   transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
   box-shadow: 0 4px 16px rgba(232, 93, 4, 0.3);
   font-family: inherit;
+  margin-top: 4px;
 }
-.calib-start-btn:hover {
+.calib-start-btn:hover:not(:disabled) {
   background: var(--primary-dark);
   transform: translateY(-1px);
   box-shadow: 0 6px 20px rgba(232, 93, 4, 0.38);
 }
-.calib-start-btn:active { transform: translateY(0); }
+.calib-start-btn:active:not(:disabled) { transform: translateY(0); }
+.calib-start-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none;
+}
 
 .calib-skip-link {
   background: none;
@@ -314,102 +403,9 @@
   text-underline-offset: 3px;
   font-family: inherit;
   transition: color 0.2s;
+  text-align: center;
 }
 .calib-skip-link:hover { color: var(--text-muted); }
-
-/* ── Ring countdown (step-measuring) ────────────────────── */
-.calib-ring-wrap {
-  position: relative;
-  width: 140px;
-  height: 140px;
-  margin: 0 auto;
-  flex-shrink: 0;
-}
-
-.calib-ring {
-  width: 140px;
-  height: 140px;
-  /* Rotate so arc starts at top (12 o'clock) */
-  transform: rotate(-90deg);
-}
-
-.calib-ring-bg {
-  fill: none;
-  stroke: #f0ebe4;
-  stroke-width: 8;
-}
-
-.calib-ring-fill {
-  fill: none;
-  stroke: var(--primary);
-  stroke-width: 8;
-  stroke-linecap: round;
-  stroke-dasharray: 314;
-  stroke-dashoffset: 314;
-  transition: stroke-dashoffset 0.25s linear;
-}
-
-/* Countdown number centered over the ring */
-.calib-sec {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 48px;
-  font-weight: 900;
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -2px;
-}
-
-.calib-inst {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text);
-  min-height: 24px;
-  margin: 0;
-}
-
-.calib-sample-count {
-  font-size: 12px;
-  color: var(--text-light);
-  margin: 0;
-}
-
-/* ── Result card (step-done) ─────────────────────────────── */
-.calib-result-card {
-  background: #faf8f6;
-  border-radius: var(--radius-sm);
-  padding: 16px;
-  width: 100%;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.calib-result-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.calib-result-label {
-  font-size: 11px;
-  color: var(--text-light);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.calib-result-val {
-  font-size: 22px;
-  font-weight: 900;
-  color: var(--primary);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.5px;
-}
 
 /* ── Responsive: stack on mobile ─────────────────────────── */
 @media (max-width: 780px) {

@@ -61,10 +61,10 @@
 
     </section>
 
-    <!-- RIGHT: Step panels column -->
+    <!-- RIGHT: Control column -->
     <aside class="calib-control-col" aria-label="보정 단계">
 
-      <!-- Step: Loading -->
+      <!-- Loading step -->
       <div class="calib-step" id="step-loading" role="status" aria-live="polite">
         <div class="calib-step-icon" aria-hidden="true">
           <div class="calib-loader"></div>
@@ -73,74 +73,79 @@
         <p id="calib-load-status">카메라와 얼굴 감지 모델을 불러오고 있어요</p>
       </div>
 
-      <!-- Step: Ready -->
-      <div class="calib-step" id="step-ready" style="display:none">
-        <div class="calib-step-icon" aria-hidden="true">✅</div>
-        <h2>보정 준비 완료</h2>
-        <p>아래 팁을 참고해 10초간 자연스럽게 움직여 주세요.</p>
+      <!-- Main calibration panel -->
+      <div class="calib-main" id="step-main" style="display:none">
 
-        <ul class="calib-tips-list" role="list">
-          <li class="calib-tip-item">
-            <span aria-hidden="true">🖥️</span>
-            <span>정면 화면 바라보기</span>
-          </li>
-          <li class="calib-tip-item">
-            <span aria-hidden="true">📱</span>
-            <span>옆 태블릿·책이 있으면 봐 주세요</span>
-          </li>
-          <li class="calib-tip-item">
-            <span aria-hidden="true">📓</span>
-            <span>아래 노트나 책을 내려봐 주세요</span>
-          </li>
-        </ul>
+        <div class="calib-main-header">
+          <h2>자세 보정</h2>
+          <p>각 자세를 3초씩 보정하면 집중 판정이 더 정확해져요</p>
+        </div>
 
-        <button class="calib-start-btn" onclick="beginCalibration()">보정 시작하기</button>
+        <!-- Card: 정면 보정 -->
+        <div class="calib-card" id="card-screen">
+          <div class="calib-card-row">
+            <div class="calib-card-info">
+              <span class="calib-card-icon" aria-hidden="true">🖥️</span>
+              <div class="calib-card-text">
+                <span class="calib-card-title">정면 보정 <span class="calib-tag calib-tag-required">필수</span></span>
+                <span class="calib-card-desc">화면을 자연스럽게 바라봐 주세요</span>
+              </div>
+            </div>
+            <div class="calib-card-action">
+              <span class="calib-status-badge" id="status-screen">미보정</span>
+              <button class="btn-calib-do" id="btn-screen" onclick="startCalib('screen')">보정하기</button>
+            </div>
+          </div>
+          <div class="calib-card-progress" id="progress-screen" style="display:none">
+            <div class="calib-card-progress-bar" id="progress-bar-screen"></div>
+          </div>
+        </div>
+
+        <!-- Card: 태블릿 보정 -->
+        <div class="calib-card" id="card-tablet">
+          <div class="calib-card-row">
+            <div class="calib-card-info">
+              <span class="calib-card-icon" aria-hidden="true">📱</span>
+              <div class="calib-card-text">
+                <span class="calib-card-title">태블릿 보정 <span class="calib-tag calib-tag-optional">선택</span></span>
+                <span class="calib-card-desc">옆에 있는 태블릿·기기를 바라봐 주세요</span>
+              </div>
+            </div>
+            <div class="calib-card-action">
+              <span class="calib-status-badge" id="status-tablet">미보정</span>
+              <button class="btn-calib-do" id="btn-tablet" onclick="startCalib('tablet')">보정하기</button>
+            </div>
+          </div>
+          <div class="calib-card-progress" id="progress-tablet" style="display:none">
+            <div class="calib-card-progress-bar" id="progress-bar-tablet"></div>
+          </div>
+        </div>
+
+        <!-- Card: 책 보정 -->
+        <div class="calib-card" id="card-book">
+          <div class="calib-card-row">
+            <div class="calib-card-info">
+              <span class="calib-card-icon" aria-hidden="true">📓</span>
+              <div class="calib-card-text">
+                <span class="calib-card-title">책 보정 <span class="calib-tag calib-tag-optional">선택</span></span>
+                <span class="calib-card-desc">아래 책·노트를 바라봐 주세요</span>
+              </div>
+            </div>
+            <div class="calib-card-action">
+              <span class="calib-status-badge" id="status-book">미보정</span>
+              <button class="btn-calib-do" id="btn-book" onclick="startCalib('book')">보정하기</button>
+            </div>
+          </div>
+          <div class="calib-card-progress" id="progress-book" style="display:none">
+            <div class="calib-card-progress-bar" id="progress-bar-book"></div>
+          </div>
+        </div>
+
+        <button class="calib-start-btn" id="btn-start" onclick="goToStudy()" disabled>
+          스터디 시작하기
+        </button>
         <button class="calib-skip-link" onclick="skipAndStart()">건너뛰고 기본값으로 시작</button>
-      </div>
 
-      <!-- Step: Measuring -->
-      <div class="calib-step" id="step-measuring" style="display:none" role="status" aria-live="polite">
-        <!-- SVG ring countdown -->
-        <div class="calib-ring-wrap">
-          <svg class="calib-ring" viewBox="0 0 120 120" aria-hidden="true">
-            <circle class="calib-ring-bg" cx="60" cy="60" r="50" />
-            <circle class="calib-ring-fill" id="calib-ring-fill" cx="60" cy="60" r="50"
-                    stroke-dasharray="314" stroke-dashoffset="314" />
-          </svg>
-          <span class="calib-sec" id="calib-sec" aria-label="남은 시간">10</span>
-        </div>
-
-        <p class="calib-inst" id="calib-inst">측정을 준비하고 있어요</p>
-        <p class="calib-sample-count" id="calib-sample-count">샘플 수집 중...</p>
-      </div>
-
-      <!-- Step: Done -->
-      <div class="calib-step" id="step-done" style="display:none">
-        <div class="calib-step-icon" aria-hidden="true">🎉</div>
-        <h2>보정 완료!</h2>
-        <p>내 공부 환경에 맞게 감지 범위가 조정되었어요.</p>
-
-        <!-- Result card with 4 computed angles -->
-        <div class="calib-result-card" aria-label="보정 결과">
-          <div class="calib-result-item">
-            <span class="calib-result-label">좌</span>
-            <span class="calib-result-val" id="result-yaw-left">—</span>
-          </div>
-          <div class="calib-result-item">
-            <span class="calib-result-label">우</span>
-            <span class="calib-result-val" id="result-yaw-right">—</span>
-          </div>
-          <div class="calib-result-item">
-            <span class="calib-result-label">상</span>
-            <span class="calib-result-val" id="result-pitch-up">—</span>
-          </div>
-          <div class="calib-result-item">
-            <span class="calib-result-label">하</span>
-            <span class="calib-result-val" id="result-pitch-down">—</span>
-          </div>
-        </div>
-
-        <button class="calib-start-btn" onclick="goToStudy()">스터디 시작하기</button>
       </div>
 
     </aside>

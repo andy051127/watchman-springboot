@@ -164,22 +164,32 @@ let faceLandmarker = null;
 let detectionRafId = null;
 let distractionSince = null; // 이탈 시작 시각 (유예 판정용)
 
-const DISTRACTION_DELAY_MS = 2000; // 딴짓 판정 유예 시간 — 순간 시선 이동 무시
+const DISTRACTION_DELAY_MS = 3000; // 딴짓 판정 유예 시간 — 자세 변경·순간 이동 무시
 
 // ── 캘리브레이션 임계값 ────────────────────────────────────
 // 캘리브레이션 전까지는 기본값을 사용하고,
 // 캘리브레이션 완료 후 사용자 환경에 맞게 덮어씁니다.
-const BASE_THRESHOLDS = { yawLeft: 55, yawRight: 55, pitchDown: 40, pitchUp: 25 };
+const BASE_THRESHOLDS = { yawLeft: 35, yawRight: 35, pitchDown: 30, pitchUp: 20 };
 
-// 보정 페이지에서 측정한 값을 불러옵니다. 없으면 기본값을 사용합니다.
-let calibYawLeft   = parseFloat(sessionStorage.getItem('watchman_calib_yaw_left'))   || BASE_THRESHOLDS.yawLeft;
-let calibYawRight  = parseFloat(sessionStorage.getItem('watchman_calib_yaw_right'))  || BASE_THRESHOLDS.yawRight;
-let calibPitchDown = parseFloat(sessionStorage.getItem('watchman_calib_pitch_down')) || BASE_THRESHOLDS.pitchDown;
-let calibPitchUp   = parseFloat(sessionStorage.getItem('watchman_calib_pitch_up'))   || BASE_THRESHOLDS.pitchUp;
+// calib_done === '1' (명시적 보정 완료)인 경우에만 저장된 값을 사용합니다.
+// 이렇게 해야 과거 구버전이 sessionStorage에 남긴 오래된 값(예: 55°)이
+// 현재 BASE_THRESHOLDS(25°)를 덮어쓰는 문제를 방지합니다.
+function loadCalibValue(key, base) {
+  if (sessionStorage.getItem('watchman_calib_done') !== '1') return base;
+  const v = parseFloat(sessionStorage.getItem(key));
+  // 음수·NaN·과도하게 큰 값(base + 20° 초과)은 구버전 데이터로 간주하고 거부합니다.
+  if (isNaN(v) || v <= 0 || v > base + 20) return base;
+  return v;
+}
+let calibYawLeft   = loadCalibValue('watchman_calib_yaw_left',   BASE_THRESHOLDS.yawLeft);
+let calibYawRight  = loadCalibValue('watchman_calib_yaw_right',  BASE_THRESHOLDS.yawRight);
+let calibPitchDown = loadCalibValue('watchman_calib_pitch_down', BASE_THRESHOLDS.pitchDown);
+let calibPitchUp   = loadCalibValue('watchman_calib_pitch_up',   BASE_THRESHOLDS.pitchUp);
 
 // ── 캘리브레이션 상태 ──────────────────────────────────────
 const CALIB_DURATION_MS = 10000; // 측정 시간(ms)
-const CALIB_BUFFER_DEG  = 15;    // 측정 범위에 더하는 여유각(도)
+const CALIB_BUFFER_DEG  = 8;     // 측정 범위에 더하는 여유각(도)
+const CALIB_MAX_OFFSET_DEG = 10; // 기본값 대비 최대 완화 허용 범위(도)
 const RING_CIRCUMFERENCE = 314;  // 2π × r(50) ≈ 314
 
 let calibRafId        = null;
@@ -315,10 +325,13 @@ function startDetectionLoop() {
           distractionSince = null; // 시선 복귀 시 유예 타이머 리셋
           applyFocusState(true);
         }
+
+        updateDebugPanel(yaw, pitch, rawDistracted);
       } else {
         // 얼굴 미감지(자리 비움) → 즉시 이탈로 처리
         distractionSince = null;
         applyFocusState(false);
+        updateDebugPanel(null, null, false);
       }
     }
 
@@ -530,11 +543,13 @@ function finishCalibration() {
     const yaw   = calibPercentileRange(calibYawSamples);
     const pitch = calibPercentileRange(calibPitchSamples);
 
-    // 관측 범위 + 여유각, 단 기본값보다 작아지지 않도록 하한을 유지합니다.
-    calibYawLeft   = Math.max(BASE_THRESHOLDS.yawLeft,   yaw.p95  + CALIB_BUFFER_DEG);
-    calibYawRight  = Math.max(BASE_THRESHOLDS.yawRight,  -yaw.p5  + CALIB_BUFFER_DEG);
-    calibPitchDown = Math.max(BASE_THRESHOLDS.pitchDown, pitch.p95 + CALIB_BUFFER_DEG);
-    calibPitchUp   = Math.max(BASE_THRESHOLDS.pitchUp,  -pitch.p5 + CALIB_BUFFER_DEG);
+    // 관측 범위 + 여유각 (하한: 기본값, 상한: 기본값 + MAX_OFFSET)
+    const clamp = (val, base) =>
+      Math.min(base + CALIB_MAX_OFFSET_DEG, Math.max(base, val));
+    calibYawLeft   = clamp(yaw.p95   + CALIB_BUFFER_DEG, BASE_THRESHOLDS.yawLeft);
+    calibYawRight  = clamp(-yaw.p5   + CALIB_BUFFER_DEG, BASE_THRESHOLDS.yawRight);
+    calibPitchDown = clamp(pitch.p95 + CALIB_BUFFER_DEG, BASE_THRESHOLDS.pitchDown);
+    calibPitchUp   = clamp(-pitch.p5 + CALIB_BUFFER_DEG, BASE_THRESHOLDS.pitchUp);
 
     console.log(
       `[Watchman] 캘리브레이션 완료 — ` +
@@ -756,5 +771,103 @@ function setState(state) {
     timerSub.textContent = '타이머 진행 중';
     navTimer.style.display  = 'inline';
     timerDisplay.classList.add('running');
+  }
+}
+
+// ── 디버그 패널 (임시 분석용) ──────────────────────────────
+
+document.addEventListener('DOMContentLoaded', () => {
+  // 페이지 로드 시 디버그 패널에 sessionStorage 상태와 현재 임계값을 표시합니다.
+  refreshDebugStatic();
+});
+
+function toggleDebug() {
+  const panel = document.getElementById('debug-panel');
+  if (!panel) return;
+  const isHidden = panel.style.display === 'none';
+  panel.style.display = isHidden ? 'block' : 'none';
+  if (isHidden) refreshDebugStatic();
+}
+
+/** 카메라 없이도 표시 가능한 정적 정보를 업데이트합니다. */
+function refreshDebugStatic() {
+  const done       = sessionStorage.getItem('watchman_calib_done');
+  const ssYawL     = sessionStorage.getItem('watchman_calib_yaw_left');
+  const ssYawR     = sessionStorage.getItem('watchman_calib_yaw_right');
+  const ssPitchD   = sessionStorage.getItem('watchman_calib_pitch_down');
+  const ssPitchU   = sessionStorage.getItem('watchman_calib_pitch_up');
+
+  const el = document.getElementById('dbg-storage');
+  if (el) {
+    el.textContent =
+      `calib_done=${done}  yaw_L=${ssYawL}  yaw_R=${ssYawR}  pitch_D=${ssPitchD}  pitch_U=${ssPitchU}`;
+  }
+
+  const activeEl = document.getElementById('dbg-active-thresh');
+  if (activeEl) {
+    activeEl.textContent =
+      `실제 적용 임계값 — Yaw: ±${calibYawLeft}°/±${calibYawRight}°  PitchDown: ${calibPitchDown}°  PitchUp: ${calibPitchUp}°`;
+  }
+}
+
+/**
+ * 감지 루프가 매 프레임 호출합니다.
+ * @param {number|null} yaw   - 측정된 Yaw 각도 (얼굴 없으면 null)
+ * @param {number|null} pitch - 측정된 Pitch 각도 (얼굴 없으면 null)
+ * @param {boolean} rawDistracted - 임계값 초과 여부
+ */
+function updateDebugPanel(yaw, pitch, rawDistracted) {
+  const panel = document.getElementById('debug-panel');
+  if (!panel || panel.style.display === 'none') return;
+
+  // Yaw
+  const yawEl = document.getElementById('dbg-yaw');
+  if (yawEl) {
+    if (yaw === null) {
+      yawEl.textContent = '—';
+      yawEl.style.color = '#888';
+    } else {
+      yawEl.textContent = yaw.toFixed(1) + '°';
+      yawEl.style.color = (yaw > calibYawLeft || yaw < -calibYawRight) ? '#f87171' : '#4ade80';
+    }
+  }
+
+  // Pitch
+  const pitchEl = document.getElementById('dbg-pitch');
+  if (pitchEl) {
+    if (pitch === null) {
+      pitchEl.textContent = '—';
+      pitchEl.style.color = '#888';
+    } else {
+      pitchEl.textContent = pitch.toFixed(1) + '°';
+      pitchEl.style.color = (pitch > calibPitchDown || pitch < -calibPitchUp) ? '#f87171' : '#4ade80';
+    }
+  }
+
+  // 임계값 표시 (동적으로 갱신)
+  const yawThreshEl = document.getElementById('dbg-yaw-thresh');
+  if (yawThreshEl) yawThreshEl.textContent = `±${calibYawLeft}° / ±${calibYawRight}°`;
+
+  const pitchThreshEl = document.getElementById('dbg-pitch-thresh');
+  if (pitchThreshEl) pitchThreshEl.textContent = `↓${calibPitchDown}°  ↑${calibPitchUp}°`;
+
+  // 집중 상태
+  const stateEl = document.getElementById('dbg-state');
+  if (stateEl) {
+    if (yaw === null) {
+      stateEl.textContent = '얼굴 없음';
+      stateEl.style.color = '#facc15';
+    } else {
+      stateEl.textContent = isFocused ? '집중' : '딴짓';
+      stateEl.style.color = isFocused ? '#4ade80' : '#f87171';
+    }
+  }
+
+  // 딴짓 유예 타이머
+  const delayEl = document.getElementById('dbg-delay');
+  if (delayEl) {
+    const ms = distractionSince !== null ? (performance.now() - distractionSince) : 0;
+    delayEl.textContent = `유예: ${(ms / 1000).toFixed(1)}s / 2.0s`;
+    delayEl.style.color = rawDistracted ? '#fb923c' : '#888';
   }
 }

@@ -96,8 +96,38 @@
         <a href="calibration.html" class="btn-calib-shortcut" id="btn-go-calib">
           🎯 보정하기
         </a>
+        <button class="btn-debug-toggle" onclick="toggleDebug()">각도 분석</button>
       </div>
       <p class="controls-hint" id="controls-hint">카메라를 켜면 스터디를 시작할 수 있어요</p>
+
+      <!-- 임시 디버그 패널: 각도 측정값과 임계값을 실시간으로 표시합니다 -->
+      <div class="debug-panel" id="debug-panel" style="display:none">
+        <div class="debug-header">
+          <span>🔍 각도 분석 패널 (임시)</span>
+          <button class="debug-close-btn" onclick="toggleDebug()">닫기</button>
+        </div>
+        <div class="debug-grid">
+          <div class="debug-item">
+            <div class="debug-item-label">Yaw (좌우)</div>
+            <div class="debug-item-val" id="dbg-yaw">—</div>
+            <div class="debug-item-sub">임계: <span id="dbg-yaw-thresh">±25°</span></div>
+          </div>
+          <div class="debug-item">
+            <div class="debug-item-label">Pitch (상하)</div>
+            <div class="debug-item-val" id="dbg-pitch">—</div>
+            <div class="debug-item-sub">임계: <span id="dbg-pitch-thresh">↓20° ↑15°</span></div>
+          </div>
+          <div class="debug-item">
+            <div class="debug-item-label">집중 상태</div>
+            <div class="debug-item-val" id="dbg-state">—</div>
+            <div class="debug-item-sub" id="dbg-delay">유예: 0.0s / 2.0s</div>
+          </div>
+        </div>
+        <div class="debug-active-thresh" id="dbg-active-thresh">실제 적용 임계값 로딩 중...</div>
+        <div class="debug-storage-row">
+          SessionStorage: <span id="dbg-storage">—</span>
+        </div>
+      </div>
     </div>
 
     <!-- Sidebar -->

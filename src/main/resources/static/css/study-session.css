@@ -182,7 +182,7 @@
 .controls-hint { font-size: 13px; color: var(--text-light); text-align: center; }
 
 /* Calibration shortcut link (between controls and hint) */
-.calib-shortcut { text-align: center; }
+.calib-shortcut { text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px; }
 .btn-calib-shortcut {
   display: inline-flex;
   align-items: center;
@@ -198,6 +198,78 @@
   background: transparent;
 }
 .btn-calib-shortcut:hover { color: var(--text); border-color: var(--text-light); }
+
+/* Debug toggle button */
+.btn-debug-toggle {
+  background: none; border: none;
+  font-size: 11.5px; font-weight: 600;
+  color: var(--text-light); cursor: pointer;
+  text-decoration: underline; text-underline-offset: 3px;
+  font-family: inherit; padding: 0;
+  transition: color 0.2s;
+}
+.btn-debug-toggle:hover { color: var(--text-muted); }
+
+/* Debug panel */
+.debug-panel {
+  margin-top: 10px;
+  background: #1c1917;
+  border: 1px solid #3f3833;
+  border-radius: 10px;
+  padding: 14px 16px;
+  color: #e7e5e4;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+}
+
+.debug-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 12px;
+  font-size: 12px; font-weight: 700; color: #a8a29e;
+  letter-spacing: 0.3px;
+}
+
+.debug-close-btn {
+  background: #3f3833; border: none; color: #a8a29e;
+  font-size: 11px; padding: 3px 10px;
+  border-radius: 4px; cursor: pointer; font-family: inherit;
+}
+.debug-close-btn:hover { background: #57534e; }
+
+.debug-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px; margin-bottom: 12px;
+}
+
+.debug-item-label {
+  font-size: 9.5px; color: #78716c;
+  text-transform: uppercase; letter-spacing: 0.8px;
+  margin-bottom: 4px;
+}
+.debug-item-val {
+  font-size: 22px; font-weight: 900;
+  line-height: 1; margin-bottom: 3px;
+  letter-spacing: -0.5px;
+  transition: color 0.15s;
+}
+.debug-item-sub {
+  font-size: 10px; color: #57534e;
+}
+
+.debug-active-thresh {
+  font-size: 10.5px; color: #a8a29e;
+  background: #292524; border-radius: 6px;
+  padding: 7px 10px; margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.debug-storage-row {
+  font-size: 10px; color: #57534e;
+  border-top: 1px solid #3f3833;
+  padding-top: 8px;
+  word-break: break-all; line-height: 1.6;
+}
+.debug-storage-row span { color: #a8a29e; }
 
 /* Sidebar */
 .session-sidebar { width: 280px; display: flex; flex-direction: column; gap: 14px; flex-shrink: 0; }
