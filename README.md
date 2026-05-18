@@ -98,7 +98,7 @@ FLUSH PRIVILEGES;
 서버를 시작하면 `src/main/resources/schema.sql` 파일이 자동으로 실행되어 필요한 테이블이 모두 생성됩니다.
 모두 `CREATE TABLE IF NOT EXISTS`로 작성되어 있어 이미 테이블이 존재하면 건너뛰고, 기존 데이터는 유지됩니다.
 
-> 생성되는 테이블: `users`, `sessions`, `todos`, `ddays`, `timetable`, `contacts`, `notices`, `study_groups`, `group_members`
+> 생성되는 테이블: `users`, `sessions`, `todos`, `ddays`, `timetable`, `contacts`, `notices`
 
 ---
 
