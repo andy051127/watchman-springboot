@@ -153,6 +153,20 @@ CREATE TABLE timetable (
     PRIMARY KEY (timetable_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 관리자: 사용자 역할 컬럼 추가 (users 테이블 생성 후 실행)
+ALTER TABLE users ADD COLUMN role VARCHAR(20) NOT NULL DEFAULT 'user';
+
+-- 관리자: 문의 테이블
+CREATE TABLE contacts (
+    contact_id BIGINT       NOT NULL AUTO_INCREMENT,
+    name       VARCHAR(100) NOT NULL,
+    email      VARCHAR(200) NOT NULL,
+    type       VARCHAR(50)  NOT NULL,   -- bug / feature / account / general / other
+    content    TEXT         NOT NULL,
+    created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (contact_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 ---
