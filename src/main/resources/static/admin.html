@@ -21,8 +21,12 @@
     <input type="password" class="admin-login-input" id="admin-pw"
       placeholder="관리자 비밀번호 입력"
       onkeydown="if(event.key==='Enter') tryLogin()" />
+    <label class="admin-remember-label">
+      <input type="checkbox" id="admin-remember" />
+      로그인 저장 (30일)
+    </label>
     <button class="admin-login-btn" onclick="tryLogin()">로그인</button>
-    <p class="admin-login-error" id="login-error">비밀번호가 올바르지 않습니다.</p>
+    <p class="admin-login-error" id="login-error"></p>
   </div>
 </div>
 
@@ -120,23 +124,40 @@
 </div>
 
 <script>
+// ── 페이지 로드 시 세션 자동 복원 ────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const res = await fetch('/watchman/api/admin/check');
+    if (res.ok) {
+      showDashboard();
+      return;
+    }
+  } catch (e) {}
+  document.getElementById('login-screen').style.display = 'flex';
+});
+
+function showDashboard() {
+  document.getElementById('login-screen').style.display    = 'none';
+  document.getElementById('admin-dashboard').style.display = 'flex';
+  loadData();
+}
+
 // ── 로그인 ────────────────────────────────────────────────
 async function tryLogin() {
-  const pw  = document.getElementById('admin-pw').value;
-  const err = document.getElementById('login-error');
+  const pw         = document.getElementById('admin-pw').value;
+  const rememberMe = document.getElementById('admin-remember').checked;
+  const err        = document.getElementById('login-error');
   err.style.display = 'none';
 
   try {
     const res = await fetch('/watchman/api/admin/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: pw })
+      body: JSON.stringify({ password: pw, rememberMe })
     });
 
     if (res.ok) {
-      document.getElementById('login-screen').style.display    = 'none';
-      document.getElementById('admin-dashboard').style.display = 'flex';
-      loadData();
+      showDashboard();
     } else {
       err.textContent = '비밀번호가 올바르지 않습니다.';
       err.style.display = 'block';

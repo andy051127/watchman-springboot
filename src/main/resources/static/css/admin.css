@@ -60,6 +60,16 @@
   transition: background 0.2s;
 }
 .admin-login-btn:hover { background: var(--primary-dark); }
+.admin-remember-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+.admin-remember-label input[type="checkbox"] { accent-color: var(--primary); width: 15px; height: 15px; cursor: pointer; }
 .admin-login-error {
   font-size: 13px;
   color: #f87171;

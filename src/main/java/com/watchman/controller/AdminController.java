@@ -3,6 +3,8 @@ package com.watchman.controller;
 import com.watchman.domain.Contact;
 import com.watchman.service.ContactService;
 import com.watchman.service.UserService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -42,12 +44,32 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("message", "문의가 접수되었습니다."));
     }
 
+    // ── 관리자 세션 확인 ──────────────────────────────────
+    // GET /api/admin/check
+    @GetMapping("/api/admin/check")
+    public ResponseEntity<?> checkAdmin(HttpSession session) {
+        if (isAdmin(session)) return ResponseEntity.ok(Map.of("admin", true));
+        return ResponseEntity.status(401).body(Map.of("admin", false));
+    }
+
     // ── 관리자 로그인 ─────────────────────────────────────
     // POST /api/admin/login
     @PostMapping("/api/admin/login")
-    public ResponseEntity<?> adminLogin(@RequestBody Map<String, String> body, HttpSession session) {
+    public ResponseEntity<?> adminLogin(@RequestBody Map<String, Object> body,
+                                        HttpSession session,
+                                        HttpServletResponse response) {
         if (ADMIN_PASSWORD.equals(body.get("password"))) {
             session.setAttribute(ADMIN_SESSION_KEY, true);
+            boolean rememberMe = Boolean.TRUE.equals(body.get("rememberMe"));
+            if (rememberMe) {
+                int maxAge = 30 * 24 * 60 * 60;
+                session.setMaxInactiveInterval(maxAge);
+                Cookie cookie = new Cookie("JSESSIONID", session.getId());
+                cookie.setMaxAge(maxAge);
+                cookie.setPath("/watchman");
+                cookie.setHttpOnly(true);
+                response.addCookie(cookie);
+            }
             return ResponseEntity.ok(Map.of("message", "로그인 성공"));
         }
         return ResponseEntity.status(401).body(Map.of("message", "비밀번호가 올바르지 않습니다."));
@@ -56,8 +78,14 @@ public class AdminController {
     // ── 관리자 로그아웃 ───────────────────────────────────
     // POST /api/admin/logout
     @PostMapping("/api/admin/logout")
-    public ResponseEntity<?> adminLogout(HttpSession session) {
+    public ResponseEntity<?> adminLogout(HttpSession session, HttpServletResponse response) {
         session.removeAttribute(ADMIN_SESSION_KEY);
+        // 저장된 쿠키 만료
+        Cookie cookie = new Cookie("JSESSIONID", "");
+        cookie.setMaxAge(0);
+        cookie.setPath("/watchman");
+        cookie.setHttpOnly(true);
+        response.addCookie(cookie);
         return ResponseEntity.ok(Map.of("message", "로그아웃"));
     }
 
