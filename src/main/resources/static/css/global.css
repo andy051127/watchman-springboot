@@ -238,6 +238,22 @@ input, textarea, select { font-family: inherit; }
   to { transform: scaleX(1); }
 }
 
+/* ─── Admin Nav Button ──────────────────────────────────── */
+.btn-admin-nav {
+  padding: 7px 14px;
+  background: var(--bg-dark);
+  color: #e8e2d9;
+  border: none;
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s;
+  align-items: center;
+}
+.btn-admin-nav:hover { background: #292524; }
+
 /* ─── Toast ──────────────────────────────────────────────── */
 .login-toast {
   position: fixed;

@@ -7,6 +7,13 @@
     if (!res.ok) {
       alert('로그아웃 되었습니다.\n로그인 해 주십시오.');
       window.location.replace('index.html');
+      return;
+    }
+    const user = await res.json();
+    // 관리자 계정이면 관리자 페이지 버튼 표시
+    if (user.isAdmin === 1) {
+      const btn = document.getElementById('btn-admin-nav');
+      if (btn) btn.style.display = 'inline-flex';
     }
   } catch (e) {
     // 네트워크 오류는 무시 (일시적 단절)
