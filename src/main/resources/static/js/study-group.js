@@ -18,15 +18,19 @@ async function loadMyInfo() {
     if (cached && cachedId) {
       myNickname = cached;
       myUserId = Number(cachedId);
-    } else {
-      const res = await fetch('/watchman/api/users/me');
-      if (res.ok) {
-        const user = await res.json();
-        myNickname = user.nickname;
-        myUserId   = user.userId;
-        sessionStorage.setItem('nickname', user.nickname);
-        sessionStorage.setItem('userId',   user.userId);
-        sessionStorage.setItem('avatar',   user.avatar || '');
+    }
+    const user = await window.__authReady;
+    if (user) {
+      myNickname = user.nickname;
+      myUserId   = user.userId;
+      sessionStorage.setItem('nickname', user.nickname);
+      sessionStorage.setItem('userId',   String(user.userId));
+      if (user.avatar) {
+        sessionStorage.setItem('avatar', user.avatar);
+        const emojiEl = document.getElementById('nav-avatar-emoji');
+        const imgEl   = document.getElementById('nav-avatar-img');
+        if (emojiEl) emojiEl.style.display = 'none';
+        if (imgEl)   { imgEl.src = user.avatar; imgEl.style.display = 'block'; }
       }
     }
   } catch (e) {}

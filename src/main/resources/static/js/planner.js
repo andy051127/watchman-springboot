@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   currentMonth = now.getMonth();
   selectedDate = null; // 날짜를 클릭해야 노트북이 열림
 
-  // 닉네임: 로그인 시 sessionStorage에 저장된 값 사용 (API 재호출 불필요)
+  // 닉네임 + 아바타
   const nickEl = document.getElementById('nav-nickname');
   const cached = sessionStorage.getItem('nickname');
   if (cached) {
@@ -50,6 +50,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.addEventListener('mousemove', ttDragMove);
   document.addEventListener('mouseup',   ttDragEnd);
   initCalendar();
+  // auth-guard.js 완료 보장 후 아바타 표시
+  if (window.__authReady) window.__authReady.then(applyNavAvatar);
 });
 
 // ── 월별 할 일 일괄 로드 (달력 미리보기용) ────────────────────────────────────
@@ -639,6 +641,16 @@ async function handleExit() {
   }
   sessionStorage.clear();
   window.location.href = 'index.html';
+}
+
+// ── 네브바 아바타 표시 ────────────────────────────────────────────────────────
+function applyNavAvatar() {
+  const avatar = sessionStorage.getItem('avatar') || '';
+  if (!avatar) return;
+  const emojiEl = document.getElementById('nav-avatar-emoji');
+  const imgEl   = document.getElementById('nav-avatar-img');
+  if (emojiEl) emojiEl.style.display = 'none';
+  if (imgEl)   { imgEl.src = avatar; imgEl.style.display = 'block'; }
 }
 
 // ── 유틸: HTML 이스케이프 ─────────────────────────────────────────────────────

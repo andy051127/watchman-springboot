@@ -25,7 +25,7 @@ async function initStats() {
     const weekSessions  = await weekRes.json();
     const todaySessions = await todayRes.json();
 
-    // 네브바 닉네임: 로그인 시 sessionStorage에 저장된 값 사용 (API 재호출 불필요)
+    // 네브바 닉네임 + 아바타
     const cached = sessionStorage.getItem('nickname');
     if (cached) {
       document.getElementById('nav-nickname').textContent = cached;
@@ -41,6 +41,7 @@ async function initStats() {
         }
       } catch (e) {}
     }
+    applyNavAvatar();
 
     renderBanner(allSessions);
     renderKPI(allSessions, todaySessions);
@@ -308,6 +309,16 @@ function fmtTime(iso) {
   const h = d.getHours();
   const m = String(d.getMinutes()).padStart(2, '0');
   return `${h < 12 ? '오전' : '오후'} ${h % 12 || 12}:${m}`;
+}
+
+// ── 네브바 아바타 표시 ────────────────────────────────────────────────────────
+function applyNavAvatar() {
+  const avatar = sessionStorage.getItem('avatar') || '';
+  if (!avatar) return;
+  const emojiEl = document.getElementById('nav-avatar-emoji');
+  const imgEl   = document.getElementById('nav-avatar-img');
+  if (emojiEl) emojiEl.style.display = 'none';
+  if (imgEl)   { imgEl.src = avatar; imgEl.style.display = 'block'; }
 }
 
 // ── 유틸: 집중률 등급 클래스 ─────────────────────────────────────────────────

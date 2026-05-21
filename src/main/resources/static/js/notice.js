@@ -11,15 +11,12 @@ let editingId = null; // 수정 중인 공지 ID (null이면 신규 작성)
 document.addEventListener('DOMContentLoaded', async () => {
   const nickEl = document.getElementById('nav-nickname');
 
-  try {
-    const res = await fetch('/watchman/api/users/me');
-    if (res.ok) {
-      const user = await res.json();
-      if (nickEl) nickEl.textContent = user.nickname;
-      isAdmin = user.role === 'admin';
-      if (isAdmin) document.getElementById('btn-write').style.display = 'inline-flex';
-    }
-  } catch (e) { /* 비로그인 */ }
+  const user = await window.__authReady;
+  if (user) {
+    if (nickEl) nickEl.textContent = user.nickname;
+    isAdmin = user.isAdmin === 1;
+    if (isAdmin) document.getElementById('btn-write').style.display = 'inline-flex';
+  }
 
   await loadNotices();
 });
