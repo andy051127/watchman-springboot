@@ -197,3 +197,30 @@ CREATE TABLE IF NOT EXISTS notices (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
+---
+
+### timetable_blocks — 타임테이블 드래그 블록
+
+| 컬럼 | 타입 | 설명 |
+|---|---|---|
+| block_id | BIGINT PK | 블록 ID |
+| user_id | BIGINT FK | 사용자 ID |
+| block_date | DATE | 날짜 |
+| start_min | INT | 시작 시각 (자정 기준 분, 0~1439) |
+| end_min | INT | 종료 시각 (자정 기준 분, 1~1440) |
+| color | VARCHAR(20) | 블록 색상 (HEX) |
+| content | VARCHAR(200) | 일정 이름 (선택) |
+
+```sql
+CREATE TABLE IF NOT EXISTS timetable_blocks (
+    block_id   BIGINT       NOT NULL AUTO_INCREMENT,
+    user_id    BIGINT       NOT NULL,
+    block_date DATE         NOT NULL,
+    start_min  INT          NOT NULL,
+    end_min    INT          NOT NULL,
+    color      VARCHAR(20)  NOT NULL DEFAULT '#bfdbfe',
+    content    VARCHAR(200) DEFAULT NULL,
+    PRIMARY KEY (block_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
