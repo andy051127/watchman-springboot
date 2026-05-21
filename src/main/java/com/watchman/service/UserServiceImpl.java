@@ -99,9 +99,9 @@ public class UserServiceImpl implements UserService {
 		this.userRepository.delete(userId);
 	}
 
-	// 역할 변경 (user ↔ admin)
+	// 관리자 여부 변경 (0: 일반, 1: 관리자)
 	@Override
-	public void updateUserRole(Long userId, String role) {
-		this.userRepository.updateRole(userId, role);
+	public void updateUserAdmin(Long userId, int isAdmin) {
+		this.userRepository.updateAdmin(userId, isAdmin);
 	}
 }

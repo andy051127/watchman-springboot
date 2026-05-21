@@ -25,8 +25,8 @@ public interface UserRepository {
 	// 전체 유저 목록 조회 (관리자용)
 	java.util.List<User> findAll();
 
-	// 역할 변경 (관리자용)
-	void updateRole(Long userId, String role);
+	// 관리자 여부 변경 (관리자용)
+	void updateAdmin(Long userId, int isAdmin);
 
 	// 유저 삭제 (회원 탈퇴) — ON DELETE CASCADE로 연관 데이터 전부 삭제됨
 	void delete(Long userId);

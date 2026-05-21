@@ -82,7 +82,7 @@ public class NoticeController {
         if (userId == null) return false;
         try {
             User user = this.userService.getUser(userId);
-            return "admin".equals(user.getRole());
+            return user.getIsAdmin() == 1;
         } catch (Exception e) {
             return false;
         }

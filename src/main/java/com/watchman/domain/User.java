@@ -11,7 +11,7 @@ public class User {
 	private String nickname;
 	private String avatar;
 	private int streak;
-	private String role;
+	private int isAdmin;
 	private LocalDateTime createdAt;
 
 	public User() {
@@ -29,8 +29,8 @@ public class User {
 	public void setAvatar(String avatar) {this.avatar = avatar;}
 	public int getStreak() {return streak;}
 	public void setStreak(int streak) {this.streak = streak;}
-	public String getRole() {return role;}
-	public void setRole(String role) {this.role = role;}
+	public int getIsAdmin() {return isAdmin;}
+	public void setIsAdmin(int isAdmin) {this.isAdmin = isAdmin;}
 	public LocalDateTime getCreatedAt() {return createdAt;}
 	public void setCreatedAt(LocalDateTime createdAt) {this.createdAt = createdAt;}
 

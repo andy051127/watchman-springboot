@@ -10,10 +10,14 @@ CREATE TABLE IF NOT EXISTS users (
     nickname   VARCHAR(100) NOT NULL,
     avatar     VARCHAR(50)  DEFAULT NULL,
     streak     INT          NOT NULL DEFAULT 0,
-    role       VARCHAR(20)  NOT NULL DEFAULT 'user',
+    is_admin   TINYINT(1)   NOT NULL DEFAULT 0,
     created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 기존 DB에 is_admin 컬럼이 없으면 추가, role 컬럼이 있으면 제거
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin TINYINT(1) NOT NULL DEFAULT 0;
+ALTER TABLE users DROP COLUMN IF EXISTS role;
 
 CREATE TABLE IF NOT EXISTS sessions (
     session_id      BIGINT   NOT NULL AUTO_INCREMENT,
@@ -76,22 +80,10 @@ CREATE TABLE IF NOT EXISTS notices (
     PRIMARY KEY (notice_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS study_groups (
-    group_id    BIGINT       NOT NULL AUTO_INCREMENT,
-    name        VARCHAR(50)  NOT NULL,
-    description VARCHAR(200) DEFAULT NULL,
-    invite_code VARCHAR(6)   NOT NULL UNIQUE,
-    leader_id   BIGINT       NOT NULL,
-    created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (group_id),
-    FOREIGN KEY (leader_id) REFERENCES users(user_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE IF NOT EXISTS group_members (
-    group_id  BIGINT    NOT NULL,
-    user_id   BIGINT    NOT NULL,
-    joined_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (group_id, user_id),
-    FOREIGN KEY (group_id) REFERENCES study_groups(group_id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id)  REFERENCES users(user_id)         ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- ============================================================
+--  기본 관리자 계정
+--  서버 시작 시 존재하지 않으면 자동 생성됩니다.
+--  비밀번호는 최초 로그인 후 마이페이지에서 변경하세요.
+-- ============================================================
+INSERT IGNORE INTO users (email, password, nickname, is_admin)
+VALUES ('admin@watchman.com', 'admin1234!', '관리자', 1);

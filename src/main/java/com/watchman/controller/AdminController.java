@@ -1,10 +1,9 @@
 package com.watchman.controller;
 
 import com.watchman.domain.Contact;
+import com.watchman.domain.User;
 import com.watchman.service.ContactService;
 import com.watchman.service.UserService;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +13,6 @@ import java.util.Map;
 
 @RestController
 public class AdminController {
-
-    private static final String ADMIN_PASSWORD = "watchman_admin";
-    private static final String ADMIN_SESSION_KEY = "adminAuth";
 
     private ContactService contactService;
     private UserService userService;
@@ -50,43 +46,6 @@ public class AdminController {
     public ResponseEntity<?> checkAdmin(HttpSession session) {
         if (isAdmin(session)) return ResponseEntity.ok(Map.of("admin", true));
         return ResponseEntity.status(401).body(Map.of("admin", false));
-    }
-
-    // ── 관리자 로그인 ─────────────────────────────────────
-    // POST /api/admin/login
-    @PostMapping("/api/admin/login")
-    public ResponseEntity<?> adminLogin(@RequestBody Map<String, Object> body,
-                                        HttpSession session,
-                                        HttpServletResponse response) {
-        if (ADMIN_PASSWORD.equals(body.get("password"))) {
-            session.setAttribute(ADMIN_SESSION_KEY, true);
-            boolean rememberMe = Boolean.TRUE.equals(body.get("rememberMe"));
-            if (rememberMe) {
-                int maxAge = 30 * 24 * 60 * 60;
-                session.setMaxInactiveInterval(maxAge);
-                Cookie cookie = new Cookie("JSESSIONID", session.getId());
-                cookie.setMaxAge(maxAge);
-                cookie.setPath("/watchman");
-                cookie.setHttpOnly(true);
-                response.addCookie(cookie);
-            }
-            return ResponseEntity.ok(Map.of("message", "로그인 성공"));
-        }
-        return ResponseEntity.status(401).body(Map.of("message", "비밀번호가 올바르지 않습니다."));
-    }
-
-    // ── 관리자 로그아웃 ───────────────────────────────────
-    // POST /api/admin/logout
-    @PostMapping("/api/admin/logout")
-    public ResponseEntity<?> adminLogout(HttpSession session, HttpServletResponse response) {
-        session.removeAttribute(ADMIN_SESSION_KEY);
-        // 저장된 쿠키 만료
-        Cookie cookie = new Cookie("JSESSIONID", "");
-        cookie.setMaxAge(0);
-        cookie.setPath("/watchman");
-        cookie.setHttpOnly(true);
-        response.addCookie(cookie);
-        return ResponseEntity.ok(Map.of("message", "로그아웃"));
     }
 
     // ── 문의 목록 조회 ────────────────────────────────────
@@ -123,22 +82,29 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("message", "삭제되었습니다."));
     }
 
-    // ── 역할 변경 ─────────────────────────────────────────────
-    // PATCH /api/admin/users/{id}/role  body: { "role": "admin" | "user" }
-    @PatchMapping("/api/admin/users/{id}/role")
-    public ResponseEntity<?> updateRole(@PathVariable Long id,
-                                        @RequestBody Map<String, String> body,
-                                        HttpSession session) {
+    // ── 관리자 여부 변경 ──────────────────────────────────────
+    // PATCH /api/admin/users/{id}/admin  body: { "isAdmin": 0 | 1 }
+    @PatchMapping("/api/admin/users/{id}/admin")
+    public ResponseEntity<?> updateAdmin(@PathVariable Long id,
+                                         @RequestBody Map<String, Integer> body,
+                                         HttpSession session) {
         if (!isAdmin(session)) return ResponseEntity.status(401).body(Map.of("message", "관리자 권한이 필요합니다."));
-        String role = body.get("role");
-        if (!"admin".equals(role) && !"user".equals(role)) {
-            return ResponseEntity.badRequest().body(Map.of("message", "role은 admin 또는 user만 허용됩니다."));
+        Integer isAdmin = body.get("isAdmin");
+        if (isAdmin == null || (isAdmin != 0 && isAdmin != 1)) {
+            return ResponseEntity.badRequest().body(Map.of("message", "isAdmin은 0 또는 1만 허용됩니다."));
         }
-        this.userService.updateUserRole(id, role);
-        return ResponseEntity.ok(Map.of("message", "역할이 변경되었습니다."));
+        this.userService.updateUserAdmin(id, isAdmin);
+        return ResponseEntity.ok(Map.of("message", "변경되었습니다."));
     }
 
     private boolean isAdmin(HttpSession session) {
-        return Boolean.TRUE.equals(session.getAttribute(ADMIN_SESSION_KEY));
+        Long userId = (Long) session.getAttribute("userId");
+        if (userId == null) return false;
+        try {
+            User user = this.userService.getUser(userId);
+            return user.getIsAdmin() == 1;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

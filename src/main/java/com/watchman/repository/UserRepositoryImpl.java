@@ -22,7 +22,7 @@ public class UserRepositoryImpl implements UserRepository {
 	// BeanPropertyRowMapper: 컬럼명(snake_case) → 필드명(camelCase) 자동 매핑
 	@Override
 	public User findByEmail(String email) {
-		String sql = "SELECT user_id, email, password, nickname, avatar, streak, role, created_at " +
+		String sql = "SELECT user_id, email, password, nickname, avatar, streak, is_admin, created_at " +
 				     "FROM users WHERE email = ?";
 		return this.template.queryForObject(sql,
 				BeanPropertyRowMapper.newInstance(User.class), email);
@@ -31,7 +31,7 @@ public class UserRepositoryImpl implements UserRepository {
 	// user_id로 유저 1명 조회
 	@Override
 	public User findById(Long userId) {
-		String sql = "SELECT user_id, email, password, nickname, avatar, streak, role, created_at " +
+		String sql = "SELECT user_id, email, password, nickname, avatar, streak, is_admin, created_at " +
 				     "FROM users WHERE user_id = ?";
 		return this.template.queryForObject(sql,
 				BeanPropertyRowMapper.newInstance(User.class), userId);
@@ -70,15 +70,15 @@ public class UserRepositoryImpl implements UserRepository {
 	// 전체 유저 조회 (관리자용)
 	@Override
 	public java.util.List<User> findAll() {
-		String sql = "SELECT user_id, email, nickname, avatar, streak, role, created_at FROM users ORDER BY created_at DESC";
+		String sql = "SELECT user_id, email, nickname, avatar, streak, is_admin, created_at FROM users ORDER BY created_at DESC";
 		return this.template.query(sql, BeanPropertyRowMapper.newInstance(User.class));
 	}
 
-	// 역할 변경 (관리자용)
+	// 관리자 여부 변경 (관리자용)
 	@Override
-	public void updateRole(Long userId, String role) {
-		String sql = "UPDATE users SET role = ? WHERE user_id = ?";
-		this.template.update(sql, role, userId);
+	public void updateAdmin(Long userId, int isAdmin) {
+		String sql = "UPDATE users SET is_admin = ? WHERE user_id = ?";
+		this.template.update(sql, isAdmin, userId);
 	}
 
 	// 유저 DELETE — sessions, todos, ddays 등 연관 데이터도 CASCADE로 함께 삭제됨

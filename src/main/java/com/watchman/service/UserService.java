@@ -31,6 +31,6 @@ public interface UserService {
 	// 관리자가 직접 유저 삭제 (비밀번호 확인 없음)
 	void adminDeleteUser(Long userId);
 
-	// 역할 변경 (user ↔ admin)
-	void updateUserRole(Long userId, String role);
+	// 관리자 여부 변경 (0: 일반, 1: 관리자)
+	void updateUserAdmin(Long userId, int isAdmin);
 }

@@ -17,6 +17,10 @@
       Watchman
     </div>
     <p class="admin-login-sub">관리자 전용 페이지입니다.</p>
+    <label class="admin-login-label">이메일</label>
+    <input type="email" class="admin-login-input" id="admin-email"
+      placeholder="관리자 이메일 입력"
+      onkeydown="if(event.key==='Enter') document.getElementById('admin-pw').focus()" />
     <label class="admin-login-label">비밀번호</label>
     <input type="password" class="admin-login-input" id="admin-pw"
       placeholder="관리자 비밀번호 입력"
@@ -144,25 +148,34 @@ function showDashboard() {
 
 // ── 로그인 ────────────────────────────────────────────────
 async function tryLogin() {
+  const email      = document.getElementById('admin-email').value;
   const pw         = document.getElementById('admin-pw').value;
   const rememberMe = document.getElementById('admin-remember').checked;
   const err        = document.getElementById('login-error');
   err.style.display = 'none';
 
   try {
-    const res = await fetch('/watchman/api/admin/login', {
+    const loginRes = await fetch('/watchman/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: pw, rememberMe })
+      body: JSON.stringify({ email, password: pw, rememberMe })
     });
 
-    if (res.ok) {
-      showDashboard();
-    } else {
-      err.textContent = '비밀번호가 올바르지 않습니다.';
+    if (!loginRes.ok) {
+      err.textContent = '이메일 또는 비밀번호가 올바르지 않습니다.';
       err.style.display = 'block';
       document.getElementById('admin-pw').value = '';
       document.getElementById('admin-pw').focus();
+      return;
+    }
+
+    const checkRes = await fetch('/watchman/api/admin/check');
+    if (checkRes.ok) {
+      showDashboard();
+    } else {
+      err.textContent = '관리자 계정이 아닙니다.';
+      err.style.display = 'block';
+      await fetch('/watchman/api/auth/logout', { method: 'POST' });
     }
   } catch (e) {
     err.textContent = '서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.';
@@ -171,9 +184,10 @@ async function tryLogin() {
 }
 
 async function adminLogout() {
-  await fetch('/watchman/api/admin/logout', { method: 'POST' });
+  await fetch('/watchman/api/auth/logout', { method: 'POST' });
   document.getElementById('login-screen').style.display    = 'flex';
   document.getElementById('admin-dashboard').style.display = 'none';
+  document.getElementById('admin-email').value = '';
   document.getElementById('admin-pw').value = '';
   document.getElementById('login-error').style.display = 'none';
 }
@@ -295,9 +309,9 @@ function renderUsers(users) {
         <td>${date}</td>
         <td>${u.streak > 0 ? `🔥 ${u.streak}일` : '-'}</td>
         <td>
-          <select class="admin-role-select" onchange="changeRole(${u.userId}, this.value)">
-            <option value="user"  ${u.role === 'user'  ? 'selected' : ''}>👤 일반 계정</option>
-            <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>⚙️ 어드민 계정</option>
+          <select class="admin-role-select" onchange="changeAdmin(${u.userId}, this.value)">
+            <option value="0" ${u.isAdmin === 0 ? 'selected' : ''}>👤 일반 계정</option>
+            <option value="1" ${u.isAdmin === 1 ? 'selected' : ''}>⚙️ 어드민 계정</option>
           </select>
         </td>
         <td><button class="admin-del-btn" onclick="deleteUser(${u.userId})">삭제</button></td>
@@ -305,16 +319,16 @@ function renderUsers(users) {
   }).join('');
 }
 
-async function changeRole(id, role) {
-  const res = await fetch(`/watchman/api/admin/users/${id}/role`, {
+async function changeAdmin(id, value) {
+  const res = await fetch(`/watchman/api/admin/users/${id}/admin`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ role })
+    body: JSON.stringify({ isAdmin: parseInt(value) })
   });
   if (res.ok) {
     await loadData();
   } else {
-    alert('역할 변경에 실패했습니다. 다시 시도해 주세요.');
+    alert('변경에 실패했습니다. 다시 시도해 주세요.');
     await loadData(); // 원래 값으로 복구
   }
 }

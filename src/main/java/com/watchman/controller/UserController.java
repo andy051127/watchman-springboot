@@ -42,7 +42,7 @@ public class UserController {
                 "nickname",  user.getNickname(),
                 "avatar",    user.getAvatar() != null ? user.getAvatar() : "",
                 "streak",    user.getStreak(),
-                "role",      user.getRole() != null ? user.getRole() : "user",
+                "isAdmin",   user.getIsAdmin(),
                 "createdAt", user.getCreatedAt().toString()
         ));
     }

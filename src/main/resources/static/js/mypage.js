@@ -37,6 +37,11 @@ async function initMyPage() {
       document.getElementById('btn-remove-avatar').style.display = 'inline';
     }
 
+    // 관리자 섹션 표시
+    if (user.isAdmin === 1) {
+      document.getElementById('admin-section').style.display = 'block';
+    }
+
     // 통계 카드
     const totalFocused = sessions.reduce((acc, s) => acc + s.focusedTime, 0);
     const avgRate      = sessions.length > 0
