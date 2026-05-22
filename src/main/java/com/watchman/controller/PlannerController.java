@@ -2,7 +2,6 @@ package com.watchman.controller;
 
 import com.watchman.domain.DDay;
 import com.watchman.domain.Timetable;
-import com.watchman.domain.TimetableBlock;
 import com.watchman.domain.Todo;
 import com.watchman.service.PlannerService;
 import jakarta.servlet.http.HttpSession;
@@ -213,42 +212,5 @@ public class PlannerController {
         timetable.setContent((String) body.get("content"));
         this.plannerService.updateTimetable(timetable);
         return ResponseEntity.ok(Map.of("message", "시간표가 수정되었습니다."));
-    }
-
-    // ── TimetableBlock (드래그 블록) ───────────────────────────
-
-    // GET /api/planner/blocks?date=YYYY-MM-DD
-    @GetMapping("/blocks")
-    public ResponseEntity<?> getBlocks(@RequestParam String date, HttpSession session) {
-        Long userId = getSessionUserId(session);
-        if (userId == null) return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
-        return ResponseEntity.ok(this.plannerService.getBlocks(userId, LocalDate.parse(date)));
-    }
-
-    // POST /api/planner/blocks
-    // body: { "blockDate": "2026-05-21", "startMin": 540, "endMin": 630, "color": "#bfdbfe", "content": "수학" }
-    @PostMapping("/blocks")
-    public ResponseEntity<?> saveBlock(@RequestBody Map<String, Object> body, HttpSession session) {
-        Long userId = getSessionUserId(session);
-        if (userId == null) return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
-
-        TimetableBlock block = new TimetableBlock();
-        block.setUserId(userId);
-        block.setBlockDate(LocalDate.parse((String) body.get("blockDate")));
-        block.setStartMin(((Number) body.get("startMin")).intValue());
-        block.setEndMin(((Number) body.get("endMin")).intValue());
-        block.setColor((String) body.getOrDefault("color", "#bfdbfe"));
-        block.setContent((String) body.get("content"));
-        this.plannerService.saveBlock(block);
-        return ResponseEntity.ok(Map.of("message", "블록이 저장되었습니다."));
-    }
-
-    // DELETE /api/planner/blocks/{blockId}
-    @DeleteMapping("/blocks/{blockId}")
-    public ResponseEntity<?> deleteBlock(@PathVariable Long blockId, HttpSession session) {
-        Long userId = getSessionUserId(session);
-        if (userId == null) return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
-        this.plannerService.deleteBlock(blockId);
-        return ResponseEntity.ok(Map.of("message", "블록이 삭제되었습니다."));
     }
 }

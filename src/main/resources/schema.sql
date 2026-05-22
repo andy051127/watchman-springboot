@@ -59,18 +59,6 @@ CREATE TABLE IF NOT EXISTS timetable (
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS timetable_blocks (
-    block_id   BIGINT       NOT NULL AUTO_INCREMENT,
-    user_id    BIGINT       NOT NULL,
-    block_date DATE         NOT NULL,
-    start_min  INT          NOT NULL,
-    end_min    INT          NOT NULL,
-    color      VARCHAR(20)  NOT NULL DEFAULT '#bfdbfe',
-    content    VARCHAR(200) DEFAULT NULL,
-    PRIMARY KEY (block_id),
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 CREATE TABLE IF NOT EXISTS contacts (
     contact_id BIGINT       NOT NULL AUTO_INCREMENT,
     name       VARCHAR(100) NOT NULL,

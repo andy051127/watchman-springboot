@@ -2,7 +2,6 @@ package com.watchman.repository;
 
 import com.watchman.domain.DDay;
 import com.watchman.domain.Timetable;
-import com.watchman.domain.TimetableBlock;
 import com.watchman.domain.Todo;
 
 import java.time.LocalDate;
@@ -48,10 +47,4 @@ public interface PlannerRepository {
 
 	// 시간표 내용 수정 (이미 존재하는 슬롯의 내용을 바꿀 때)
 	void updateTimetable(Timetable timetable);
-
-	// ── TimetableBlock (드래그 블록) ───────────────────────────
-
-	List<TimetableBlock> findBlocksByDate(Long userId, LocalDate date);
-	void saveBlock(TimetableBlock block);
-	void deleteBlock(Long blockId);
 }

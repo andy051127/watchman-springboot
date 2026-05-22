@@ -9,16 +9,10 @@ let todos = {};
 // ddays = [{ id: ddayId, name, date: ddayDate }]
 let ddays = [];
 
-// 타임테이블 드래그 블록
-let blocks = [];
-
-// ── 타임테이블 상수 ───────────────────────────────────────────────────────────
-const HOUR_H   = 40;   // px per hour (24h × 40 = 960px 전체 표시)
-const SNAP_MIN = 5;    // 5분 단위 스냅
-const BLOCK_COLORS = ['#bfdbfe','#fed7aa','#bbf7d0','#fecaca','#e9d5ff','#fef08a'];
-let selectedColor  = BLOCK_COLORS[0];
-let pendingBlock   = null; // 드래그 완료 후 저장 대기 중인 { startMin, endMin }
-let dragStartMin   = null;
+// timetable[dateStr] = { [hourSlot]: { id: timetableId|null, content } }
+// id가 null이면 아직 서버에 저장되지 않은 슬롯 (POST 대상)
+// id가 있으면 이미 저장된 슬롯 (PUT 대상)
+let timetable = {};
 
 // ── 페이지 진입점 ─────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
@@ -46,9 +40,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   await Promise.all([loadDDays(), loadMonthTodos()]);
-  // 전역 드래그 이벤트 (mousemove·mouseup은 body에서 수신해야 그리드 밖으로 나가도 동작)
-  document.addEventListener('mousemove', ttDragMove);
-  document.addEventListener('mouseup',   ttDragEnd);
   initCalendar();
 });
 
@@ -101,12 +92,8 @@ function initCalendar() {
   const today       = toDateStr(new Date());
 
   // 이전 달 빈 칸
-  const prevYear  = currentMonth === 0 ? currentYear - 1 : currentYear;
-  const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
   for (let i = firstDay - 1; i >= 0; i--) {
-    const d = daysInPrev - i;
-    const ds = `${prevYear}-${String(prevMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    html += `<div class="cal-day other-month" onclick="goToDate('${ds}')"><span class="cal-day-num">${d}</span></div>`;
+    html += `<div class="cal-day other-month"><span class="cal-day-num">${daysInPrev - i}</span></div>`;
   }
 
   for (let d = 1; d <= daysInMonth; d++) {
@@ -135,40 +122,28 @@ function initCalendar() {
   }
 
   // 다음 달 빈 칸
-  const nextYear  = currentMonth === 11 ? currentYear + 1 : currentYear;
-  const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
   const total     = firstDay + daysInMonth;
   const remaining = total % 7 === 0 ? 0 : 7 - (total % 7);
   for (let d = 1; d <= remaining; d++) {
-    const ds = `${nextYear}-${String(nextMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    html += `<div class="cal-day other-month" onclick="goToDate('${ds}')"><span class="cal-day-num">${d}</span></div>`;
+    html += `<div class="cal-day other-month"><span class="cal-day-num">${d}</span></div>`;
   }
 
   grid.innerHTML = html;
 }
 
-// 날짜를 선택하면 해당 날짜의 할 일·블록을 로드하고 노트북을 다시 그린다.
+// 날짜를 선택하면 해당 날짜의 할 일·시간표를 로드하고 노트북을 다시 그린다.
 async function selectDate(dateStr) {
   selectedDate = dateStr;
 
+  // 이미 캐시된 날짜라도 시간표는 항상 서버에서 최신 데이터를 가져온다
   await Promise.all([
     loadTodos(dateStr),
-    loadBlocks(dateStr)
+    loadTimetable(dateStr)
   ]);
 
   initCalendar();
   renderNotebook();
   showNotebook();
-}
-
-// 이전/다음 달 날짜 클릭 시 해당 월로 이동
-async function goToDate(dateStr) {
-  const [year, month] = dateStr.split('-').map(Number);
-  currentYear  = year;
-  currentMonth = month - 1;
-  selectedDate = dateStr;
-  await loadMonthTodos();
-  initCalendar();
 }
 
 async function showCalendar() {
@@ -338,200 +313,143 @@ async function deleteTodo(index) {
   }
 }
 
-// ── 타임테이블 블록 (드래그) ──────────────────────────────────────────────────
+// ── 시간표 ────────────────────────────────────────────────────────────────────
 
-async function loadBlocks(date) {
+// GET /api/planner/timetable?date=YYYY-MM-DD
+// 서버 응답: [{ timetableId, hourSlot, content }]
+// 클라이언트 형태: { [hourSlot]: { id: timetableId, content } }
+async function loadTimetable(date) {
   try {
-    const res = await fetch(`/watchman/api/planner/blocks?date=${date}`);
+    const res = await fetch(`/watchman/api/planner/timetable?date=${date}`);
     if (res.status === 401) { window.location.href = 'login.html'; return; }
-    blocks = await res.json();
+    const data = await res.json();
+    // 배열 → 시간 슬롯 키 맵으로 변환
+    timetable[date] = {};
+    data.forEach(t => {
+      timetable[date][t.hourSlot] = { id: t.timetableId, content: t.content };
+    });
   } catch (err) {
-    console.error('블록 로드 실패:', err);
-    blocks = [];
+    console.error('시간표 로드 실패:', err);
+    timetable[date] = {};
   }
 }
 
+// 하이라이트 색상 팔레트
+const TT_COLORS = [
+  { value: 'edit',    label: '✏️',  bg: 'none' },
+  { value: 'erase',   label: '✕',   bg: 'none' },
+  { value: '#fecaca', label: '',    bg: '#fecaca' },
+  { value: '#fed7aa', label: '',    bg: '#fed7aa' },
+  { value: '#fef08a', label: '',    bg: '#fef08a' },
+  { value: '#bbf7d0', label: '',    bg: '#bbf7d0' },
+  { value: '#bfdbfe', label: '',    bg: '#bfdbfe' },
+  { value: '#e9d5ff', label: '',    bg: '#e9d5ff' },
+];
+let ttMode = 'edit'; // 'edit' | 'erase' | '#hex'
+
+// 0시 ~ 23시(24시간) 슬롯 렌더링. 색상 팔레트 + 하이라이트 지원.
 function renderTimetable() {
   const container = document.getElementById('timetable-grid');
-  const totalH = 24 * HOUR_H;
+  const dayTable  = timetable[selectedDate] || {};
 
-  // 시간 라벨 + 그리드 구조
-  let labelsHtml = '';
-  let linesHtml  = '';
-  for (let h = 0; h < 24; h++) {
-    const top = h * HOUR_H;
-    // 첫 라벨(h=0)은 translateY 없이 2px 내려서 잘림 방지
-    labelsHtml += `<div class="ttg-label" style="top:${h === 0 ? 2 : top - 7}px">${String(h).padStart(2,'0')}:00</div>`;
-    linesHtml  += `<div class="ttg-line-hour"  style="top:${top}px"></div>`;
-    linesHtml  += `<div class="ttg-line-half"  style="top:${top + HOUR_H / 2}px"></div>`;
-  }
-
-  // 저장된 블록 렌더링
-  const blocksHtml = blocks.map(b => {
-    const top  = b.startMin / 60 * HOUR_H;
-    const h    = Math.max((b.endMin - b.startMin) / 60 * HOUR_H, 14);
-    return `
-      <div class="ttg-block" style="top:${top}px;height:${h}px;background:${b.color || '#bfdbfe'}"
-           data-id="${b.blockId}">
-        <span class="ttg-block-time">${fmtMin(b.startMin)}–${fmtMin(b.endMin)}</span>
-        ${b.content ? `<span class="ttg-block-label">${escHtml(b.content)}</span>` : ''}
-        <button class="ttg-block-del" onmousedown="event.stopPropagation()" onclick="deleteBlock(event,${b.blockId})">✕</button>
-      </div>`;
-  }).join('');
-
-  container.innerHTML = `
-    <div class="ttg-wrap">
-      <div class="ttg-labels" style="height:${totalH}px">${labelsHtml}</div>
-      <div class="ttg-body" id="ttg-body" style="height:${totalH}px"
-           onmousedown="ttDragStart(event)">
-        ${linesHtml}
-        <div class="ttg-blocks">${blocksHtml}</div>
-        <div class="ttg-preview" id="ttg-preview" style="display:none"></div>
-      </div>
-    </div>
-    <div class="ttg-popup" id="ttg-popup">
-      <div class="ttg-popup-range" id="ttg-popup-range">위 타임테이블을 드래그해서 시간을 선택하세요</div>
-      <input class="ttg-popup-input" id="ttg-popup-label" placeholder="일정 이름 (선택)" maxlength="50"
-        onkeydown="if(event.key==='Enter') confirmBlock()" />
-      <div class="ttg-popup-colors">
-        ${BLOCK_COLORS.map(c => `
-          <button class="ttg-color-swatch${selectedColor===c?' active':''}"
-            style="background:${c}" data-color="${c}" onclick="selectBlockColor('${c}')"></button>`).join('')}
-      </div>
-      <div class="ttg-popup-actions">
-        <button class="ttg-popup-save" id="ttg-popup-save-btn" onclick="confirmBlock()" disabled>저장</button>
-        <button class="ttg-popup-cancel" onclick="cancelBlock()">초기화</button>
-      </div>
+  const palette = `
+    <div class="tt-palette">
+      ${TT_COLORS.map(c => `
+        <button class="tt-swatch${ttMode === c.value ? ' active' : ''}"
+          style="${c.bg !== 'none' ? `background:${c.bg}` : ''}"
+          onclick="setTtMode('${c.value}')"
+          title="${c.label || c.value}">${c.label}</button>
+      `).join('')}
     </div>`;
-}
 
-// ── 드래그 ────────────────────────────────────────────────────────────────────
+  let rows = '';
+  for (let h = 0; h <= 23; h++) {
+    const entry   = dayTable[h];
+    const val     = entry ? entry.content : '';
+    const hlColor = localStorage.getItem(`tt-hl-${selectedDate}-${h}`) || '';
+    const rowStyle = hlColor ? `background:${hlColor}` : '';
 
-function getMinFromEvent(e) {
-  const body = document.getElementById('ttg-body');
-  if (!body) return 0;
-  const rect = body.getBoundingClientRect();
-  // getBoundingClientRect()는 이미 스크롤을 반영한 뷰포트 좌표를 반환하므로
-  // 별도로 scrollTop을 더하면 이중 적용이 됨 → 그냥 clientY - rect.top 사용
-  const relY   = Math.max(0, Math.min(e.clientY - rect.top, body.offsetHeight - 1));
-  const rawMin = relY / HOUR_H * 60;
-  return Math.round(rawMin / SNAP_MIN) * SNAP_MIN;
-}
-
-function ttDragStart(e) {
-  if (e.button !== 0) return;
-  dragStartMin = getMinFromEvent(e);
-  e.preventDefault();
-}
-
-function ttDragMove(e) {
-  if (dragStartMin === null) return;
-  const cur = getMinFromEvent(e);
-  const s  = Math.min(dragStartMin, cur);
-  const en = Math.max(dragStartMin, cur);
-  const preview = document.getElementById('ttg-preview');
-  if (!preview) return;
-  if (en - s < SNAP_MIN) { preview.style.display = 'none'; return; }
-  preview.style.display = 'block';
-  preview.style.top    = (s / 60 * HOUR_H) + 'px';
-  preview.style.height = Math.max((en - s) / 60 * HOUR_H, 14) + 'px';
-  preview.textContent  = `${fmtMin(s)} – ${fmtMin(en)}`;
-}
-
-function ttDragEnd(e) {
-  if (dragStartMin === null) return;
-  const cur      = getMinFromEvent(e);
-  const startMin = Math.min(dragStartMin, cur);
-  const endMin   = Math.max(dragStartMin, cur);
-  dragStartMin   = null;
-
-  if (endMin - startMin < SNAP_MIN) {
-    const preview = document.getElementById('ttg-preview');
-    if (preview) preview.style.display = 'none';
-    return;
+    rows += `
+      <div class="timetable-row${hlColor ? ' hl' : ''}" style="${rowStyle}"
+           onclick="handleTtRowClick(${h}, event)">
+        <span class="timetable-hour">${String(h).padStart(2, '0')}:00</span>
+        <div class="timetable-cell${val ? ' filled' : ''}" id="tt-cell-${h}">
+          ${val ? escHtml(val) : ''}
+        </div>
+      </div>`;
   }
 
-  // 드래그한 시간 팝업에 반영
-  pendingBlock = { startMin, endMin };
-  const rangeEl = document.getElementById('ttg-popup-range');
-  const saveBtn = document.getElementById('ttg-popup-save-btn');
-  if (rangeEl) {
-    rangeEl.textContent = `${fmtMin(startMin)} – ${fmtMin(endMin)}`;
-    rangeEl.style.color = 'var(--text)';
-  }
-  if (saveBtn) saveBtn.disabled = false;
-  document.getElementById('ttg-popup-label').focus();
+  container.innerHTML = palette + rows;
+}
 
-  // 드래그한 영역이 화면 밖에 있으면 스크롤해서 보여주기
-  const body = document.getElementById('ttg-body');
-  if (body) {
-    const bodyRect = body.getBoundingClientRect();
-    const previewTopInPage = window.scrollY + bodyRect.top + (startMin / 60 * HOUR_H);
-    window.scrollTo({ top: Math.max(0, previewTopInPage - 120), behavior: 'smooth' });
+function setTtMode(mode) {
+  ttMode = mode;
+  renderTimetable();
+}
+
+function handleTtRowClick(hour, event) {
+  if (ttMode === 'edit') {
+    // 텍스트 입력 모드: 셀 클릭 시 편집
+    const cell = document.getElementById(`tt-cell-${hour}`);
+    editTimetableCell(hour, cell);
+  } else if (ttMode === 'erase') {
+    localStorage.removeItem(`tt-hl-${selectedDate}-${hour}`);
+    renderTimetable();
+  } else {
+    // 색상 적용
+    localStorage.setItem(`tt-hl-${selectedDate}-${hour}`, ttMode);
+    renderTimetable();
   }
 }
 
-function selectBlockColor(color) {
-  selectedColor = color;
-  document.querySelectorAll('.ttg-color-swatch').forEach(el => {
-    el.classList.toggle('active', el.dataset.color === color);
+// 시간표 셀을 클릭하면 인라인 input으로 전환하고,
+// blur 또는 Enter 키 입력 시 서버에 저장한다.
+function editTimetableCell(hour, cell) {
+  const current = cell.textContent.trim();
+  const input   = document.createElement('input');
+  input.type        = 'text';
+  input.className   = 'timetable-cell-input';
+  input.value       = current;
+  input.placeholder = '일정 입력...';
+  cell.innerHTML    = '';
+  cell.appendChild(input);
+  input.focus();
+
+  async function save() {
+    const val      = input.value.trim();
+    const existing = timetable[selectedDate]?.[hour]; // 이미 저장된 슬롯 여부 확인
+
+    try {
+      if (existing?.id) {
+        // 이미 존재하는 슬롯 → PUT으로 내용 수정
+        // body에 tableDate와 hourSlot도 함께 전달 (컨트롤러 요구사항)
+        await fetch(`/watchman/api/planner/timetable/${existing.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tableDate: selectedDate, hourSlot: hour, content: val })
+        });
+      } else if (val) {
+        // 새 슬롯이고 내용이 있을 때만 POST로 신규 저장
+        await fetch('/watchman/api/planner/timetable', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tableDate: selectedDate, hourSlot: hour, content: val })
+        });
+      }
+
+      // 저장 후 서버에서 재로드하여 timetableId를 동기화한다
+      await loadTimetable(selectedDate);
+    } catch (err) {
+      console.error('시간표 저장 실패:', err);
+    }
+
+    renderTimetable();
+  }
+
+  input.addEventListener('blur', save);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
   });
-}
-
-async function confirmBlock() {
-  if (!pendingBlock) return;
-  const label   = document.getElementById('ttg-popup-label').value.trim();
-  const preview = document.getElementById('ttg-preview');
-  if (preview) preview.style.display = 'none';
-
-  try {
-    await fetch('/watchman/api/planner/blocks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        blockDate: selectedDate,
-        startMin:  pendingBlock.startMin,
-        endMin:    pendingBlock.endMin,
-        color:     selectedColor,
-        content:   label || null
-      })
-    });
-    await loadBlocks(selectedDate);
-    renderTimetable();
-  } catch (err) {
-    console.error('블록 저장 실패:', err);
-  }
-  pendingBlock = null;
-}
-
-function cancelBlock() {
-  pendingBlock = null;
-  const preview = document.getElementById('ttg-preview');
-  if (preview) preview.style.display = 'none';
-  // 팝업 초기 상태로 복원
-  const rangeEl = document.getElementById('ttg-popup-range');
-  const saveBtn = document.getElementById('ttg-popup-save-btn');
-  const label   = document.getElementById('ttg-popup-label');
-  if (rangeEl) { rangeEl.textContent = '위 타임테이블을 드래그해서 시간을 선택하세요'; rangeEl.style.color = ''; }
-  if (saveBtn) saveBtn.disabled = true;
-  if (label)   label.value = '';
-}
-
-async function deleteBlock(e, blockId) {
-  e.stopPropagation();
-  try {
-    await fetch(`/watchman/api/planner/blocks/${blockId}`, { method: 'DELETE' });
-    blocks = blocks.filter(b => b.blockId !== blockId);
-    renderTimetable();
-  } catch (err) {
-    console.error('블록 삭제 실패:', err);
-  }
-}
-
-function fmtMin(min) {
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
 }
 
 // ── D-Day ─────────────────────────────────────────────────────────────────────
