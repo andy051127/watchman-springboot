@@ -2,6 +2,7 @@ package com.watchman.controller;
 
 import com.watchman.domain.DDay;
 import com.watchman.domain.Timetable;
+import com.watchman.domain.TimetableBlock;
 import com.watchman.domain.Todo;
 import com.watchman.service.PlannerService;
 import jakarta.servlet.http.HttpSession;
@@ -212,5 +213,77 @@ public class PlannerController {
         timetable.setContent((String) body.get("content"));
         this.plannerService.updateTimetable(timetable);
         return ResponseEntity.ok(Map.of("message", "시간표가 수정되었습니다."));
+    }
+
+    // ── TimetableBlock ──────────────────────────────────────────────────────────────────────
+
+    // 특정 날짜의 블록 전체 조회
+    // GET /api/planner/blocks?date=2026-05-22
+    @GetMapping("/blocks")
+    public ResponseEntity<?> getBlocks(
+            @RequestParam String date,
+            HttpSession session) {
+        Long userId = getSessionUserId(session);
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
+        }
+        List<TimetableBlock> blocks = this.plannerService.getBlocks(userId, LocalDate.parse(date));
+        return ResponseEntity.ok(blocks);
+    }
+
+    // 블록 생성
+    // POST /api/planner/blocks
+    // body: { "blockDate": "2026-05-22", "startTime": "09:00", "endTime": "09:35", "color": "#bfdbfe", "label": "수학" }
+    @PostMapping("/blocks")
+    public ResponseEntity<?> addBlock(@RequestBody Map<String, String> body, HttpSession session) {
+        Long userId = getSessionUserId(session);
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
+        }
+        TimetableBlock block = new TimetableBlock();
+        block.setUserId(userId);
+        block.setBlockDate(LocalDate.parse(body.get("blockDate")));
+        block.setStartTime(java.time.LocalTime.parse(body.get("startTime")));
+        block.setEndTime(java.time.LocalTime.parse(body.get("endTime")));
+        block.setColor(body.get("color"));
+        block.setLabel(body.getOrDefault("label", ""));
+        this.plannerService.addBlock(block);
+        return ResponseEntity.ok(Map.of("message", "블록이 생성되었습니다."));
+    }
+
+    // 블록 수정
+    // PUT /api/planner/blocks/{blockId}
+    // body: { "blockDate": "2026-05-22", "startTime": "09:00", "endTime": "09:35", "color": "#bfdbfe", "label": "수학" }
+    @PutMapping("/blocks/{blockId}")
+    public ResponseEntity<?> updateBlock(
+            @PathVariable Long blockId,
+            @RequestBody Map<String, String> body,
+            HttpSession session) {
+        Long userId = getSessionUserId(session);
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
+        }
+        TimetableBlock block = new TimetableBlock();
+        block.setBlockId(blockId);
+        block.setUserId(userId);
+        block.setBlockDate(LocalDate.parse(body.get("blockDate")));
+        block.setStartTime(java.time.LocalTime.parse(body.get("startTime")));
+        block.setEndTime(java.time.LocalTime.parse(body.get("endTime")));
+        block.setColor(body.get("color"));
+        block.setLabel(body.getOrDefault("label", ""));
+        this.plannerService.updateBlock(block);
+        return ResponseEntity.ok(Map.of("message", "블록이 수정되었습니다."));
+    }
+
+    // 블록 삭제
+    // DELETE /api/planner/blocks/{blockId}
+    @DeleteMapping("/blocks/{blockId}")
+    public ResponseEntity<?> deleteBlock(@PathVariable Long blockId, HttpSession session) {
+        Long userId = getSessionUserId(session);
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
+        }
+        this.plannerService.deleteBlock(blockId);
+        return ResponseEntity.ok(Map.of("message", "블록이 삭제되었습니다."));
     }
 }
