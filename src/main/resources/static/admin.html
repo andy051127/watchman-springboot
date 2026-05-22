@@ -67,6 +67,7 @@
   <div class="admin-tabs">
     <button class="admin-tab active" onclick="switchTab('contacts', this)">📬 문의 관리</button>
     <button class="admin-tab" onclick="switchTab('users', this)">👤 사용자 관리</button>
+    <button class="admin-tab" onclick="switchTab('notices', this)">📢 공지사항 관리</button>
   </div>
 
   <div class="admin-content">
@@ -120,6 +121,55 @@
             </tr>
           </thead>
           <tbody id="users-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 공지사항 관리 패널 -->
+    <div class="admin-panel" id="panel-notices">
+      <div class="admin-panel-header">
+        <div>
+          <div class="admin-panel-title">공지사항 관리</div>
+          <div class="admin-panel-count" id="notices-count"></div>
+        </div>
+        <button class="admin-add-btn" onclick="openNoticeForm()">+ 새 공지 작성</button>
+      </div>
+
+      <!-- 작성/수정 폼 -->
+      <div class="admin-notice-form" id="notice-form" style="display:none">
+        <div class="admin-notice-form-row">
+          <select class="admin-notice-tag-select" id="notice-tag">
+            <option value="공지">공지</option>
+            <option value="이벤트">이벤트</option>
+            <option value="점검">점검</option>
+            <option value="업데이트">업데이트</option>
+          </select>
+          <label class="admin-notice-pin-label">
+            <input type="checkbox" id="notice-pinned" /> 상단 고정
+          </label>
+        </div>
+        <input type="text" class="admin-notice-title-input" id="notice-title" placeholder="제목" />
+        <textarea class="admin-notice-content-input" id="notice-content" placeholder="내용" rows="5"></textarea>
+        <div class="admin-notice-form-actions">
+          <button class="admin-cancel-btn" onclick="closeNoticeForm()">취소</button>
+          <button class="admin-save-btn" onclick="submitNotice()">저장</button>
+        </div>
+      </div>
+
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>태그</th>
+              <th>제목</th>
+              <th>작성자</th>
+              <th>등록일</th>
+              <th>고정</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="notices-tbody"></tbody>
         </table>
       </div>
     </div>
@@ -202,9 +252,10 @@ function switchTab(panel, btn) {
 
 // ── 데이터 로드 ──────────────────────────────────────────
 async function loadData() {
-  const [cRes, uRes] = await Promise.all([
+  const [cRes, uRes, nRes] = await Promise.all([
     fetch('/watchman/api/admin/contacts'),
-    fetch('/watchman/api/admin/users')
+    fetch('/watchman/api/admin/users'),
+    fetch('/watchman/api/notices')
   ]);
 
   if (cRes.status === 401 || uRes.status === 401) {
@@ -220,6 +271,7 @@ async function loadData() {
 
   const contacts = await cRes.json();
   const users    = await uRes.json();
+  const notices  = nRes.ok ? await nRes.json() : [];
 
   if (!Array.isArray(contacts) || !Array.isArray(users)) {
     alert('데이터 형식 오류입니다. 서버 로그를 확인해 주세요.');
@@ -228,6 +280,7 @@ async function loadData() {
 
   renderContacts(contacts);
   renderUsers(users);
+  renderNotices(notices);
   document.getElementById('stat-users').textContent    = users.length;
   document.getElementById('stat-contacts').textContent = contacts.length;
   document.getElementById('stat-pending').textContent  =
@@ -336,6 +389,100 @@ async function changeAdmin(id, value) {
 async function deleteUser(id) {
   if (!confirm('이 사용자를 삭제하시겠습니까?\n삭제된 계정은 복구할 수 없습니다.')) return;
   await fetch(`/watchman/api/admin/users/${id}`, { method: 'DELETE' });
+  loadData();
+}
+
+// ── 공지사항 렌더링 ───────────────────────────────────────
+const TAG_CLS = {
+  '공지':   'admin-badge-account',
+  '이벤트': 'admin-badge-feature',
+  '점검':   'admin-badge-bug',
+  '업데이트': 'admin-badge-general',
+};
+
+function renderNotices(notices) {
+  noticesCache = notices;
+  const tbody = document.getElementById('notices-tbody');
+  document.getElementById('notices-count').textContent = `총 ${notices.length}건`;
+
+  if (notices.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7">
+      <div class="admin-empty"><span class="admin-empty-icon">📭</span>등록된 공지사항이 없습니다.</div>
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = notices.map((n, i) => {
+    const date = n.createdAt ? n.createdAt.split('T')[0] : '';
+    const cls  = TAG_CLS[n.tag] || 'admin-badge-general';
+    return `
+      <tr>
+        <td style="color:var(--text-light)">${i + 1}</td>
+        <td><span class="admin-badge ${cls}">${esc(n.tag)}</span></td>
+        <td><div class="admin-td-main">${esc(n.title)}</div></td>
+        <td>${esc(n.writerNickname)}</td>
+        <td style="white-space:nowrap">${date}</td>
+        <td>${n.pinned ? '📌' : '-'}</td>
+        <td style="display:flex;gap:6px">
+          <button class="admin-edit-btn" onclick="openNoticeFormById(${n.noticeId})">수정</button>
+          <button class="admin-del-btn" onclick="deleteNotice(${n.noticeId})">삭제</button>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function openNoticeFormById(id) {
+  const n = noticesCache.find(n => n.noticeId === id);
+  if (n) openNoticeForm(n.noticeId, n.tag, n.pinned, n.title, n.content);
+}
+
+let editingNoticeId = null;
+let noticesCache = [];
+
+function openNoticeForm(id, tag, pinned, title, content) {
+  editingNoticeId = id || null;
+  document.getElementById('notice-tag').value     = tag     || '공지';
+  document.getElementById('notice-pinned').checked = !!pinned;
+  document.getElementById('notice-title').value   = title   || '';
+  document.getElementById('notice-content').value = content || '';
+  document.getElementById('notice-form').style.display = 'block';
+  document.getElementById('notice-title').focus();
+}
+
+function closeNoticeForm() {
+  editingNoticeId = null;
+  document.getElementById('notice-form').style.display = 'none';
+}
+
+async function submitNotice() {
+  const body = {
+    tag:     document.getElementById('notice-tag').value,
+    title:   document.getElementById('notice-title').value.trim(),
+    content: document.getElementById('notice-content').value.trim(),
+    pinned:  document.getElementById('notice-pinned').checked
+  };
+  if (!body.title || !body.content) {
+    alert('제목과 내용을 입력해 주세요.');
+    return;
+  }
+  const url    = editingNoticeId ? `/watchman/api/notices/${editingNoticeId}` : '/watchman/api/notices';
+  const method = editingNoticeId ? 'PUT' : 'POST';
+  const res    = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (res.ok) {
+    closeNoticeForm();
+    loadData();
+  } else {
+    alert('저장에 실패했습니다.');
+  }
+}
+
+async function deleteNotice(id) {
+  if (!confirm('이 공지사항을 삭제하시겠습니까?')) return;
+  await fetch(`/watchman/api/notices/${id}`, { method: 'DELETE' });
   loadData();
 }
 

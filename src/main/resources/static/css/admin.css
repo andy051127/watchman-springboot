@@ -299,3 +299,112 @@
   color: var(--text-muted);
 }
 .admin-empty-icon { font-size: 32px; display: block; margin-bottom: 12px; }
+
+/* 수정 버튼 */
+.admin-edit-btn {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2563eb;
+  background: #dbeafe;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.admin-edit-btn:hover { background: #bfdbfe; }
+
+/* 추가 버튼 */
+.admin-add-btn {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+.admin-add-btn:hover { opacity: 0.85; }
+
+/* 공지 작성/수정 폼 */
+.admin-notice-form {
+  background: #1c1917;
+  border: 1px solid #3c3330;
+  border-radius: var(--radius-md);
+  padding: 20px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.admin-notice-form-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.admin-notice-tag-select {
+  background: #292524;
+  border: 1.5px solid #3c3330;
+  border-radius: var(--radius-sm);
+  color: #e7e5e4;
+  font-size: 13px;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+.admin-notice-pin-label {
+  font-size: 13px;
+  color: #a8a29e;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.admin-notice-title-input,
+.admin-notice-content-input {
+  width: 100%;
+  background: #292524;
+  border: 1.5px solid #3c3330;
+  border-radius: var(--radius-sm);
+  color: #e7e5e4;
+  font-size: 14px;
+  font-family: inherit;
+  padding: 10px 14px;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+  resize: vertical;
+}
+.admin-notice-title-input:focus,
+.admin-notice-content-input:focus { outline: none; border-color: var(--primary); }
+.admin-notice-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.admin-cancel-btn {
+  font-size: 13px;
+  font-weight: 600;
+  color: #a8a29e;
+  background: #292524;
+  border: 1px solid #3c3330;
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  cursor: pointer;
+}
+.admin-cancel-btn:hover { background: #3c3330; }
+.admin-save-btn {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.admin-save-btn:hover { opacity: 0.85; }
+
