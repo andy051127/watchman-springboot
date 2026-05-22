@@ -9,10 +9,8 @@ let todos = {};
 // ddays = [{ id: ddayId, name, date: ddayDate }]
 let ddays = [];
 
-// timetable[dateStr] = { [hourSlot]: { id: timetableId|null, content } }
-// id가 null이면 아직 서버에 저장되지 않은 슬롯 (POST 대상)
-// id가 있으면 이미 저장된 슬롯 (PUT 대상)
-let timetable = {};
+// blocks[dateStr] = [{ blockId, startTime, endTime, color, label }]
+let blocks = {};
 
 // ── 페이지 진입점 ─────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
@@ -138,7 +136,7 @@ async function selectDate(dateStr) {
   // 이미 캐시된 날짜라도 시간표는 항상 서버에서 최신 데이터를 가져온다
   await Promise.all([
     loadTodos(dateStr),
-    loadTimetable(dateStr)
+    loadBlocks(dateStr)
   ]);
 
   initCalendar();
@@ -177,7 +175,7 @@ function renderNotebook() {
 
   renderMemo();
   renderTodoList();
-  renderTimetable();
+  renderBlockGrid();
 }
 
 // ── 하루 메모 ─────────────────────────────────────────────────────────────────
@@ -313,145 +311,6 @@ async function deleteTodo(index) {
   }
 }
 
-// ── 시간표 ────────────────────────────────────────────────────────────────────
-
-// GET /api/planner/timetable?date=YYYY-MM-DD
-// 서버 응답: [{ timetableId, hourSlot, content }]
-// 클라이언트 형태: { [hourSlot]: { id: timetableId, content } }
-async function loadTimetable(date) {
-  try {
-    const res = await fetch(`/watchman/api/planner/timetable?date=${date}`);
-    if (res.status === 401) { window.location.href = 'login.html'; return; }
-    const data = await res.json();
-    // 배열 → 시간 슬롯 키 맵으로 변환
-    timetable[date] = {};
-    data.forEach(t => {
-      timetable[date][t.hourSlot] = { id: t.timetableId, content: t.content };
-    });
-  } catch (err) {
-    console.error('시간표 로드 실패:', err);
-    timetable[date] = {};
-  }
-}
-
-// 하이라이트 색상 팔레트
-const TT_COLORS = [
-  { value: 'edit',    label: '✏️',  bg: 'none' },
-  { value: 'erase',   label: '✕',   bg: 'none' },
-  { value: '#fecaca', label: '',    bg: '#fecaca' },
-  { value: '#fed7aa', label: '',    bg: '#fed7aa' },
-  { value: '#fef08a', label: '',    bg: '#fef08a' },
-  { value: '#bbf7d0', label: '',    bg: '#bbf7d0' },
-  { value: '#bfdbfe', label: '',    bg: '#bfdbfe' },
-  { value: '#e9d5ff', label: '',    bg: '#e9d5ff' },
-];
-let ttMode = 'edit'; // 'edit' | 'erase' | '#hex'
-
-// 0시 ~ 23시(24시간) 슬롯 렌더링. 색상 팔레트 + 하이라이트 지원.
-function renderTimetable() {
-  const container = document.getElementById('timetable-grid');
-  const dayTable  = timetable[selectedDate] || {};
-
-  const palette = `
-    <div class="tt-palette">
-      ${TT_COLORS.map(c => `
-        <button class="tt-swatch${ttMode === c.value ? ' active' : ''}"
-          style="${c.bg !== 'none' ? `background:${c.bg}` : ''}"
-          onclick="setTtMode('${c.value}')"
-          title="${c.label || c.value}">${c.label}</button>
-      `).join('')}
-    </div>`;
-
-  let rows = '';
-  for (let h = 0; h <= 23; h++) {
-    const entry   = dayTable[h];
-    const val     = entry ? entry.content : '';
-    const hlColor = localStorage.getItem(`tt-hl-${selectedDate}-${h}`) || '';
-    const rowStyle = hlColor ? `background:${hlColor}` : '';
-
-    rows += `
-      <div class="timetable-row${hlColor ? ' hl' : ''}" style="${rowStyle}"
-           onclick="handleTtRowClick(${h}, event)">
-        <span class="timetable-hour">${String(h).padStart(2, '0')}:00</span>
-        <div class="timetable-cell${val ? ' filled' : ''}" id="tt-cell-${h}">
-          ${val ? escHtml(val) : ''}
-        </div>
-      </div>`;
-  }
-
-  container.innerHTML = palette + rows;
-}
-
-function setTtMode(mode) {
-  ttMode = mode;
-  renderTimetable();
-}
-
-function handleTtRowClick(hour, event) {
-  if (ttMode === 'edit') {
-    // 텍스트 입력 모드: 셀 클릭 시 편집
-    const cell = document.getElementById(`tt-cell-${hour}`);
-    editTimetableCell(hour, cell);
-  } else if (ttMode === 'erase') {
-    localStorage.removeItem(`tt-hl-${selectedDate}-${hour}`);
-    renderTimetable();
-  } else {
-    // 색상 적용
-    localStorage.setItem(`tt-hl-${selectedDate}-${hour}`, ttMode);
-    renderTimetable();
-  }
-}
-
-// 시간표 셀을 클릭하면 인라인 input으로 전환하고,
-// blur 또는 Enter 키 입력 시 서버에 저장한다.
-function editTimetableCell(hour, cell) {
-  const current = cell.textContent.trim();
-  const input   = document.createElement('input');
-  input.type        = 'text';
-  input.className   = 'timetable-cell-input';
-  input.value       = current;
-  input.placeholder = '일정 입력...';
-  cell.innerHTML    = '';
-  cell.appendChild(input);
-  input.focus();
-
-  async function save() {
-    const val      = input.value.trim();
-    const existing = timetable[selectedDate]?.[hour]; // 이미 저장된 슬롯 여부 확인
-
-    try {
-      if (existing?.id) {
-        // 이미 존재하는 슬롯 → PUT으로 내용 수정
-        // body에 tableDate와 hourSlot도 함께 전달 (컨트롤러 요구사항)
-        await fetch(`/watchman/api/planner/timetable/${existing.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tableDate: selectedDate, hourSlot: hour, content: val })
-        });
-      } else if (val) {
-        // 새 슬롯이고 내용이 있을 때만 POST로 신규 저장
-        await fetch('/watchman/api/planner/timetable', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tableDate: selectedDate, hourSlot: hour, content: val })
-        });
-      }
-
-      // 저장 후 서버에서 재로드하여 timetableId를 동기화한다
-      await loadTimetable(selectedDate);
-    } catch (err) {
-      console.error('시간표 저장 실패:', err);
-    }
-
-    renderTimetable();
-  }
-
-  input.addEventListener('blur', save);
-  input.addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
-  });
-}
-
 // ── D-Day ─────────────────────────────────────────────────────────────────────
 
 // GET /api/planner/ddays
@@ -546,6 +405,252 @@ function updateStats() {
   document.getElementById('stat-dday').textContent = nearestDday
     ? (nearestDday.diff === 0 ? 'D-Day!' : `D-${nearestDday.diff}`)
     : '없음';
+}
+
+// ── 타임테이블 블록 ───────────────────────────────────────────────────────────
+
+const BLOCK_COLORS = ['#fecaca','#fed7aa','#fef08a','#bbf7d0','#bfdbfe','#e9d5ff'];
+const CELL_SIZE    = 12; // px (정사각형 셀 한 변 길이)
+
+// GET /api/planner/blocks?date=YYYY-MM-DD
+async function loadBlocks(date) {
+  try {
+    const res = await fetch(`/watchman/api/planner/blocks?date=${date}`);
+    if (res.status === 401) { window.location.href = 'login.html'; return; }
+    const data = await res.json();
+    blocks[date] = data.map(b => ({
+      blockId:   b.blockId,
+      startTime: b.startTime,
+      endTime:   b.endTime,
+      color:     b.color,
+      label:     b.label
+    }));
+  } catch (err) {
+    console.error('블록 로드 실패:', err);
+    blocks[date] = [];
+  }
+}
+
+// "HH:MM" 또는 "HH:MM:SS" → 분(0~1439) 변환
+function timeToMinutes(timeStr) {
+  const [h, m] = timeStr.split(':').map(Number);
+  return h * 60 + m;
+}
+
+// 분(0~1439) → "HH:MM" 변환
+function minutesToTime(min) {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+}
+
+// 그리드 렌더링: 24행 × 12칸 정사각형 셀 + 블록 오버레이
+function renderBlockGrid() {
+  const container = document.getElementById('timetable-grid');
+  const dayBlocks = blocks[selectedDate] || [];
+
+  let gridHtml = '<div class="timetable-grid-wrap"><div class="timetable-grid-inner">';
+  for (let h = 0; h < 24; h++) {
+    gridHtml += `<div class="tt-hour-label">${String(h).padStart(2,'0')}:00</div>`;
+    for (let m = 0; m < 12; m++) {
+      gridHtml += `<div class="tt-cell" data-min="${h * 60 + m * 5}"></div>`;
+    }
+  }
+  gridHtml += '</div>';
+
+  gridHtml += '<div class="tt-block-layer" id="tt-block-layer">';
+  dayBlocks.forEach(b => {
+    const startMin = timeToMinutes(b.startTime);
+    const endMin   = timeToMinutes(b.endTime);
+    const topPx    = Math.floor(startMin / 5) * CELL_SIZE;
+    const heightPx = Math.max(CELL_SIZE, Math.floor((endMin - startMin) / 5) * CELL_SIZE);
+    gridHtml += `
+      <div class="tt-block"
+           style="background:${b.color};top:${topPx}px;left:0;width:144px;height:${heightPx}px"
+           data-block-id="${b.blockId}"
+           onclick="openBlockModal(${b.blockId})"
+      >${escHtml(b.label)}</div>`;
+  });
+  gridHtml += '</div></div>';
+
+  container.innerHTML = gridHtml;
+
+  initGridDrag();
+}
+
+// ── 드래그로 블록 범위 선택 ───────────────────────────────────────────────────
+
+let dragStartMin = null;
+let dragEndMin   = null;
+
+function initGridDrag() {
+  const wrap = document.querySelector('.timetable-grid-wrap');
+  if (!wrap) return;
+
+  wrap.addEventListener('mousedown', e => {
+    const cell = e.target.closest('.tt-cell');
+    if (!cell) return;
+    dragStartMin = parseInt(cell.dataset.min);
+    dragEndMin   = dragStartMin;
+    highlightDrag();
+  });
+
+  wrap.addEventListener('mousemove', e => {
+    if (dragStartMin === null) return;
+    const cell = e.target.closest('.tt-cell');
+    if (!cell) return;
+    dragEndMin = parseInt(cell.dataset.min);
+    highlightDrag();
+  });
+
+  wrap.addEventListener('mouseup', e => {
+    if (dragStartMin === null) return;
+    const cell = e.target.closest('.tt-cell');
+    if (cell) dragEndMin = parseInt(cell.dataset.min);
+
+    const startMin = Math.min(dragStartMin, dragEndMin);
+    const endMin   = Math.max(dragStartMin, dragEndMin) + 5;
+
+    dragStartMin = null;
+    dragEndMin   = null;
+    clearDragHighlight();
+
+    openNewBlockModal(startMin, endMin);
+  });
+}
+
+function highlightDrag() {
+  const minA = Math.min(dragStartMin, dragEndMin);
+  const minB = Math.max(dragStartMin, dragEndMin);
+  document.querySelectorAll('.tt-cell').forEach(cell => {
+    const m = parseInt(cell.dataset.min);
+    cell.classList.toggle('drag-hover', m >= minA && m <= minB);
+  });
+}
+
+function clearDragHighlight() {
+  document.querySelectorAll('.tt-cell.drag-hover').forEach(c => c.classList.remove('drag-hover'));
+}
+
+// ── 블록 모달 ─────────────────────────────────────────────────────────────────
+
+let modalBlockId   = null;
+let modalStartMin  = null;
+let modalEndMin    = null;
+let modalColor     = BLOCK_COLORS[4];
+
+function openNewBlockModal(startMin, endMin) {
+  modalBlockId  = null;
+  modalStartMin = startMin;
+  modalEndMin   = endMin;
+  modalColor    = BLOCK_COLORS[4];
+  showModal('', modalColor);
+}
+
+function openBlockModal(blockId) {
+  const b = (blocks[selectedDate] || []).find(x => x.blockId === blockId);
+  if (!b) return;
+  modalBlockId  = blockId;
+  modalStartMin = timeToMinutes(b.startTime);
+  modalEndMin   = timeToMinutes(b.endTime);
+  modalColor    = b.color;
+  showModal(b.label, b.color);
+}
+
+function showModal(labelValue, selectedColor) {
+  const existing = document.getElementById('tt-modal-overlay');
+  if (existing) existing.remove();
+
+  const timeLabel = `${minutesToTime(modalStartMin)} ~ ${minutesToTime(modalEndMin)}`;
+
+  const overlay = document.createElement('div');
+  overlay.id        = 'tt-modal-overlay';
+  overlay.className = 'tt-modal-overlay';
+
+  const swatches = BLOCK_COLORS.map(c =>
+    `<div class="tt-modal-swatch${c === selectedColor ? ' selected' : ''}"
+          style="background:${c}"
+          data-color="${c}"
+          onclick="selectModalColor('${c}')"></div>`
+  ).join('');
+
+  const deleteBtn = modalBlockId !== null
+    ? `<button class="tt-modal-btn danger" onclick="deleteBlock(${modalBlockId})">삭제</button>`
+    : '';
+
+  overlay.innerHTML = `
+    <div class="tt-modal">
+      <div class="tt-modal-time">${timeLabel}</div>
+      <div class="tt-modal-palette">${swatches}</div>
+      <input class="tt-modal-input" id="tt-modal-label" type="text"
+             placeholder="일정 이름 (선택)" value="${escHtml(labelValue)}" />
+      <div class="tt-modal-actions">
+        ${deleteBtn}
+        <button class="tt-modal-btn" onclick="closeModal()">취소</button>
+        <button class="tt-modal-btn primary" onclick="saveModalBlock()">저장</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+  document.getElementById('tt-modal-label').focus();
+}
+
+function selectModalColor(color) {
+  modalColor = color;
+  document.querySelectorAll('.tt-modal-swatch').forEach(el => {
+    el.classList.toggle('selected', el.dataset.color === color);
+  });
+}
+
+function closeModal() {
+  const overlay = document.getElementById('tt-modal-overlay');
+  if (overlay) overlay.remove();
+}
+
+async function saveModalBlock() {
+  const label = document.getElementById('tt-modal-label').value.trim();
+  const body  = {
+    blockDate: selectedDate,
+    startTime: minutesToTime(modalStartMin),
+    endTime:   minutesToTime(modalEndMin),
+    color:     modalColor,
+    label:     label
+  };
+
+  try {
+    if (modalBlockId === null) {
+      const res = await fetch('/watchman/api/planner/blocks', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(body)
+      });
+      if (res.status === 401) { window.location.href = 'login.html'; return; }
+    } else {
+      const res = await fetch(`/watchman/api/planner/blocks/${modalBlockId}`, {
+        method:  'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(body)
+      });
+      if (res.status === 401) { window.location.href = 'login.html'; return; }
+    }
+    closeModal();
+    await loadBlocks(selectedDate);
+    renderBlockGrid();
+  } catch (err) {
+    console.error('블록 저장 실패:', err);
+  }
+}
+
+async function deleteBlock(blockId) {
+  try {
+    const res = await fetch(`/watchman/api/planner/blocks/${blockId}`, { method: 'DELETE' });
+    if (res.status === 401) { window.location.href = 'login.html'; return; }
+    closeModal();
+    await loadBlocks(selectedDate);
+    renderBlockGrid();
+  } catch (err) {
+    console.error('블록 삭제 실패:', err);
+  }
 }
 
 // ── 로그아웃 처리 ─────────────────────────────────────────────────────────────
