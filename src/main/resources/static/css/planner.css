@@ -334,72 +334,151 @@
 
 /* Timetable */
 .notebook-timetable { padding: 16px 20px 20px; }
-.timetable-grid { display: flex; flex-direction: column; }
+/* ─── Timetable Grid ───────────────────────────────────── */
+.timetable-grid-wrap {
+  overflow-y: auto;
+  max-height: 520px;
+  position: relative;
+  user-select: none;
+}
 
-/* 색상 팔레트 */
-.tt-palette {
+.timetable-grid-inner {
+  display: grid;
+  /* 왼쪽 시간 레이블(40px) + 12칸 그리드 */
+  grid-template-columns: 40px repeat(12, 12px);
+  grid-template-rows: repeat(24, 12px);
+  width: fit-content;
+}
+
+.tt-hour-label {
+  grid-column: 1;
+  font-size: 9px;
+  color: var(--text-light);
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 10px;
-  flex-wrap: wrap;
+  justify-content: flex-end;
+  padding-right: 4px;
+  white-space: nowrap;
 }
-.tt-swatch {
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-  border: 2px solid var(--border);
+
+.tt-cell {
+  width: 12px;
+  height: 12px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  box-sizing: border-box;
+  cursor: crosshair;
+}
+
+.tt-cell.drag-hover {
+  background: rgba(96, 165, 250, 0.35);
+}
+
+/* 블록 오버레이 */
+.tt-block-layer {
+  position: absolute;
+  top: 0;
+  left: 40px;
+  width: 144px;
+  pointer-events: none;
+}
+
+.tt-block {
+  position: absolute;
+  border-radius: 3px;
+  opacity: 0.85;
+  overflow: hidden;
+  font-size: 9px;
+  font-weight: 600;
+  color: #1e293b;
+  padding: 1px 3px;
+  box-sizing: border-box;
   cursor: pointer;
-  font-size: 12px;
+  pointer-events: all;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ─── Block Modal ──────────────────────────────────────── */
+.tt-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.25);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s;
-  flex-shrink: 0;
-  background: var(--bg-white);
+  z-index: 1000;
 }
-.tt-swatch:hover { transform: scale(1.15); }
-.tt-swatch.active { border-color: #1c1917; box-shadow: 0 0 0 2px rgba(0,0,0,0.15); }
 
-/* 타임 테이블 행 */
-.timetable-row {
+.tt-modal {
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  width: 280px;
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 2px 4px;
-  border-bottom: 1px solid #f0ebe4;
-  cursor: pointer;
-  transition: background 0.15s;
-  border-radius: 3px;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
 }
-.timetable-row:hover { filter: brightness(0.96); }
-.timetable-row.hl { border-bottom-color: transparent; }
-.timetable-hour {
-  font-size: 11px;
-  color: var(--text-light);
-  min-width: 38px;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
-}
-.timetable-cell {
-  flex: 1;
-  height: 24px;
-  font-size: 12px;
-  color: var(--text-muted);
-  padding: 0 6px;
-  display: flex;
-  align-items: center;
-}
-.timetable-cell.filled { color: var(--text); font-weight: 600; }
-.timetable-cell-input {
-  width: 100%;
-  font-size: 12px;
-  border: none;
-  background: transparent;
-  outline: none;
+
+.tt-modal-time {
+  font-size: 13px;
+  font-weight: 700;
   color: var(--text);
-  font-family: inherit;
+}
+
+.tt-modal-palette {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tt-modal-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.tt-modal-swatch.selected {
+  border-color: #1e293b;
+}
+
+.tt-modal-input {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: 13px;
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+}
+.tt-modal-input:focus { border-color: var(--primary); }
+
+.tt-modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.tt-modal-btn {
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  font-size: 13px;
+  cursor: pointer;
+  background: none;
+}
+.tt-modal-btn.primary {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.tt-modal-btn.danger {
+  color: #ef4444;
+  border-color: #ef4444;
 }
 
 /* D-Day Section */
