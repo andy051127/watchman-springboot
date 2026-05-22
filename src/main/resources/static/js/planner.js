@@ -503,19 +503,25 @@ function initGridDrag() {
     highlightDrag();
   });
 
-  wrap.addEventListener('mouseup', e => {
+  // 드래그 중에는 블록 클릭 이벤트 차단
+  wrap.addEventListener('mousemove', () => {
+    if (dragStartMin !== null) {
+      document.querySelectorAll('.tt-block').forEach(b => b.style.pointerEvents = 'none');
+    }
+  }, { passive: true });
+
+  document.addEventListener('mouseup', e => {
     if (dragStartMin === null) return;
     const cell = e.target.closest('.tt-cell');
     if (cell) dragEndMin = parseInt(cell.dataset.min);
 
     const startMin = Math.min(dragStartMin, dragEndMin);
     const endMin   = Math.max(dragStartMin, dragEndMin) + 5;
-
     dragStartMin = null;
     dragEndMin   = null;
     clearDragHighlight();
-
-    openNewBlockModal(startMin, endMin);
+    document.querySelectorAll('.tt-block').forEach(b => b.style.pointerEvents = '');
+    if (endMin > startMin) openNewBlockModal(startMin, endMin);
   });
 }
 

@@ -113,7 +113,7 @@ public class PlannerServiceImpl implements PlannerService {
     }
 
     @Override
-    public void deleteBlock(Long blockId) {
-        this.plannerRepository.deleteBlock(blockId);
+    public void deleteBlock(Long blockId, Long userId) {
+        this.plannerRepository.deleteBlock(blockId, userId);
     }
 }

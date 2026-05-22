@@ -87,3 +87,15 @@ CREATE TABLE IF NOT EXISTS notices (
 -- ============================================================
 INSERT IGNORE INTO users (email, password, nickname, is_admin)
 VALUES ('admin@watchman.com', 'admin1234!', '관리자', 1);
+
+-- timetable_blocks: 플래너 드래그 블록 (시작시간·끝시간·색상·텍스트)
+CREATE TABLE IF NOT EXISTS timetable_blocks (
+  block_id    BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id     BIGINT       NOT NULL,
+  block_date  DATE         NOT NULL,
+  start_time  TIME         NOT NULL,
+  end_time    TIME         NOT NULL,
+  color       VARCHAR(7)   NOT NULL DEFAULT '#bfdbfe',
+  label       VARCHAR(200) NOT NULL DEFAULT '',
+  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);

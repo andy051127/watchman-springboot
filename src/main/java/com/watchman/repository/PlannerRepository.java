@@ -61,5 +61,5 @@ public interface PlannerRepository {
 	void updateBlock(TimetableBlock block);
 
 	// 블록 DELETE
-	void deleteBlock(Long blockId);
+	void deleteBlock(Long blockId, Long userId);
 }

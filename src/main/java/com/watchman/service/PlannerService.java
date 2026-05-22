@@ -61,5 +61,5 @@ public interface PlannerService {
     void updateBlock(TimetableBlock block);
 
     // 블록 삭제
-    void deleteBlock(Long blockId);
+    void deleteBlock(Long blockId, Long userId);
 }

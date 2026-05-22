@@ -283,7 +283,7 @@ public class PlannerController {
         if (userId == null) {
             return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
         }
-        this.plannerService.deleteBlock(blockId);
+        this.plannerService.deleteBlock(blockId, userId);
         return ResponseEntity.ok(Map.of("message", "블록이 삭제되었습니다."));
     }
 }

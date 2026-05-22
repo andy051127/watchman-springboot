@@ -158,8 +158,8 @@ public class PlannerRepositoryImpl implements PlannerRepository {
 	}
 
 	@Override
-	public void deleteBlock(Long blockId) {
-		String sql = "DELETE FROM timetable_blocks WHERE block_id = ?";
-		this.template.update(sql, blockId);
+	public void deleteBlock(Long blockId, Long userId) {
+		String sql = "DELETE FROM timetable_blocks WHERE block_id = ? AND user_id = ?";
+		this.template.update(sql, blockId, userId);
 	}
 }
