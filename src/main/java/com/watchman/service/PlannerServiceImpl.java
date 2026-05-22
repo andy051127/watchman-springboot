@@ -2,6 +2,7 @@ package com.watchman.service;
 
 import com.watchman.domain.DDay;
 import com.watchman.domain.Timetable;
+import com.watchman.domain.TimetableBlock;
 import com.watchman.domain.Todo;
 import com.watchman.repository.PlannerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,5 +93,27 @@ public class PlannerServiceImpl implements PlannerService {
     @Override
     public void updateTimetable(Timetable timetable) {
         this.plannerRepository.updateTimetable(timetable);
+    }
+
+    // ── TimetableBlock ─────────────────────────────────────────
+
+    @Override
+    public List<TimetableBlock> getBlocks(Long userId, LocalDate date) {
+        return this.plannerRepository.findBlocksByDate(userId, date);
+    }
+
+    @Override
+    public void addBlock(TimetableBlock block) {
+        this.plannerRepository.saveBlock(block);
+    }
+
+    @Override
+    public void updateBlock(TimetableBlock block) {
+        this.plannerRepository.updateBlock(block);
+    }
+
+    @Override
+    public void deleteBlock(Long blockId) {
+        this.plannerRepository.deleteBlock(blockId);
     }
 }
