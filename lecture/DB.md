@@ -30,7 +30,7 @@ FLUSH PRIVILEGES;
 | email | VARCHAR(255) UNIQUE | 이메일 (로그인 ID) |
 | password | VARCHAR(255) | 암호화된 비밀번호 |
 | nickname | VARCHAR(100) | 닉네임 |
-| avatar | MEDIUMTEXT | 아바타 이미지 (base64) |
+| avatar | VARCHAR(50) | 아바타 코드 |
 | streak | INT | 연속 공부 일수 |
 | role | VARCHAR(20) | 계정 역할 (`user` / `admin`) |
 | created_at | TIMESTAMP | 가입일 |

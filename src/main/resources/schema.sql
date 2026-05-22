@@ -18,8 +18,6 @@ CREATE TABLE IF NOT EXISTS users (
 -- 기존 DB에 is_admin 컬럼이 없으면 추가, role 컬럼이 있으면 제거
 ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin TINYINT(1) NOT NULL DEFAULT 0;
 ALTER TABLE users DROP COLUMN IF EXISTS role;
--- avatar 컬럼을 MEDIUMTEXT로 변경 (base64 이미지 저장)
-ALTER TABLE users MODIFY COLUMN avatar MEDIUMTEXT DEFAULT NULL;
 
 CREATE TABLE IF NOT EXISTS sessions (
     session_id      BIGINT   NOT NULL AUTO_INCREMENT,
