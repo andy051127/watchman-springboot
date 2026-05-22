@@ -2,6 +2,7 @@ package com.watchman.repository;
 
 import com.watchman.domain.DDay;
 import com.watchman.domain.Timetable;
+import com.watchman.domain.TimetableBlock;
 import com.watchman.domain.Todo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
@@ -124,5 +125,41 @@ public class PlannerRepositoryImpl implements PlannerRepository {
 		this.template.update(sql,
 				timetable.getContent(), timetable.getUserId(),
 				timetable.getTableDate(), timetable.getHourSlot());
+	}
+
+	// ── TimetableBlock ─────────────────────────────────────────
+
+	@Override
+	public List<TimetableBlock> findBlocksByDate(Long userId, LocalDate date) {
+		String sql = "SELECT block_id, user_id, block_date, start_time, end_time, color, label " +
+				     "FROM timetable_blocks WHERE user_id = ? AND block_date = ? ORDER BY start_time ASC";
+		return this.template.query(sql,
+				BeanPropertyRowMapper.newInstance(TimetableBlock.class), userId, date);
+	}
+
+	@Override
+	public void saveBlock(TimetableBlock block) {
+		String sql = "INSERT INTO timetable_blocks (user_id, block_date, start_time, end_time, color, label) " +
+				     "VALUES (?, ?, ?, ?, ?, ?)";
+		this.template.update(sql,
+				block.getUserId(), block.getBlockDate(),
+				block.getStartTime(), block.getEndTime(),
+				block.getColor(), block.getLabel());
+	}
+
+	@Override
+	public void updateBlock(TimetableBlock block) {
+		String sql = "UPDATE timetable_blocks SET start_time = ?, end_time = ?, color = ?, label = ? " +
+				     "WHERE block_id = ? AND user_id = ?";
+		this.template.update(sql,
+				block.getStartTime(), block.getEndTime(),
+				block.getColor(), block.getLabel(),
+				block.getBlockId(), block.getUserId());
+	}
+
+	@Override
+	public void deleteBlock(Long blockId) {
+		String sql = "DELETE FROM timetable_blocks WHERE block_id = ?";
+		this.template.update(sql, blockId);
 	}
 }
