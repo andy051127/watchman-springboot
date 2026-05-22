@@ -8,8 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── 페이지 초기화 ─────────────────────────────────────────────────────────────
 // URL 파라미터 ?guest=1 여부에 따라 비회원/로그인 모드로 분기한다.
 async function initPage() {
-  document.getElementById('banner-title').innerHTML = getBannerTitle();
-
   const isGuest = new URLSearchParams(window.location.search).get('guest') === '1';
 
   const nicknameEl = document.getElementById('nav-nickname');
@@ -219,32 +217,11 @@ function fmtTime(iso) {
   return `${h < 12 ? '오전' : '오후'} ${h % 12 || 12}:${m}`;
 }
 
-// ── 유틸: 시간대별 인사말 (banner-greeting용) ──────────────────────────────
+// ── 유틸: 시간대별 인사말 ─────────────────────────────────────────────────────
 function getGreeting() {
   const h = new Date().getHours();
-  if (h < 5)  return '새벽에도 열심이네요';
-  if (h < 8)  return '일찍 일어나셨군요';
-  if (h < 10) return '좋은 아침이에요';
-  if (h < 12) return '오전도 화이팅이에요';
-  if (h < 14) return '점심은 먹었나요?';
-  if (h < 17) return '오후도 파이팅이에요';
-  if (h < 20) return '저녁도 힘내봐요';
-  if (h < 22) return '오늘 하루도 수고했어요';
-  return '늦은 밤까지 수고해요';
-}
-
-// ── 유틸: 시간대별 배너 타이틀 ────────────────────────────────────────────────
-function getBannerTitle() {
-  const h = new Date().getHours();
-  const [l1, hl, l2] =
-    h < 5  ? ['새벽에도 불 켜고,',        '당신이',       ' 오늘의 주인공이에요']  :
-    h < 8  ? ['일찍 일어난 만큼,',         '앞서가는',     ' 하루가 시작돼요']      :
-    h < 10 ? ['좋은 아침이에요,',           '오늘도',       ' 함께 시작해봐요']      :
-    h < 12 ? ['오전 집중력이',             '최고조',       '일 때예요']             :
-    h < 14 ? ['든든하게 먹었나요?',         '지금부터',     ' 집중해봐요']           :
-    h < 17 ? ['오후 슬럼프, 지금이',        '공부 시작',    '할 타이밍이에요']       :
-    h < 20 ? ['하루를 마무리하며,',         '오늘의 공부',  '를 채워봐요']           :
-    h < 22 ? ['밤 공부도 습관이 되면,',     '강력한 힘',    '이 돼요']               :
-              ['오늘 하루 수고했어요,',      '마지막 집중',  ' 한 번 해봐요']         ;
-  return `${l1}<br /><span>${hl}</span>${l2}`;
+  if (h < 6)  return '밤에도 열심이네요';
+  if (h < 12) return '좋은 아침이에요';
+  if (h < 18) return '오후도 화이팅이에요';
+  return '오늘 하루도 수고했어요';
 }
