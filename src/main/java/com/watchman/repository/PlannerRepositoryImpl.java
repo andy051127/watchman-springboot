@@ -1,7 +1,6 @@
 package com.watchman.repository;
 
 import com.watchman.domain.DDay;
-import com.watchman.domain.Timetable;
 import com.watchman.domain.TimetableBlock;
 import com.watchman.domain.Todo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,39 +91,6 @@ public class PlannerRepositoryImpl implements PlannerRepository {
 	public void deleteDDay(Long ddayId) {
 		String sql = "DELETE FROM ddays WHERE dday_id = ?";
 		this.template.update(sql, ddayId);
-	}
-
-	// ── Timetable ──────────────────────────────────────────────────
-
-	// 특정 날짜의 시간표 조회
-	// ORDER BY hour_slot ASC: 0시 → 23시 순으로 정렬하여 반환
-	@Override
-	public List<Timetable> findTimetableByDate(Long userId, LocalDate date) {
-		String sql = "SELECT timetable_id, user_id, table_date, hour_slot, content " +
-				     "FROM timetable WHERE user_id = ? AND table_date = ? ORDER BY hour_slot ASC";
-		return this.template.query(sql,
-				BeanPropertyRowMapper.newInstance(Timetable.class), userId, date);
-	}
-
-	// 시간표 행 INSERT (해당 날짜·시간 슬롯에 처음 내용을 입력할 때)
-	@Override
-	public void saveTimetable(Timetable timetable) {
-		String sql = "INSERT INTO timetable (user_id, table_date, hour_slot, content) " +
-				     "VALUES (?, ?, ?, ?)";
-		this.template.update(sql,
-				timetable.getUserId(), timetable.getTableDate(),
-				timetable.getHourSlot(), timetable.getContent());
-	}
-
-	// 시간표 내용 UPDATE (이미 존재하는 슬롯의 내용을 바꿀 때)
-	// user_id + table_date + hour_slot 3개 조건으로 정확한 1행을 특정
-	@Override
-	public void updateTimetable(Timetable timetable) {
-		String sql = "UPDATE timetable SET content = ? " +
-				     "WHERE user_id = ? AND table_date = ? AND hour_slot = ?";
-		this.template.update(sql,
-				timetable.getContent(), timetable.getUserId(),
-				timetable.getTableDate(), timetable.getHourSlot());
 	}
 
 	// ── TimetableBlock ─────────────────────────────────────────

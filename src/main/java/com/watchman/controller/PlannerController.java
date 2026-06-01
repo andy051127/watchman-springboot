@@ -1,7 +1,6 @@
 package com.watchman.controller;
 
 import com.watchman.domain.DDay;
-import com.watchman.domain.Timetable;
 import com.watchman.domain.TimetableBlock;
 import com.watchman.domain.Todo;
 import com.watchman.service.PlannerService;
@@ -154,65 +153,6 @@ public class PlannerController {
 
         this.plannerService.deleteDDay(ddayId);
         return ResponseEntity.ok(Map.of("message", "D-Day가 삭제되었습니다."));
-    }
-
-    // ── Timetable ──────────────────────────────────────────────────
-
-    // 특정 날짜의 시간표 조회
-    // GET /api/planner/timetable?date=2026-04-29
-    @GetMapping("/timetable")
-    public ResponseEntity<?> getTimetable(
-            @RequestParam String date,
-            HttpSession session) {
-        Long userId = getSessionUserId(session);
-        if (userId == null) {
-            return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
-        }
-
-        List<Timetable> timetable = this.plannerService.getTimetable(userId, LocalDate.parse(date));
-        return ResponseEntity.ok(timetable);
-    }
-
-    // 시간표 슬롯 저장 (처음 입력할 때)
-    // POST /api/planner/timetable
-    // body: { "tableDate": "2026-04-29", "hourSlot": 9, "content": "수학 공부" }
-    @PostMapping("/timetable")
-    public ResponseEntity<?> saveTimetable(@RequestBody Map<String, Object> body, HttpSession session) {
-        Long userId = getSessionUserId(session);
-        if (userId == null) {
-            return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
-        }
-
-        Timetable timetable = new Timetable();
-        timetable.setUserId(userId);
-        timetable.setTableDate(LocalDate.parse((String) body.get("tableDate")));
-        timetable.setHourSlot((Integer) body.get("hourSlot"));
-        timetable.setContent((String) body.get("content"));
-        this.plannerService.saveTimetable(timetable);
-        return ResponseEntity.ok(Map.of("message", "시간표가 저장되었습니다."));
-    }
-
-    // 시간표 슬롯 수정 (이미 존재하는 슬롯 내용 변경)
-    // PUT /api/planner/timetable/{timetableId}
-    // body: { "tableDate": "2026-04-29", "hourSlot": 9, "content": "영어 공부" }
-    @PutMapping("/timetable/{timetableId}")
-    public ResponseEntity<?> updateTimetable(
-            @PathVariable Long timetableId,
-            @RequestBody Map<String, Object> body,
-            HttpSession session) {
-        Long userId = getSessionUserId(session);
-        if (userId == null) {
-            return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
-        }
-
-        Timetable timetable = new Timetable();
-        timetable.setTimetableId(timetableId);
-        timetable.setUserId(userId);
-        timetable.setTableDate(LocalDate.parse((String) body.get("tableDate")));
-        timetable.setHourSlot((Integer) body.get("hourSlot"));
-        timetable.setContent((String) body.get("content"));
-        this.plannerService.updateTimetable(timetable);
-        return ResponseEntity.ok(Map.of("message", "시간표가 수정되었습니다."));
     }
 
     // ── TimetableBlock ──────────────────────────────────────────────────────────────────────

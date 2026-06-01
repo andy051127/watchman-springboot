@@ -50,16 +50,6 @@ CREATE TABLE IF NOT EXISTS ddays (
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS timetable (
-    timetable_id BIGINT       NOT NULL AUTO_INCREMENT,
-    user_id      BIGINT       NOT NULL,
-    table_date   DATE         NOT NULL,
-    hour_slot    INT          NOT NULL,
-    content      VARCHAR(500) NOT NULL,
-    PRIMARY KEY (timetable_id),
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 CREATE TABLE IF NOT EXISTS contacts (
     contact_id BIGINT       NOT NULL AUTO_INCREMENT,
     name       VARCHAR(100) NOT NULL,

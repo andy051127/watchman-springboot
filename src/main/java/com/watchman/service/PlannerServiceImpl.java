@@ -1,7 +1,6 @@
 package com.watchman.service;
 
 import com.watchman.domain.DDay;
-import com.watchman.domain.Timetable;
 import com.watchman.domain.TimetableBlock;
 import com.watchman.domain.Todo;
 import com.watchman.repository.PlannerRepository;
@@ -73,26 +72,6 @@ public class PlannerServiceImpl implements PlannerService {
     @Override
     public void deleteDDay(Long ddayId) {
         this.plannerRepository.deleteDDay(ddayId);
-    }
-
-    // ── Timetable ──────────────────────────────────────────────────
-
-    // 특정 날짜 시간표 조회
-    @Override
-    public List<Timetable> getTimetable(Long userId, LocalDate date) {
-        return this.plannerRepository.findTimetableByDate(userId, date);
-    }
-
-    // 시간표 슬롯 저장
-    @Override
-    public void saveTimetable(Timetable timetable) {
-        this.plannerRepository.saveTimetable(timetable);
-    }
-
-    // 시간표 슬롯 수정
-    @Override
-    public void updateTimetable(Timetable timetable) {
-        this.plannerRepository.updateTimetable(timetable);
     }
 
     // ── TimetableBlock ─────────────────────────────────────────

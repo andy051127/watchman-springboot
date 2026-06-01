@@ -1,7 +1,6 @@
 package com.watchman.service;
 
 import com.watchman.domain.DDay;
-import com.watchman.domain.Timetable;
 import com.watchman.domain.TimetableBlock;
 import com.watchman.domain.Todo;
 
@@ -37,17 +36,6 @@ public interface PlannerService {
 
     // D-Day 삭제
     void deleteDDay(Long ddayId);
-
-    // ── Timetable ──────────────────────────────────────────────────
-
-    // 특정 날짜의 시간표 조회 (hour_slot 0~23 오름차순)
-    List<Timetable> getTimetable(Long userId, LocalDate date);
-
-    // 시간표 슬롯 저장 (처음 입력할 때)
-    void saveTimetable(Timetable timetable);
-
-    // 시간표 슬롯 수정 (이미 존재하는 슬롯 내용 변경)
-    void updateTimetable(Timetable timetable);
 
     // ── TimetableBlock ─────────────────────────────────────────
 
