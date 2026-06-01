@@ -65,9 +65,9 @@
 
   <!-- 탭 -->
   <div class="admin-tabs">
-    <button class="admin-tab active" onclick="switchTab('contacts', this)">📬 문의 관리</button>
-    <button class="admin-tab" onclick="switchTab('users', this)">👤 사용자 관리</button>
-    <button class="admin-tab" onclick="switchTab('notices', this)">📢 공지사항 관리</button>
+    <button class="admin-tab active" onclick="switchTab('contacts', this)">문의 관리</button>
+    <button class="admin-tab" onclick="switchTab('users', this)">사용자 관리</button>
+    <button class="admin-tab" onclick="switchTab('notices', this)">공지사항 관리</button>
   </div>
 
   <div class="admin-content">
@@ -363,8 +363,8 @@ function renderUsers(users) {
         <td>${u.streak > 0 ? `🔥 ${u.streak}일` : '-'}</td>
         <td>
           <select class="admin-role-select" onchange="changeAdmin(${u.userId}, this.value)">
-            <option value="0" ${u.isAdmin === 0 ? 'selected' : ''}>👤 일반 계정</option>
-            <option value="1" ${u.isAdmin === 1 ? 'selected' : ''}>⚙️ 어드민 계정</option>
+            <option value="0" ${u.isAdmin === 0 ? 'selected' : ''}>일반 계정</option>
+            <option value="1" ${u.isAdmin === 1 ? 'selected' : ''}>어드민 계정</option>
           </select>
         </td>
         <td><button class="admin-del-btn" onclick="deleteUser(${u.userId})">삭제</button></td>
