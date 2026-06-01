@@ -17,18 +17,3 @@
 
 **필요 기술:** WebSocket (`spring-boot-starter-websocket`), Redis Pub/Sub (ElastiCache — 그룹 스터디 구현 시 신청)
 **인프라:** EC2 단일 인스턴스 + Nginx(HTTPS) + RDS + ElastiCache
-
----
-
-## 2. 업적 시스템 (Achievement System)
-
-특정 조건을 달성하면 게임 업적처럼 배지가 부여되는 기능.
-
-- 업적 목록 정의 (예: 첫 세션 완료, 연속 7일 공부, 집중률 90% 달성 등)
-- 조건 달성 시 자동 업적 부여
-- 마이페이지 또는 별도 페이지에서 획득 업적 / 미획득 업적 표시
-- 업적 획득 시 알림 (토스트 등)
-
-**필요 기술:** `user_achievements` 테이블, 세션 저장 시점에 조건 체크 로직 (Service 레이어)
-**인프라:** 추가 AWS 서비스 불필요 (EC2 + RDS로 충분)
-

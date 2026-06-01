@@ -125,7 +125,12 @@ CREATE TABLE IF NOT EXISTS timetable_blocks (
 ALTER TABLE timetable_blocks ADD COLUMN IF NOT EXISTS start_time TIME;
 ALTER TABLE timetable_blocks ADD COLUMN IF NOT EXISTS end_time TIME;
 ALTER TABLE timetable_blocks ADD COLUMN IF NOT EXISTS label VARCHAR(200) NOT NULL DEFAULT '';
-UPDATE timetable_blocks SET start_time = SEC_TO_TIME(start_min * 60), end_time = SEC_TO_TIME(end_min * 60) WHERE start_time IS NULL AND start_min IS NOT NULL;
+-- 구 스키마(start_min/end_min) 데이터 마이그레이션 — 신규 DB에서는 해당 컬럼이 없으므로 스킵됨
+SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'timetable_blocks' AND COLUMN_NAME = 'start_min');
+SET @sql = IF(@col_exists > 0, 'UPDATE timetable_blocks SET start_time = SEC_TO_TIME(start_min * 60), end_time = SEC_TO_TIME(end_min * 60) WHERE start_time IS NULL', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 ALTER TABLE timetable_blocks MODIFY COLUMN start_time TIME NOT NULL;
 ALTER TABLE timetable_blocks MODIFY COLUMN end_time TIME NOT NULL;
 ALTER TABLE timetable_blocks DROP COLUMN IF EXISTS start_min;
