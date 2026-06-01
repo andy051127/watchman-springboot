@@ -16,7 +16,6 @@
   <!-- Calibration overlay -->
   <div class="calib-overlay" id="calib-overlay" style="display:none">
     <div class="calib-modal">
-      <div class="calib-icon">🎯</div>
       <h2 class="calib-title">공부 환경 보정</h2>
       <p class="calib-desc">
         평소 공부할 때처럼 <strong>10초간 자연스럽게</strong> 움직여 주세요.<br>
@@ -77,7 +76,6 @@
         <video id="webcam-video" class="session-video" muted playsinline></video>
 
         <div class="session-cam-off" id="cam-off-msg">
-          <span>📷</span>
           <p>카메라가 꺼져 있어요</p>
         </div>
         <div class="session-loading" id="cam-loading" style="display:none">
@@ -94,7 +92,7 @@
       </div>
       <div class="calib-shortcut">
         <a href="calibration.html" class="btn-calib-shortcut" id="btn-go-calib">
-          🎯 보정하기
+          보정하기
         </a>
         <button class="btn-debug-toggle" onclick="toggleDebug()">각도 분석</button>
       </div>
@@ -103,7 +101,7 @@
       <!-- 임시 디버그 패널: 각도 측정값과 임계값을 실시간으로 표시합니다 -->
       <div class="debug-panel" id="debug-panel" style="display:none">
         <div class="debug-header">
-          <span>🔍 각도 분석 패널 (임시)</span>
+          <span>각도 분석 패널 (임시)</span>
           <button class="debug-close-btn" onclick="toggleDebug()">닫기</button>
         </div>
         <div class="debug-grid">
@@ -140,7 +138,7 @@
           <span class="music-badge">독립 채널</span>
         </div>
         <div class="music-track-info">
-          <div class="music-thumb">🎵</div>
+          <div class="music-thumb"></div>
           <div>
             <div class="music-track-name" id="music-track-name">Midnight Study Session</div>
             <div class="music-track-artist" id="music-track-artist">Lofi Fruits Music</div>
@@ -153,7 +151,6 @@
           <button class="music-btn" id="btn-shuffle" onclick="toggleShuffle()">셔플</button>
         </div>
         <div class="music-volume-row">
-          <span>♪</span>
           <span class="music-vol-label">음악 볼륨</span>
           <input type="range" class="music-slider" id="music-volume" min="0" max="100" value="60" oninput="setMusicVolume(this.value)" />
           <span class="music-vol-pct" id="music-vol-pct">60%</span>

@@ -58,7 +58,7 @@ async function initPage() {
     // 네브바·배너 닉네임 표시
     nicknameEl.textContent = user.nickname;
     document.getElementById('banner-greeting').textContent
-      = `${user.nickname}님, ${getGreeting()} 👋`;
+      = `${user.nickname}님, ${getGreeting()}`;
 
     // sessionStorage 갱신 — 다른 페이지(mypage 등)에서 닉네임·아바타 참조용
     sessionStorage.setItem('userId',   user.userId);
@@ -105,8 +105,8 @@ function renderStats(user, todaySessions, weekSessions) {
   // 연속 공부 카드 — 비회원이면 잠금 표시
   if (!user) {
     document.getElementById('stat-streak-card').innerHTML = `
-      <div class="stat-card-label">🔥 연속 공부</div>
-      <div class="stat-locked-msg">🔒 로그인 필요</div>`;
+      <div class="stat-card-label">연속 공부</div>
+      <div class="stat-locked-msg">로그인 필요</div>`;
   } else {
     // user.streak: users 테이블의 streak 컬럼 값
     const streakEl = document.getElementById('stat-streak');
@@ -125,7 +125,6 @@ function renderRecentSessions(sessions, isGuest) {
     // 비회원: 잠금 안내 메시지 표시
     container.innerHTML = `
       <div class="guest-lock-state">
-        <span class="guest-lock-icon">🔒</span>
         <p>세션 기록은 로그인 후 이용할 수 있어요.</p>
         <p class="guest-lock-sub">지금 공부는 할 수 있지만 기록은 저장되지 않아요.</p>
       </div>`;
@@ -136,7 +135,6 @@ function renderRecentSessions(sessions, isGuest) {
     // 세션 없음: 빈 상태 안내
     container.innerHTML = `
       <div class="empty-state">
-        <span class="empty-state-icon">📋</span>
         아직 세션 기록이 없어요.<br />첫 번째 공부 세션을 시작해보세요!
       </div>`;
     return;

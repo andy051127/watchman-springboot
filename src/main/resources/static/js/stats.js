@@ -219,7 +219,7 @@ function renderPage(page, scroll = true) {
   const container  = document.getElementById('sessions-table-content');
 
   if (allSessionsCache.length === 0) {
-    container.innerHTML = `<div class="stats-empty"><span>📋</span><p>아직 세션 기록이 없어요. 공부를 시작해보세요!</p></div>`;
+    container.innerHTML = `<div class="stats-empty"><p>아직 세션 기록이 없어요. 공부를 시작해보세요!</p></div>`;
     return;
   }
 

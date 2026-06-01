@@ -42,7 +42,6 @@ function renderNotices() {
 
   if (notices.length === 0) {
     list.innerHTML = `<div style="text-align:center;padding:52px 24px;color:var(--text-muted)">
-      <div style="font-size:32px;margin-bottom:12px">📭</div>
       <p style="font-size:14px">아직 등록된 공지사항이 없습니다.</p>
     </div>`;
     footer.textContent = '';
@@ -75,7 +74,7 @@ function renderNotices() {
         </div>
         <div class="notice-content" id="content-${n.noticeId}" style="display:none" onclick="event.stopPropagation()">
           <div class="notice-content-body">${esc(n.content).replace(/\n/g, '<br>')}</div>
-          <div class="notice-writer">✍️ ${esc(n.writerNickname || '관리자')}</div>
+          <div class="notice-writer">${esc(n.writerNickname || '관리자')}</div>
         </div>
       </div>`;
   }).join('');
