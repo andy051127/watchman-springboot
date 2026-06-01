@@ -410,7 +410,7 @@ function updateStats() {
 // ── 타임테이블 블록 ───────────────────────────────────────────────────────────
 
 const BLOCK_COLORS = ['#fecaca','#fed7aa','#fef08a','#bbf7d0','#bfdbfe','#e9d5ff'];
-const CELL_SIZE    = 12; // px (정사각형 셀 한 변 길이)
+const ROW_HEIGHT   = 22; // px per hour row
 
 // GET /api/planner/blocks?date=YYYY-MM-DD
 async function loadBlocks(date) {
@@ -444,37 +444,51 @@ function minutesToTime(min) {
   return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
 }
 
-// 그리드 렌더링: 24행 × 12칸 정사각형 셀 + 블록 오버레이
+// 그리드 렌더링: 수평 바 타임라인 (시간 행 × 가로 바)
 function renderBlockGrid() {
   const container = document.getElementById('timetable-grid');
   const dayBlocks = blocks[selectedDate] || [];
 
-  let gridHtml = '<div class="timetable-grid-wrap"><div class="timetable-grid-inner">';
+  let html = '<div class="timetable-grid-wrap">';
+
   for (let h = 0; h < 24; h++) {
-    gridHtml += `<div class="tt-hour-label">${String(h).padStart(2,'0')}:00</div>`;
+    html += `<div class="tt-hour-row">`;
+    html += `<div class="tt-row-label">${h}</div>`;
+    html += `<div class="tt-row-area" data-hour="${h}">`;
+
+    // 5분 단위 스냅 셀 (보이지 않음)
     for (let m = 0; m < 12; m++) {
-      gridHtml += `<div class="tt-cell" data-min="${h * 60 + m * 5}"></div>`;
+      const leftPct  = (m / 12) * 100;
+      const widthPct = 100 / 12;
+      html += `<div class="tt-cell" data-min="${h * 60 + m * 5}"
+        style="left:${leftPct}%;width:${widthPct}%"></div>`;
     }
-  }
-  gridHtml += '</div>';
 
-  gridHtml += '<div class="tt-block-layer" id="tt-block-layer">';
-  dayBlocks.forEach(b => {
-    const startMin = timeToMinutes(b.startTime);
-    const endMin   = timeToMinutes(b.endTime);
-    const topPx    = Math.floor(startMin / 5) * CELL_SIZE;
-    const heightPx = Math.max(CELL_SIZE, Math.floor((endMin - startMin) / 5) * CELL_SIZE);
-    gridHtml += `
-      <div class="tt-block"
-           style="background:${b.color};top:${topPx}px;left:0;width:144px;height:${heightPx}px"
-           data-block-id="${b.blockId}"
-           onclick="openBlockModal(${b.blockId})"
+    // 이 시간대에 걸친 블록을 가로 바로 렌더링
+    dayBlocks.forEach(b => {
+      const startMin  = timeToMinutes(b.startTime);
+      const endMin    = timeToMinutes(b.endTime);
+      const hourStart = h * 60;
+      const hourEnd   = (h + 1) * 60;
+      if (endMin <= hourStart || startMin >= hourEnd) return;
+
+      const barStart  = Math.max(startMin, hourStart);
+      const barEnd    = Math.min(endMin, hourEnd);
+      const leftPct   = ((barStart - hourStart) / 60) * 100;
+      const widthPct  = ((barEnd - barStart) / 60) * 100;
+
+      html += `<div class="tt-bar"
+        style="background:${b.color};left:${leftPct}%;width:${widthPct}%"
+        data-block-id="${b.blockId}"
+        onclick="openBlockModal(${b.blockId})"
       >${escHtml(b.label)}</div>`;
-  });
-  gridHtml += '</div></div>';
+    });
 
-  container.innerHTML = gridHtml;
+    html += '</div></div>';
+  }
 
+  html += '</div>';
+  container.innerHTML = html;
   initGridDrag();
 }
 
@@ -482,60 +496,114 @@ function renderBlockGrid() {
 
 let dragStartMin = null;
 let dragEndMin   = null;
+let dragActive   = false;
+
+function getMinFromRowEvent(e) {
+  const area = e.target.closest('.tt-row-area');
+  if (!area) return null;
+  const rect  = area.getBoundingClientRect();
+  const x     = Math.max(0, Math.min(rect.width - 1, e.clientX - rect.left));
+  const pct   = x / rect.width;
+  const h     = parseInt(area.dataset.hour);
+  const snap  = Math.round(pct * 60); // 1분 단위 스냅
+  return h * 60 + Math.min(snap, 59);
+}
+
+let _dragUpHandler = null;
 
 function initGridDrag() {
   const wrap = document.querySelector('.timetable-grid-wrap');
   if (!wrap) return;
 
+  // 이전 mouseup 핸들러 제거
+  if (_dragUpHandler) document.removeEventListener('mouseup', _dragUpHandler);
+
   wrap.addEventListener('mousedown', e => {
-    const cell = e.target.closest('.tt-cell');
-    if (!cell) return;
-    dragStartMin = parseInt(cell.dataset.min);
-    dragEndMin   = dragStartMin;
-    highlightDrag();
+    if (e.target.closest('.tt-bar')) return; // 바 클릭은 드래그 시작 안 함
+    const min = getMinFromRowEvent(e);
+    if (min === null) return;
+    dragActive   = true;
+    dragStartMin = min;
+    dragEndMin   = min;
+    e.preventDefault();
+    document.querySelectorAll('.tt-bar').forEach(b => b.style.pointerEvents = 'none');
   });
 
   wrap.addEventListener('mousemove', e => {
-    if (dragStartMin === null) return;
-    const cell = e.target.closest('.tt-cell');
-    if (!cell) return;
-    dragEndMin = parseInt(cell.dataset.min);
-    highlightDrag();
+    if (!dragActive) return;
+    const area = e.target.closest('.tt-row-area');
+    if (!area) {
+      // 행 사이 이동 시 Y좌표로 시간 추정
+      const wrapRect = wrap.getBoundingClientRect();
+      const y   = e.clientY - wrapRect.top + wrap.scrollTop;
+      const h   = Math.min(23, Math.max(0, Math.floor(y / ROW_HEIGHT)));
+      const a2  = wrap.querySelector(`.tt-row-area[data-hour="${h}"]`);
+      if (a2) {
+        const r   = a2.getBoundingClientRect();
+        const x   = Math.max(0, Math.min(r.width - 1, e.clientX - r.left));
+        const snap = Math.round((x / r.width) * 60);
+        dragEndMin = h * 60 + Math.min(snap, 59);
+      }
+    } else {
+      dragEndMin = getMinFromRowEvent(e);
+    }
+    renderDragPreview();
   });
 
-  // 드래그 중에는 블록 클릭 이벤트 차단
-  wrap.addEventListener('mousemove', () => {
-    if (dragStartMin !== null) {
-      document.querySelectorAll('.tt-block').forEach(b => b.style.pointerEvents = 'none');
-    }
-  }, { passive: true });
+  _dragUpHandler = () => {
+    if (!dragActive) return;
+    dragActive = false;
+    clearDragPreview();
+    document.querySelectorAll('.tt-bar').forEach(b => b.style.pointerEvents = '');
 
-  document.addEventListener('mouseup', e => {
-    if (dragStartMin === null) return;
-    const cell = e.target.closest('.tt-cell');
-    if (cell) dragEndMin = parseInt(cell.dataset.min);
-
-    const startMin = Math.min(dragStartMin, dragEndMin);
-    const endMin   = Math.max(dragStartMin, dragEndMin) + 5;
+    const s = dragStartMin;
+    const e = dragEndMin;
     dragStartMin = null;
     dragEndMin   = null;
-    clearDragHighlight();
-    document.querySelectorAll('.tt-block').forEach(b => b.style.pointerEvents = '');
-    if (endMin > startMin) openNewBlockModal(startMin, endMin);
-  });
+
+    // 실제로 드래그가 이동한 경우(시작 ≠ 끝)에만 새 블록 모달 열기
+    if (s !== null && e !== null && s !== e) {
+      const startMin = Math.min(s, e);
+      const endMin   = Math.max(s, e) + 5;
+      openNewBlockModal(startMin, endMin);
+    }
+  };
+  document.addEventListener('mouseup', _dragUpHandler);
 }
 
-function highlightDrag() {
+function renderDragPreview() {
+  clearDragPreview();
+  if (dragStartMin === null || dragEndMin === null) return;
   const minA = Math.min(dragStartMin, dragEndMin);
-  const minB = Math.max(dragStartMin, dragEndMin);
-  document.querySelectorAll('.tt-cell').forEach(cell => {
-    const m = parseInt(cell.dataset.min);
-    cell.classList.toggle('drag-hover', m >= minA && m <= minB);
-  });
+  const minB = Math.max(dragStartMin, dragEndMin) + 5;
+  const timeLabel = `${minutesToTime(minA)} ~ ${minutesToTime(minB)}`;
+  let labelAdded = false;
+
+  for (let h = 0; h < 24; h++) {
+    const hourStart = h * 60, hourEnd = (h + 1) * 60;
+    if (minB <= hourStart || minA >= hourEnd) continue;
+    const barStart = Math.max(minA, hourStart);
+    const barEnd   = Math.min(minB, hourEnd);
+    const leftPct  = ((barStart - hourStart) / 60) * 100;
+    const widthPct = ((barEnd - barStart) / 60) * 100;
+    const area = document.querySelector(`.tt-row-area[data-hour="${h}"]`);
+    if (!area) continue;
+    const el = document.createElement('div');
+    el.className = 'tt-drag-preview';
+    el.style.cssText = `left:${leftPct}%;width:${widthPct}%`;
+    if (!labelAdded) {
+      const span = document.createElement('span');
+      span.className = 'tt-drag-time';
+      span.textContent = timeLabel;
+      el.appendChild(span);
+      labelAdded = true;
+    }
+    area.appendChild(el);
+  }
 }
 
-function clearDragHighlight() {
-  document.querySelectorAll('.tt-cell.drag-hover').forEach(c => c.classList.remove('drag-hover'));
+function clearDragPreview() {
+  document.querySelectorAll('.tt-drag-preview').forEach(el => el.remove());
 }
 
 // ── 블록 모달 ─────────────────────────────────────────────────────────────────

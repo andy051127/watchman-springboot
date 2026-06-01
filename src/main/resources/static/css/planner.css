@@ -334,68 +334,105 @@
 
 /* Timetable */
 .notebook-timetable { padding: 16px 20px 20px; }
-/* ─── Timetable Grid ───────────────────────────────────── */
+
+/* ─── Timetable : 수평 바 타임라인 ─────────────────────── */
 .timetable-grid-wrap {
   overflow-y: auto;
-  max-height: 520px;
-  position: relative;
+  max-height: 400px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
   user-select: none;
 }
 
-.timetable-grid-inner {
-  display: grid;
-  /* 왼쪽 시간 레이블(40px) + 12칸 그리드 */
-  grid-template-columns: 40px repeat(12, 12px);
-  grid-template-rows: repeat(24, 12px);
-  width: fit-content;
+.tt-hour-row {
+  display: flex;
+  align-items: stretch;
+  height: 22px;
+  border-bottom: 1px solid #f0ebe4;
+  position: relative;
 }
+.tt-hour-row:nth-child(even) { background: #fdfcf9; }
 
-.tt-hour-label {
-  grid-column: 1;
-  font-size: 9px;
-  color: var(--text-light);
+.tt-row-label {
+  width: 28px;
+  min-width: 28px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #b0a89e;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding-right: 4px;
-  white-space: nowrap;
+  padding-right: 6px;
+  border-right: 1px solid #e8e2d9;
+  flex-shrink: 0;
 }
 
-.tt-cell {
-  width: 12px;
-  height: 12px;
-  border-right: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  box-sizing: border-box;
+.tt-row-area {
+  flex: 1;
+  position: relative;
   cursor: crosshair;
 }
 
-.tt-cell.drag-hover {
-  background: rgba(96, 165, 250, 0.35);
-}
-
-/* 블록 오버레이 */
-.tt-block-layer {
+/* 30분 구분선 */
+.tt-row-area::after {
+  content: '';
   position: absolute;
-  top: 0;
-  left: 40px;
-  width: 144px;
+  top: 0; bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: #f0ebe4;
   pointer-events: none;
 }
 
-.tt-block {
+/* 스냅 셀 (보이지 않음, 드래그용) */
+.tt-cell {
   position: absolute;
+  top: 0; bottom: 0;
+  cursor: crosshair;
+}
+
+/* 수평 바 */
+.tt-bar {
+  position: absolute;
+  top: 3px;
+  height: 16px;
   border-radius: 3px;
   opacity: 0.85;
-  overflow: hidden;
-  font-size: 9px;
+  cursor: pointer;
+  font-size: 10px;
   font-weight: 600;
   color: #1e293b;
-  padding: 1px 3px;
-  box-sizing: border-box;
-  cursor: pointer;
-  pointer-events: all;
+  overflow: hidden;
   white-space: nowrap;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  box-sizing: border-box;
+}
+
+/* 드래그 미리보기 바 */
+.tt-drag-preview {
+  position: absolute;
+  top: 3px;
+  height: 16px;
+  border-radius: 3px;
+  background: rgba(96,165,250,0.35);
+  border: 1px dashed rgba(96,165,250,0.8);
+  pointer-events: none;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  padding: 0 5px;
+  overflow: hidden;
+}
+.tt-drag-time {
+  font-size: 10px;
+  font-weight: 700;
+  color: #1d4ed8;
+  white-space: nowrap;
+  overflow: hidden;
   text-overflow: ellipsis;
 }
 

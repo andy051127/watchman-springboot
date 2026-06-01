@@ -116,7 +116,18 @@ CREATE TABLE IF NOT EXISTS timetable_blocks (
   block_date  DATE         NOT NULL,
   start_time  TIME         NOT NULL,
   end_time    TIME         NOT NULL,
-  color       VARCHAR(7)   NOT NULL DEFAULT '#bfdbfe',
+  color       VARCHAR(20)  NOT NULL DEFAULT '#bfdbfe',
   label       VARCHAR(200) NOT NULL DEFAULT '',
   FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- timetable_blocks 구 스키마(start_min/end_min/content) → 신 스키마 마이그레이션
+ALTER TABLE timetable_blocks ADD COLUMN IF NOT EXISTS start_time TIME;
+ALTER TABLE timetable_blocks ADD COLUMN IF NOT EXISTS end_time TIME;
+ALTER TABLE timetable_blocks ADD COLUMN IF NOT EXISTS label VARCHAR(200) NOT NULL DEFAULT '';
+UPDATE timetable_blocks SET start_time = SEC_TO_TIME(start_min * 60), end_time = SEC_TO_TIME(end_min * 60) WHERE start_time IS NULL AND start_min IS NOT NULL;
+ALTER TABLE timetable_blocks MODIFY COLUMN start_time TIME NOT NULL;
+ALTER TABLE timetable_blocks MODIFY COLUMN end_time TIME NOT NULL;
+ALTER TABLE timetable_blocks DROP COLUMN IF EXISTS start_min;
+ALTER TABLE timetable_blocks DROP COLUMN IF EXISTS end_min;
+ALTER TABLE timetable_blocks DROP COLUMN IF EXISTS content;
