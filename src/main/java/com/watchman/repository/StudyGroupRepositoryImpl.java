@@ -1,7 +1,6 @@
 package com.watchman.repository;
 
 import com.watchman.domain.StudyGroup;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -16,10 +15,11 @@ import java.util.Map;
 @Repository
 public class StudyGroupRepositoryImpl implements StudyGroupRepository {
 
-    private JdbcTemplate template;
+    private final JdbcTemplate template;
 
-    @Autowired
-    public void setJdbcTemplate(JdbcTemplate template) { this.template = template; }
+    public StudyGroupRepositoryImpl(JdbcTemplate template) {
+        this.template = template;
+    }
 
     @Override
     public List<StudyGroup> findAllByUserId(Long userId) {
@@ -58,7 +58,8 @@ public class StudyGroupRepositoryImpl implements StudyGroupRepository {
             ps.setLong(4, group.getLeaderId());
             return ps;
         }, keyHolder);
-        group.setGroupId(keyHolder.getKey().longValue());
+        Number key = keyHolder.getKey();
+        if (key != null) group.setGroupId(key.longValue());
     }
 
     @Override

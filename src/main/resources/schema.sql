@@ -8,14 +8,15 @@ CREATE TABLE IF NOT EXISTS users (
     email      VARCHAR(255) NOT NULL UNIQUE,
     password   VARCHAR(255) NOT NULL,
     nickname   VARCHAR(100) NOT NULL,
-    avatar     VARCHAR(50)  DEFAULT NULL,
+    avatar     MEDIUMTEXT   DEFAULT NULL,
     streak     INT          NOT NULL DEFAULT 0,
     is_admin   TINYINT(1)   NOT NULL DEFAULT 0,
     created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 기존 DB에 is_admin 컬럼이 없으면 추가, role 컬럼이 있으면 제거
+-- 기존 DB 마이그레이션
+ALTER TABLE users MODIFY COLUMN avatar MEDIUMTEXT DEFAULT NULL;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin TINYINT(1) NOT NULL DEFAULT 0;
 ALTER TABLE users DROP COLUMN IF EXISTS role;
 
@@ -87,6 +88,26 @@ CREATE TABLE IF NOT EXISTS notices (
 -- ============================================================
 INSERT IGNORE INTO users (email, password, nickname, is_admin)
 VALUES ('admin@watchman.com', 'admin1234!', '관리자', 1);
+
+-- 스터디 그룹
+CREATE TABLE IF NOT EXISTS study_groups (
+    group_id    BIGINT       NOT NULL AUTO_INCREMENT,
+    name        VARCHAR(100) NOT NULL,
+    description VARCHAR(500) DEFAULT NULL,
+    invite_code VARCHAR(10)  NOT NULL UNIQUE,
+    leader_id   BIGINT       NOT NULL,
+    created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (group_id),
+    FOREIGN KEY (leader_id) REFERENCES users(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS group_members (
+    group_id BIGINT NOT NULL,
+    user_id  BIGINT NOT NULL,
+    PRIMARY KEY (group_id, user_id),
+    FOREIGN KEY (group_id) REFERENCES study_groups(group_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id)  REFERENCES users(user_id)         ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- timetable_blocks: 플래너 드래그 블록 (시작시간·끝시간·색상·텍스트)
 CREATE TABLE IF NOT EXISTS timetable_blocks (

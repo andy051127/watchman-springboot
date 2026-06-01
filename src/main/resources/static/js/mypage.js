@@ -87,14 +87,20 @@ function handleFileChange(e) {
           body: JSON.stringify({ avatar: base64 })
         });
         if (res.status === 401) { window.location.href = 'login.html'; return; }
+        if (!res.ok) { alert('프로필 사진 저장에 실패했어요. 다시 시도해 주세요.'); return; }
 
-        // 서버 저장 성공 시 화면 업데이트
+        // 서버 저장 성공 → 마이페이지 + 헤더 모두 즉시 갱신
         showAvatarImg(base64);
-        sessionStorage.setItem('avatar', base64); // 다른 페이지에서 참조용
+        sessionStorage.setItem('avatar', base64);
+        const navEmoji = document.getElementById('nav-avatar-emoji');
+        const navImg   = document.getElementById('nav-avatar-img');
+        if (navEmoji) navEmoji.style.display = 'none';
+        if (navImg)   { navImg.src = base64; navImg.style.display = 'block'; }
         document.getElementById('avatar-status').textContent = '사진이 설정되어 있어요.';
         document.getElementById('btn-remove-avatar').style.display = 'inline';
       } catch (err) {
         console.error('아바타 저장 실패:', err);
+        alert('프로필 사진 저장 중 오류가 발생했어요.');
       }
     };
     img.src = ev.target.result;
@@ -121,6 +127,7 @@ async function removeAvatar() {
       body: JSON.stringify({ avatar: '' })
     });
     if (res.status === 401) { window.location.href = 'login.html'; return; }
+    if (!res.ok) { alert('프로필 사진 삭제에 실패했어요.'); return; }
 
     document.getElementById('mypage-avatar-emoji').style.display = 'flex';
     document.getElementById('mypage-avatar-img').style.display   = 'none';
@@ -128,6 +135,10 @@ async function removeAvatar() {
     document.getElementById('avatar-status').textContent         = '기본 이모지가 사용 중이에요.';
     document.getElementById('btn-remove-avatar').style.display   = 'none';
     sessionStorage.setItem('avatar', '');
+    const navEmoji = document.getElementById('nav-avatar-emoji');
+    const navImg   = document.getElementById('nav-avatar-img');
+    if (navEmoji) navEmoji.style.display = 'inline';
+    if (navImg)   { navImg.src = ''; navImg.style.display = 'none'; }
   } catch (err) {
     console.error('아바타 제거 실패:', err);
   }
