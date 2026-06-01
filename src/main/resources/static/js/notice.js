@@ -181,9 +181,3 @@ function esc(s) {
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function handleExit() {
-  fetch('/watchman/api/auth/logout', { method: 'POST' }).finally(() => {
-    sessionStorage.clear();
-    window.location.href = 'index.html';
-  });
-}

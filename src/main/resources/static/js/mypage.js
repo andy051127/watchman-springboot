@@ -33,6 +33,11 @@ async function initMyPage() {
     // 아바타: 저장된 값이 있으면 이미지로 표시, 없으면 기본 이모지 유지
     if (user.avatar) {
       showAvatarImg(user.avatar);
+      // 헤더 네브바도 즉시 반영
+      const navEmoji = document.getElementById('nav-avatar-emoji');
+      const navImg   = document.getElementById('nav-avatar-img');
+      if (navEmoji) navEmoji.style.display = 'none';
+      if (navImg)   { navImg.src = user.avatar; navImg.style.display = 'block'; }
       document.getElementById('avatar-status').textContent  = '사진이 설정되어 있어요.';
       document.getElementById('btn-remove-avatar').style.display = 'inline';
     }
@@ -285,17 +290,6 @@ async function handleDelete() {
   }
 }
 
-// ── 로그아웃 처리 ─────────────────────────────────────────────────────────────
-// POST /api/auth/logout → 서버 세션 무효화 → index.html로 이동
-async function handleExit() {
-  try {
-    await fetch('/watchman/api/auth/logout', { method: 'POST' });
-  } catch (err) {
-    console.error('로그아웃 요청 실패:', err);
-  }
-  sessionStorage.clear();
-  window.location.href = 'index.html';
-}
 
 // ── 유틸 ──────────────────────────────────────────────────────────────────────
 

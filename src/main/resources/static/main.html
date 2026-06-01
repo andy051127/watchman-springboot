@@ -14,28 +14,7 @@
   <div class="login-toast" id="login-toast" style="display:none">🔒 로그인 하고 이용해주세요!</div>
 
   <!-- Navbar -->
-  <nav class="main-nav">
-    <div class="main-nav-inner">
-      <a href="main.html" class="main-nav-logo">
-        <img src="assets/icon.svg" alt="Watchman" width="24" height="24" />
-        <span>Watchman</span>
-      </a>
-      <div class="main-nav-links">
-        <a href="main.html" class="nav-link active">홈</a>
-        <a href="stats.html" class="nav-link" id="nav-stats">내 통계</a>
-        <a href="study-group.html" class="nav-link" id="nav-group">스터디 그룹</a>
-        <a href="planner.html" class="nav-link" id="nav-planner">플래너</a>
-        <a href="notice.html" class="nav-link">공지사항</a>
-      </div>
-      <div class="main-nav-right">
-        <a href="mypage.html" class="nav-avatar" id="nav-avatar" title="마이페이지">
-          <span id="nav-avatar-emoji">😊</span>
-        </a>
-        <a href="mypage.html" class="nav-nickname" id="nav-nickname"></a>
-        <button class="btn-nav-exit" id="btn-exit" onclick="handleExit()">로그아웃</button>
-      </div>
-    </div>
-  </nav>
+  <div id="nav-root"></div>
 
   <!-- Banner -->
   <div class="banner-section">
@@ -185,6 +164,7 @@
     </div>
   </footer>
 </div>
+<script src="js/nav.js"></script>
 <script src="js/auth-guard.js"></script>
 <script src="js/animations.js"></script>
 <script src="js/main.js"></script>

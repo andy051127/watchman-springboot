@@ -659,16 +659,6 @@ async function deleteBlock(blockId) {
   }
 }
 
-// ── 로그아웃 처리 ─────────────────────────────────────────────────────────────
-async function handleExit() {
-  try {
-    await fetch('/watchman/api/auth/logout', { method: 'POST' });
-  } catch (err) {
-    console.error('로그아웃 요청 실패:', err);
-  }
-  sessionStorage.clear();
-  window.location.href = 'index.html';
-}
 
 // ── 유틸: HTML 이스케이프 ─────────────────────────────────────────────────────
 // XSS 방지를 위해 사용자 입력 텍스트를 HTML에 삽입하기 전에 반드시 이스케이프한다.

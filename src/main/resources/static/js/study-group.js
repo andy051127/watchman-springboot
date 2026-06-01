@@ -291,12 +291,6 @@ function copyCode(code) {
   });
 }
 
-function handleExit() {
-  fetch('/watchman/api/auth/logout', { method: 'POST' }).finally(() => {
-    sessionStorage.clear();
-    window.location.href = 'index.html';
-  });
-}
 
 // ── 유틸 ──────────────────────────────────────────────────
 function showMsg(el, text) {

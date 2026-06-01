@@ -166,24 +166,6 @@ function renderRecentSessions(sessions, isGuest) {
   }).join('')}</div>`;
 }
 
-// ── 로그아웃 처리 ─────────────────────────────────────────────────────────────
-// POST /api/auth/logout → 서버 세션 무효화 → index.html로 이동
-// 비회원(나가기 버튼)일 때는 API 호출 없이 바로 이동
-async function handleExit() {
-  const isGuest = new URLSearchParams(window.location.search).get('guest') === '1';
-
-  if (!isGuest) {
-    try {
-      await fetch('/watchman/api/auth/logout', { method: 'POST' });
-    } catch (err) {
-      console.error('로그아웃 요청 실패:', err);
-    }
-    // sessionStorage 초기화
-    sessionStorage.clear();
-  }
-
-  window.location.href = 'index.html';
-}
 
 // ── 유틸: 시간 포맷 ──────────────────────────────────────────────────────────
 // 초(sec)를 "N시간 M분" 또는 "M분" 형태로 변환

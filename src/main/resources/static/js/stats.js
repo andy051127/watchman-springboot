@@ -271,17 +271,6 @@ function renderPage(page, scroll = true) {
   }
 }
 
-// ── 로그아웃 처리 ─────────────────────────────────────────────────────────────
-// POST /api/auth/logout → 서버 세션 무효화 → index.html로 이동
-async function handleExit() {
-  try {
-    await fetch('/watchman/api/auth/logout', { method: 'POST' });
-  } catch (err) {
-    console.error('로그아웃 요청 실패:', err);
-  }
-  sessionStorage.clear();
-  window.location.href = 'index.html';
-}
 
 // ── 유틸: 시간 포맷 ──────────────────────────────────────────────────────────
 function fmtSec(sec) {
