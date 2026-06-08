@@ -3,7 +3,6 @@
 let groups = [];
 let myUserId = null;
 let myNickname = '사용자';
-let selectedGroup = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   await loadMyInfo();
@@ -46,7 +45,7 @@ async function loadGroups() {
 
 // ── 패널 전환 ─────────────────────────────────────────────
 function showPanel(name) {
-  ['list', 'create', 'join', 'detail'].forEach(p => {
+  ['list', 'create', 'join'].forEach(p => {
     const el = document.getElementById(`panel-${p}`);
     if (el) el.style.display = p === name ? 'block' : 'none';
   });
@@ -97,84 +96,7 @@ function renderGroupList() {
 
 // ── 그룹 상세 ─────────────────────────────────────────────
 function openDetail(groupId) {
-  selectedGroup = groups.find(g => g.groupId === groupId);
-  if (!selectedGroup) return;
-  const g = selectedGroup;
-  const amLeader = g.leaderId == myUserId;
-
-  document.getElementById('detail-group-name').textContent = g.name;
-
-  const sorted = [...g.members].sort((a, b) => b.totalTime - a.totalTime);
-  const myRank = sorted.findIndex(m => m.userId == myUserId) + 1;
-
-  document.getElementById('detail-body').innerHTML = `
-    <div class="sg-info-card">
-      <div class="sg-info-left">
-        <div>
-          <div class="sg-group-name">${esc(g.name)}${amLeader ? '<span class="sg-leader-badge">그룹장</span>' : ''}</div>
-          ${g.description ? `<div class="sg-group-desc">${esc(g.description)}</div>` : ''}
-          <div class="sg-group-meta">멤버 ${g.members.length}명 · ${fmtDate(g.createdAt)} 개설</div>
-        </div>
-      </div>
-      <div class="sg-invite-wrap">
-        <div class="sg-invite-label">초대 코드</div>
-        <div class="sg-invite-code-row">
-          <span class="sg-invite-code">${g.inviteCode}</span>
-          <button class="sg-copy-btn" id="copy-btn" onclick="copyCode('${g.inviteCode}')">복사</button>
-        </div>
-      </div>
-    </div>
-
-    ${myRank > 0 ? `
-    <div class="sg-myrank-card">
-      <span class="sg-myrank-label">내 순위</span>
-      <span class="sg-myrank-value">${myRank}위</span>
-      <span class="sg-myrank-sub">/ ${g.members.length}명 중</span>
-    </div>` : ''}
-
-    <div class="sg-section">
-      <div class="sg-section-title">공부 시간 랭킹</div>
-      <div class="sg-rank-list">
-        ${sorted.map((m, i) => {
-          const isMe = m.userId == myUserId;
-          const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : null;
-          const rateN = Math.round(Number(m.focusRate) || 0);
-          const rateC = rateN >= 70 ? 'good' : rateN >= 40 ? 'ok' : 'bad';
-          const maxTime = sorted[0].totalTime || 1;
-          const barW = Math.round(((m.totalTime || 0) / maxTime) * 100);
-          const kickBtn = amLeader && !isMe
-            ? `<button class="sg-kick-btn" onclick="event.stopPropagation();kickMember(${m.userId},'${esc(m.nickname)}')">강퇴</button>`
-            : '';
-          return `
-            <div class="sg-rank-row ${isMe ? 'me' : ''}">
-              <div class="sg-rank-num">${medal ?? `<span class="sg-rank-plain">${i + 1}</span>`}</div>
-              <div class="sg-rank-avatar">${(m.nickname || '?').charAt(0)}</div>
-              <div class="sg-rank-info">
-                <div class="sg-rank-name">
-                  ${esc(m.nickname)}
-                  ${m.isLeader ? '<span class="sg-leader-mini">그룹장</span>' : ''}
-                  ${isMe ? '<span class="sg-me-badge">나</span>' : ''}
-                </div>
-                <div class="sg-rank-bar-wrap"><div class="sg-rank-bar" style="width:${barW}%"></div></div>
-              </div>
-              <div class="sg-rank-stats">
-                <div class="sg-rank-time">${m.totalTime > 0 ? fmtSec(m.totalTime) : '-'}</div>
-                <div class="sg-rank-rate ${rateC}">${m.totalTime > 0 ? rateN + '%' : '-'}</div>
-              </div>
-              ${kickBtn}
-            </div>`;
-        }).join('')}
-      </div>
-    </div>
-
-    <div class="sg-detail-actions">
-      ${amLeader
-        ? `<button class="sg-disband-btn" onclick="handleDisband(${g.groupId})">그룹 폐쇄</button>`
-        : `<button class="sg-leave-btn" onclick="handleLeave(${g.groupId})">그룹 나가기</button>`
-      }
-    </div>`;
-
-  showPanel('detail');
+  window.location.href = 'study-group-info.html?groupId=' + groupId;
 }
 
 // ── 그룹 만들기 ───────────────────────────────────────────
@@ -227,70 +149,6 @@ async function handleJoinGroup() {
     showMsg(msg, '서버 오류가 발생했습니다.');
   }
 }
-
-// ── 그룹 나가기 (일반 멤버) ───────────────────────────────
-async function handleLeave(groupId) {
-  if (!confirm('그룹을 나가시겠습니까?')) return;
-  try {
-    const res = await fetch(`/watchman/api/groups/${groupId}/members/me`, { method: 'DELETE' });
-    if (res.ok) {
-      await loadGroups();
-      showPanel('list');
-    } else {
-      const data = await res.json();
-      alert(data.message || '나가기에 실패했습니다.');
-    }
-  } catch (e) {
-    alert('서버 오류가 발생했습니다.');
-  }
-}
-
-// ── 그룹 폐쇄 (그룹장) ───────────────────────────────────
-async function handleDisband(groupId) {
-  if (!confirm('그룹을 폐쇄하시겠습니까?\n모든 멤버가 그룹에서 제거되며 되돌릴 수 없습니다.')) return;
-  try {
-    const res = await fetch(`/watchman/api/groups/${groupId}`, { method: 'DELETE' });
-    if (res.ok) {
-      await loadGroups();
-      showPanel('list');
-    } else {
-      const data = await res.json();
-      alert(data.message || '폐쇄에 실패했습니다.');
-    }
-  } catch (e) {
-    alert('서버 오류가 발생했습니다.');
-  }
-}
-
-// ── 멤버 강퇴 (그룹장) ───────────────────────────────────
-async function kickMember(targetUserId, nickname) {
-  if (!confirm(`'${nickname}' 님을 강퇴하시겠습니까?`)) return;
-  const g = selectedGroup;
-  if (!g) return;
-  try {
-    const res = await fetch(`/watchman/api/groups/${g.groupId}/members/${targetUserId}`, { method: 'DELETE' });
-    if (res.ok) {
-      await loadGroups();
-      const updated = groups.find(x => x.groupId === g.groupId);
-      if (updated) openDetail(g.groupId);
-      else showPanel('list');
-    } else {
-      const data = await res.json();
-      alert(data.message || '강퇴에 실패했습니다.');
-    }
-  } catch (e) {
-    alert('서버 오류가 발생했습니다.');
-  }
-}
-
-// ── 복사 ──────────────────────────────────────────────────
-function copyCode(code) {
-  navigator.clipboard.writeText(code).then(() => {
-    const btn = document.getElementById('copy-btn');
-    if (btn) { btn.textContent = '복사됨 ✓'; setTimeout(() => { btn.textContent = '복사'; }, 1500); }
-  });
-}
-
 
 // ── 유틸 ──────────────────────────────────────────────────
 function showMsg(el, text) {
