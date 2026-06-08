@@ -1,0 +1,55 @@
+<h2>영상 공유 방식 선택</h2>
+<p class="subtitle">스터디룸에서 서로의 카메라를 어떻게 공유할까요?</p>
+
+<div class="options">
+  <div class="option" data-choice="webrtc" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>WebRTC (권장)</h3>
+      <p>브라우저 ↔ 브라우저 직접 P2P 연결 — 실제 Zoom / Google Meet 방식</p>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>장점</h4>
+          <ul>
+            <li>화질 좋고 지연 낮음</li>
+            <li>기존 MediaPipe 얼굴 감지와 그대로 호환</li>
+            <li>서버 부하 거의 없음</li>
+            <li>Spring WebSocket은 연결 중개(시그널링)만 담당</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>단점</h4>
+          <ul>
+            <li>구현 복잡도 높음</li>
+            <li>외부 STUN 서버 필요 (Google 무료 서버 사용 가능)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="ws-frames" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>WebSocket 프레임 전송</h3>
+      <p>카메라 캔버스 캡처 → 서버 → 전체 broadcast</p>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>장점</h4>
+          <ul>
+            <li>구현 단순</li>
+            <li>Spring WebSocket 하나로 통일</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>단점</h4>
+          <ul>
+            <li>화질 낮고 지연 높음</li>
+            <li>서버 트래픽·부하 매우 높음</li>
+            <li>참가자 많을수록 급격히 느려짐</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

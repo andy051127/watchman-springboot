@@ -2,6 +2,7 @@
 
 let group = null;
 let myUserId = null;
+let rankSortMode = 'time'; // 'time' | 'focus'
 
 document.addEventListener('DOMContentLoaded', async () => {
   await loadMyInfo();
@@ -70,37 +71,15 @@ function renderDetail() {
     </div>` : ''}
 
     <div class="sg-section">
-      <div class="sg-section-title">공부 시간 랭킹</div>
-      <div class="sg-rank-list">
-        ${sorted.map((m, i) => {
-          const isMe = m.userId == myUserId;
-          const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : null;
-          const rateN = Math.round(Number(m.focusRate) || 0);
-          const rateC = rateN >= 70 ? 'good' : rateN >= 40 ? 'ok' : 'bad';
-          const maxTime = sorted[0].totalTime || 1;
-          const barW = Math.round(((m.totalTime || 0) / maxTime) * 100);
-          const kickBtn = amLeader && !isMe
-            ? `<button class="sg-kick-btn" onclick="event.stopPropagation();kickMember(${m.userId},'${esc(m.nickname)}')">강퇴</button>`
-            : '';
-          return `
-            <div class="sg-rank-row ${isMe ? 'me' : ''}">
-              <div class="sg-rank-num">${medal ?? `<span class="sg-rank-plain">${i + 1}</span>`}</div>
-              <div class="sg-rank-avatar">${(m.nickname || '?').charAt(0)}</div>
-              <div class="sg-rank-info">
-                <div class="sg-rank-name">
-                  ${esc(m.nickname)}
-                  ${m.isLeader ? '<span class="sg-leader-mini">그룹장</span>' : ''}
-                  ${isMe ? '<span class="sg-me-badge">나</span>' : ''}
-                </div>
-                <div class="sg-rank-bar-wrap"><div class="sg-rank-bar" style="width:${barW}%"></div></div>
-              </div>
-              <div class="sg-rank-stats">
-                <div class="sg-rank-time">${m.totalTime > 0 ? fmtSec(m.totalTime) : '-'}</div>
-                <div class="sg-rank-rate ${rateC}">${m.totalTime > 0 ? rateN + '%' : '-'}</div>
-              </div>
-              ${kickBtn}
-            </div>`;
-        }).join('')}
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div class="sg-section-title" style="margin-bottom:0">공부 시간 랭킹</div>
+        <div style="display:flex;gap:6px;">
+          <button id="sort-time-btn" class="sg-sort-btn ${rankSortMode === 'time' ? 'active' : ''}" onclick="setRankSort('time')">공부시간</button>
+          <button id="sort-focus-btn" class="sg-sort-btn ${rankSortMode === 'focus' ? 'active' : ''}" onclick="setRankSort('focus')">집중도</button>
+        </div>
+      </div>
+      <div class="sg-rank-list" id="rank-list">
+        ${renderRankList(g.members, amLeader)}
       </div>
     </div>
 
@@ -118,6 +97,55 @@ function renderDetail() {
         : `<button class="sg-leave-btn"   onclick="handleLeave(${g.groupId})">그룹 나가기</button>`
       }
     </div>`;
+}
+
+// ── 랭킹 정렬 ─────────────────────────────────────────────
+function renderRankList(members, amLeader) {
+  const sorted = rankSortMode === 'focus'
+    ? [...members].sort((a, b) => b.focusRate - a.focusRate)
+    : [...members].sort((a, b) => b.totalTime - a.totalTime);
+
+  const maxVal = rankSortMode === 'focus'
+    ? (sorted[0]?.focusRate || 1)
+    : (sorted[0]?.totalTime || 1);
+
+  return sorted.map((m, i) => {
+    const isMe  = m.userId == myUserId;
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : null;
+    const rateN = Math.round(Number(m.focusRate) || 0);
+    const rateC = rateN >= 70 ? 'good' : rateN >= 40 ? 'ok' : 'bad';
+    const barVal = rankSortMode === 'focus' ? (m.focusRate || 0) : (m.totalTime || 0);
+    const barW  = Math.round((barVal / maxVal) * 100);
+    const kickBtn = amLeader && !isMe
+      ? `<button class="sg-kick-btn" onclick="event.stopPropagation();kickMember(${m.userId},'${esc(m.nickname)}')">강퇴</button>`
+      : '';
+    return `
+      <div class="sg-rank-row ${isMe ? 'me' : ''}">
+        <div class="sg-rank-num">${medal ?? `<span class="sg-rank-plain">${i + 1}</span>`}</div>
+        <div class="sg-rank-avatar">${(m.nickname || '?').charAt(0)}</div>
+        <div class="sg-rank-info">
+          <div class="sg-rank-name">
+            ${esc(m.nickname)}
+            ${m.isLeader ? '<span class="sg-leader-mini">그룹장</span>' : ''}
+            ${isMe ? '<span class="sg-me-badge">나</span>' : ''}
+          </div>
+          <div class="sg-rank-bar-wrap"><div class="sg-rank-bar" style="width:${barW}%"></div></div>
+        </div>
+        <div class="sg-rank-stats">
+          <div class="sg-rank-time">${m.totalTime > 0 ? fmtSec(m.totalTime) : '-'}</div>
+          <div class="sg-rank-rate ${rateC}">${m.totalTime > 0 ? rateN + '%' : '-'}</div>
+        </div>
+        ${kickBtn}
+      </div>`;
+  }).join('');
+}
+
+function setRankSort(mode) {
+  rankSortMode = mode;
+  document.getElementById('sort-time-btn').className  = `sg-sort-btn${mode === 'time'  ? ' active' : ''}`;
+  document.getElementById('sort-focus-btn').className = `sg-sort-btn${mode === 'focus' ? ' active' : ''}`;
+  const amLeader = group.leaderId == myUserId;
+  document.getElementById('rank-list').innerHTML = renderRankList(group.members, amLeader);
 }
 
 // ── 스터디룸 입장 ──────────────────────────────────────────

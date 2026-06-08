@@ -544,6 +544,9 @@
 
 .sg-section { background: var(--bg-white); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; }
 .sg-section-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 16px; }
+.sg-sort-btn { background: none; border: 1.5px solid var(--border); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.15s; }
+.sg-sort-btn:hover { border-color: var(--primary); color: var(--primary); }
+.sg-sort-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
 .sg-rank-list { display: flex; flex-direction: column; gap: 10px; }
 .sg-rank-row {
   display: flex;

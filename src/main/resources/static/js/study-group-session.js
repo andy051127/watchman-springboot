@@ -138,7 +138,8 @@ async function initiateOffer(remoteUserId) {
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
     stompClient.send(`/app/room/${groupId}/signal`, {},
-      JSON.stringify({ from: myUserId, to: remoteUserId, type: 'offer', data: offer }));
+      JSON.stringify({ from: myUserId, to: remoteUserId, type: 'offer', data: offer,
+                       fromNickname: myNickname, fromAvatar: myAvatar }));
   } catch (e) {
     console.error('[SGS] offer 생성 실패:', e);
   }
@@ -196,6 +197,13 @@ async function handleSignal(msg) {
   const remoteUserId = msg.from;
 
   if (msg.type === 'offer') {
+    // offer 보낸 쪽이 participants에 없으면 추가 (신규 참가자가 기존 참가자 화면 못 보는 문제 해결)
+    if (!participants.has(String(remoteUserId))) {
+      participants.set(String(remoteUserId), {
+        userId: remoteUserId, nickname: msg.fromNickname || String(remoteUserId), avatar: msg.fromAvatar || '', focused: true
+      });
+      renderGrid();
+    }
     const pc = createPC(remoteUserId);
     try {
       await pc.setRemoteDescription(new RTCSessionDescription(msg.data));
@@ -369,6 +377,16 @@ const BASE_THRESHOLDS = { yawLeft: 35, yawRight: 35, pitchDown: 30, pitchUp: 20 
 const MEDIAPIPE_VERSION = '0.10.3';
 const MEDIAPIPE_CDN     = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MEDIAPIPE_VERSION}`;
 
+// ── 캘리브레이션 ────────────────────────────────────────────
+const CALIB_DURATION_MS    = 10000;
+const CALIB_BUFFER_DEG     = 8;
+const CALIB_MAX_OFFSET_DEG = 10;
+const RING_CIRCUMFERENCE   = 314;
+let calibRafId        = null;
+let calibStartTime    = null;
+let calibYawSamples   = [];
+let calibPitchSamples = [];
+
 function loadCalibValue(key, base) {
   if (sessionStorage.getItem('watchman_calib_done') !== '1') return base;
   const v = parseFloat(sessionStorage.getItem(key));
@@ -397,7 +415,107 @@ async function initFaceLandmarker() {
     faceLandmarker = await FaceLandmarker.createFromOptions(vision,
       { baseOptions: { modelAssetPath, delegate: 'CPU' }, ...opts });
   }
+  startCalibration();
+}
+
+function startCalibration() {
+  calibYawSamples   = [];
+  calibPitchSamples = [];
+  calibStartTime    = null;
+
+  const overlay = document.getElementById('calib-overlay');
+  overlay.style.display = 'flex';
+  document.getElementById('calib-countdown').textContent = '10';
+  document.getElementById('calib-ring-fill').style.strokeDashoffset = RING_CIRCUMFERENCE;
+  document.getElementById('calib-status').textContent = '측정 중...';
+  ['center', 'side', 'down'].forEach(k => {
+    document.getElementById(`calib-tip-${k}`).classList.remove('done');
+  });
+
+  runCalibrationLoop();
+}
+
+function runCalibrationLoop() {
+  const video = document.getElementById(`tile-video-${myUserId}`);
+
+  function sample(ts) {
+    if (!calibStartTime) calibStartTime = ts;
+    const elapsed  = ts - calibStartTime;
+    const progress = Math.min(elapsed / CALIB_DURATION_MS, 1);
+    const secLeft  = Math.ceil((CALIB_DURATION_MS - elapsed) / 1000);
+
+    document.getElementById('calib-ring-fill').style.strokeDashoffset =
+      RING_CIRCUMFERENCE * (1 - progress);
+    document.getElementById('calib-countdown').textContent = secLeft > 0 ? secLeft : '0';
+
+    const step = Math.floor(progress * 3);
+    if (step >= 1) document.getElementById('calib-tip-center').classList.add('done');
+    if (step >= 2) document.getElementById('calib-tip-side').classList.add('done');
+
+    if (faceLandmarker && video && video.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) {
+      try {
+        const res = faceLandmarker.detectForVideo(video, performance.now());
+        if (res.faceLandmarks?.length > 0) {
+          const { yaw, pitch } = computeHeadAngles(res.faceLandmarks[0]);
+          calibYawSamples.push(yaw);
+          calibPitchSamples.push(pitch);
+        }
+      } catch (_) {}
+    }
+    document.getElementById('calib-status').textContent =
+      `측정 중... (샘플 ${calibYawSamples.length}개)`;
+
+    if (progress < 1) {
+      calibRafId = requestAnimationFrame(sample);
+    } else {
+      finishCalibration();
+    }
+  }
+  calibRafId = requestAnimationFrame(sample);
+}
+
+function finishCalibration() {
+  document.getElementById('calib-tip-down').classList.add('done');
+
+  if (calibYawSamples.length >= 20) {
+    const yaw   = calibPercentileRange(calibYawSamples);
+    const pitch = calibPercentileRange(calibPitchSamples);
+    const clamp = (val, base) =>
+      Math.min(base + CALIB_MAX_OFFSET_DEG, Math.max(base, val));
+    calibYawLeft   = clamp(yaw.p95   + CALIB_BUFFER_DEG, BASE_THRESHOLDS.yawLeft);
+    calibYawRight  = clamp(-yaw.p5   + CALIB_BUFFER_DEG, BASE_THRESHOLDS.yawRight);
+    calibPitchDown = clamp(pitch.p95 + CALIB_BUFFER_DEG, BASE_THRESHOLDS.pitchDown);
+    calibPitchUp   = clamp(-pitch.p5 + CALIB_BUFFER_DEG, BASE_THRESHOLDS.pitchUp);
+    document.getElementById('calib-countdown').textContent = '✓';
+    document.getElementById('calib-status').textContent =
+      `보정 완료 · 좌 ${calibYawLeft.toFixed(0)}° 우 ${calibYawRight.toFixed(0)}°` +
+      ` 상 ${calibPitchUp.toFixed(0)}° 하 ${calibPitchDown.toFixed(0)}°`;
+  } else {
+    document.getElementById('calib-countdown').textContent = '!';
+    document.getElementById('calib-status').textContent = '샘플 부족 — 기본값으로 시작합니다';
+  }
+
+  setTimeout(() => {
+    document.getElementById('calib-overlay').style.display = 'none';
+    startDetectionLoop();
+  }, 1400);
+}
+
+function skipCalibration() {
+  if (calibRafId !== null) { cancelAnimationFrame(calibRafId); calibRafId = null; }
+  calibYawLeft   = BASE_THRESHOLDS.yawLeft;
+  calibYawRight  = BASE_THRESHOLDS.yawRight;
+  calibPitchDown = BASE_THRESHOLDS.pitchDown;
+  calibPitchUp   = BASE_THRESHOLDS.pitchUp;
+  document.getElementById('calib-overlay').style.display = 'none';
   startDetectionLoop();
+}
+
+function calibPercentileRange(samples) {
+  const sorted = [...samples].sort((a, b) => a - b);
+  const p5  = sorted[Math.max(0, Math.floor(sorted.length * 0.05))];
+  const p95 = sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.95))];
+  return { p5, p95 };
 }
 
 function computeHeadAngles(landmarks) {

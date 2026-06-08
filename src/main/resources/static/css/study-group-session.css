@@ -220,6 +220,7 @@
   font-size: 13px;
   color: #cbd5e1;
   word-break: break-word;
+  overflow-wrap: anywhere;
   line-height: 1.4;
 }
 .sgs-chat-msg.mine .sgs-chat-text { background: #1d4ed8; color: #eff6ff; }
@@ -262,6 +263,44 @@
   color: #475569;
   padding: 2px 0;
 }
+
+/* ── Calibration overlay ── */
+.calib-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.calib-modal {
+  background: #1e293b;
+  border-radius: 24px;
+  padding: 40px 36px 32px;
+  text-align: center;
+  max-width: 400px;
+  width: calc(100% - 48px);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+}
+.calib-title { font-size: 20px; font-weight: 800; color: #e2e8f0; margin: 0 0 10px; }
+.calib-desc { font-size: 13.5px; color: #94a3b8; line-height: 1.65; margin: 0 0 28px; }
+.calib-desc strong { color: #e2e8f0; }
+.calib-countdown-wrap { position: relative; width: 120px; height: 120px; margin: 0 auto 24px; }
+.calib-ring { width: 120px; height: 120px; transform: rotate(-90deg); }
+.calib-ring-bg { fill: none; stroke: #334155; stroke-width: 8; }
+.calib-ring-fill { fill: none; stroke: #3b82f6; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.25s linear; }
+.calib-countdown { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 900; color: #e2e8f0; font-variant-numeric: tabular-nums; }
+.calib-tips { display: flex; flex-direction: column; gap: 8px; text-align: left; background: #0f172a; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
+.calib-tip-item { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #64748b; transition: color 0.3s; }
+.calib-tip-item.done { color: #4ade80; font-weight: 600; }
+.calib-tip-dot { width: 8px; height: 8px; border-radius: 50%; background: #334155; flex-shrink: 0; transition: background 0.3s; }
+.calib-tip-item.done .calib-tip-dot { background: #4ade80; }
+.calib-status { font-size: 12px; color: #475569; margin: 0 0 20px; min-height: 18px; }
+.calib-skip-btn { background: none; border: 1.5px solid #334155; border-radius: 999px; padding: 9px 22px; font-size: 12.5px; font-weight: 600; color: #64748b; cursor: pointer; transition: all 0.2s; }
+.calib-skip-btn:hover { border-color: #64748b; color: #e2e8f0; }
 
 /* ── 반응형 ── */
 @media (max-width: 640px) {

@@ -1,0 +1,119 @@
+<h2>그룹 스터디 전체 설계</h2>
+<p class="subtitle">구현 전 최종 확인 — 각 섹션을 검토해 주세요</p>
+
+<div class="section">
+  <h3>📄 페이지 구조</h3>
+  <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+    <div style="background:#1e293b;border-radius:8px;padding:12px;display:flex;align-items:center;gap:12px;">
+      <div style="background:#3b82f6;color:#fff;padding:4px 10px;border-radius:6px;font-size:12px;white-space:nowrap;">study-group.html</div>
+      <div style="font-size:13px;color:#94a3b8;">그룹 목록 / 만들기 / 코드참가 (기존 파일 — 상세 패널 제거, 카드 클릭 시 study-group-info.html?groupId=xxx 로 이동)</div>
+    </div>
+    <div style="display:flex;justify-content:center;color:#475569;font-size:18px;">↓</div>
+    <div style="background:#1e293b;border-radius:8px;padding:12px;display:flex;align-items:center;gap:12px;">
+      <div style="background:#8b5cf6;color:#fff;padding:4px 10px;border-radius:6px;font-size:12px;white-space:nowrap;">study-group-info.html</div>
+      <div style="font-size:13px;color:#94a3b8;">그룹 상세 + 멤버 집중 랭킹 + "스터디룸 들어가기" 버튼 / 강퇴·폐쇄(방장)</div>
+    </div>
+    <div style="display:flex;justify-content:center;color:#475569;font-size:18px;">↓</div>
+    <div style="background:#1e293b;border-radius:8px;padding:12px;display:flex;align-items:center;gap:12px;">
+      <div style="background:#10b981;color:#fff;padding:4px 10px;border-radius:6px;font-size:12px;white-space:nowrap;">study-group-session.html</div>
+      <div style="font-size:13px;color:#94a3b8;">실시간 화상 + 채팅 + 집중 상태 공유 (자동 그리드 + 우측 패널)</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>🔌 WebSocket 채널 (STOMP)</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;">
+    <thead>
+      <tr style="background:#1e293b;color:#94a3b8;">
+        <th style="padding:8px;text-align:left;border-radius:6px 0 0 0;">Topic</th>
+        <th style="padding:8px;text-align:left;">용도</th>
+        <th style="padding:8px;text-align:left;border-radius:0 6px 0 0;">Payload</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid #1e293b;">
+        <td style="padding:8px;color:#60a5fa;font-family:monospace;">/topic/room/{id}/presence</td>
+        <td style="padding:8px;color:#cbd5e1;">입장 / 퇴장 알림</td>
+        <td style="padding:8px;color:#94a3b8;">userId, nickname, avatar, action</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1e293b;">
+        <td style="padding:8px;color:#60a5fa;font-family:monospace;">/topic/room/{id}/focus</td>
+        <td style="padding:8px;color:#cbd5e1;">집중/딴짓 상태 브로드캐스트</td>
+        <td style="padding:8px;color:#94a3b8;">userId, focused (boolean)</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1e293b;">
+        <td style="padding:8px;color:#60a5fa;font-family:monospace;">/topic/room/{id}/chat</td>
+        <td style="padding:8px;color:#cbd5e1;">채팅 메시지</td>
+        <td style="padding:8px;color:#94a3b8;">userId, nickname, avatar, message, timestamp</td>
+      </tr>
+      <tr>
+        <td style="padding:8px;color:#60a5fa;font-family:monospace;">/topic/room/{id}/signal</td>
+        <td style="padding:8px;color:#cbd5e1;">WebRTC 시그널링 (offer/answer/ICE)</td>
+        <td style="padding:8px;color:#94a3b8;">from, to, type, data</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section">
+  <h3>🌐 REST API (백엔드 신규 구현)</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;">
+    <thead>
+      <tr style="background:#1e293b;color:#94a3b8;">
+        <th style="padding:8px;text-align:left;">Method</th>
+        <th style="padding:8px;text-align:left;">Endpoint</th>
+        <th style="padding:8px;text-align:left;">설명</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid #1e293b;"><td style="padding:8px;color:#4ade80;">GET</td><td style="padding:8px;font-family:monospace;color:#e2e8f0;">/api/groups</td><td style="padding:8px;color:#94a3b8;">내 그룹 목록</td></tr>
+      <tr style="border-bottom:1px solid #1e293b;"><td style="padding:8px;color:#4ade80;">GET</td><td style="padding:8px;font-family:monospace;color:#e2e8f0;">/api/groups/{groupId}</td><td style="padding:8px;color:#94a3b8;">그룹 상세 + 멤버 목록</td></tr>
+      <tr style="border-bottom:1px solid #1e293b;"><td style="padding:8px;color:#fb923c;">POST</td><td style="padding:8px;font-family:monospace;color:#e2e8f0;">/api/groups</td><td style="padding:8px;color:#94a3b8;">그룹 생성</td></tr>
+      <tr style="border-bottom:1px solid #1e293b;"><td style="padding:8px;color:#fb923c;">POST</td><td style="padding:8px;font-family:monospace;color:#e2e8f0;">/api/groups/join</td><td style="padding:8px;color:#94a3b8;">초대코드로 참가</td></tr>
+      <tr style="border-bottom:1px solid #1e293b;"><td style="padding:8px;color:#f87171;">DELETE</td><td style="padding:8px;font-family:monospace;color:#e2e8f0;">/api/groups/{groupId}</td><td style="padding:8px;color:#94a3b8;">그룹 폐쇄 (방장)</td></tr>
+      <tr style="border-bottom:1px solid #1e293b;"><td style="padding:8px;color:#f87171;">DELETE</td><td style="padding:8px;font-family:monospace;color:#e2e8f0;">/api/groups/{groupId}/members/me</td><td style="padding:8px;color:#94a3b8;">그룹 나가기 (일반)</td></tr>
+      <tr><td style="padding:8px;color:#f87171;">DELETE</td><td style="padding:8px;font-family:monospace;color:#e2e8f0;">/api/groups/{groupId}/members/{userId}</td><td style="padding:8px;color:#94a3b8;">멤버 강퇴 (방장)</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section">
+  <h3>🏗️ 백엔드 계층 (신규 파일)</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+    <div style="background:#1e293b;border-radius:8px;padding:10px;">
+      <div style="color:#60a5fa;font-size:11px;margin-bottom:6px;">Domain</div>
+      <div style="font-family:monospace;font-size:11px;color:#e2e8f0;line-height:1.8;">StudyGroup<br>StudyGroupMember</div>
+    </div>
+    <div style="background:#1e293b;border-radius:8px;padding:10px;">
+      <div style="color:#a78bfa;font-size:11px;margin-bottom:6px;">Repository</div>
+      <div style="font-family:monospace;font-size:11px;color:#e2e8f0;line-height:1.8;">StudyGroupRepository<br>StudyGroupRepositoryImpl</div>
+    </div>
+    <div style="background:#1e293b;border-radius:8px;padding:10px;">
+      <div style="color:#34d399;font-size:11px;margin-bottom:6px;">Service</div>
+      <div style="font-family:monospace;font-size:11px;color:#e2e8f0;line-height:1.8;">StudyGroupService<br>StudyGroupServiceImpl</div>
+    </div>
+    <div style="background:#1e293b;border-radius:8px;padding:10px;">
+      <div style="color:#fb923c;font-size:11px;margin-bottom:6px;">Controller + WebSocket</div>
+      <div style="font-family:monospace;font-size:11px;color:#e2e8f0;line-height:1.8;">StudyGroupController<br>StudyRoomController (STOMP)<br>WebSocketConfig</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>💾 세션 저장</h3>
+  <div style="background:#1e293b;border-radius:8px;padding:12px;font-size:13px;color:#94a3b8;">
+    그룹 스터디룸을 나갈 때 개인 집중 데이터(focusedTime, distractedTime)를 기존 <code style="color:#60a5fa;">sessions</code> 테이블에 저장합니다. 솔로 세션과 동일한 방식.
+  </div>
+</div>
+
+<div class="section">
+  <h3>📷 WebRTC 시그널링 흐름</h3>
+  <div style="background:#0f172a;border-radius:8px;padding:12px;font-size:12px;line-height:2;color:#94a3b8;">
+    1. A가 룸 입장 → <span style="color:#60a5fa">presence</span> 브로드캐스트<br>
+    2. 기존 참가자 B가 A에게 <span style="color:#a78bfa">SDP offer</span> 전송 (signal 채널)<br>
+    3. A가 B에게 <span style="color:#a78bfa">SDP answer</span> 응답<br>
+    4. 양측 <span style="color:#34d399">ICE candidate</span> 교환<br>
+    5. P2P 영상 스트림 연결 완료 — 이후 서버 경유 없음
+  </div>
+</div>

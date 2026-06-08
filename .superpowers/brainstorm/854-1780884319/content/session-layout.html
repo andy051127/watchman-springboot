@@ -1,0 +1,134 @@
+<h2>스터디룸 세션 페이지 레이아웃</h2>
+<p class="subtitle">카메라 그리드와 채팅 영역을 어떻게 배치할까요?</p>
+
+<div class="cards">
+
+  <!-- Option A -->
+  <div class="card" data-choice="A" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="display:flex;gap:8px;height:200px;font-size:11px;">
+        <!-- 카메라 그리드 (메인) -->
+        <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:6px;background:#111;border-radius:8px;padding:8px;">
+          <div style="background:#1e293b;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#94a3b8;gap:4px;">
+            <div style="width:28px;height:28px;border-radius:50%;background:#334155;display:flex;align-items:center;justify-content:center;font-size:12px;">나</div>
+            <span style="font-size:10px;">집중 중 🟢</span>
+          </div>
+          <div style="background:#1e293b;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#94a3b8;gap:4px;">
+            <div style="width:28px;height:28px;border-radius:50%;background:#334155;display:flex;align-items:center;justify-content:center;font-size:12px;">B</div>
+            <span style="font-size:10px;">딴짓 감지 🔴</span>
+          </div>
+          <div style="background:#1e293b;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#94a3b8;gap:4px;">
+            <div style="width:28px;height:28px;border-radius:50%;background:#334155;display:flex;align-items:center;justify-content:center;font-size:12px;">C</div>
+            <span style="font-size:10px;">집중 중 🟢</span>
+          </div>
+          <div style="background:#1e293b;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#94a3b8;gap:4px;">
+            <div style="width:28px;height:28px;border-radius:50%;background:#334155;display:flex;align-items:center;justify-content:center;font-size:12px;">D</div>
+            <span style="font-size:10px;">집중 중 🟢</span>
+          </div>
+        </div>
+        <!-- 우측 채팅 사이드바 -->
+        <div style="width:100px;background:#0f172a;border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:6px;">
+          <div style="color:#94a3b8;font-size:10px;border-bottom:1px solid #1e293b;padding-bottom:4px;">채팅</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+            <div style="background:#1e293b;border-radius:4px;padding:4px;font-size:9px;color:#cbd5e1;">
+              <span style="color:#60a5fa">나</span> 화이팅!
+            </div>
+            <div style="background:#1e293b;border-radius:4px;padding:4px;font-size:9px;color:#cbd5e1;">
+              <span style="color:#a78bfa">B</span> 같이 해요
+            </div>
+          </div>
+          <div style="background:#1e293b;border-radius:4px;height:20px;display:flex;align-items:center;padding:0 4px;">
+            <span style="color:#475569;font-size:9px;">메시지...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — 그리드 + 우측 채팅</h3>
+      <p>카메라가 2×2 그리드로 꽉 채우고 오른쪽에 채팅 패널. 인원에 따라 1×1, 1×2, 2×2, 2×3 자동 조정.</p>
+    </div>
+  </div>
+
+  <!-- Option B -->
+  <div class="card" data-choice="B" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="display:flex;flex-direction:column;gap:6px;height:200px;font-size:11px;">
+        <!-- 메인 발표자 -->
+        <div style="flex:1;background:#111;border-radius:8px;padding:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;color:#94a3b8;">
+          <div style="width:40px;height:40px;border-radius:50%;background:#334155;display:flex;align-items:center;justify-content:center;font-size:16px;">나</div>
+          <span style="font-size:10px;">집중 중 🟢</span>
+          <span style="font-size:9px;color:#475569;">내 화면 (크게)</span>
+        </div>
+        <!-- 하단 썸네일 -->
+        <div style="display:flex;gap:6px;height:50px;background:#0f172a;border-radius:8px;padding:6px;">
+          <div style="flex:1;background:#1e293b;border-radius:4px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;color:#94a3b8;font-size:9px;">
+            <span>B</span><span>🔴</span>
+          </div>
+          <div style="flex:1;background:#1e293b;border-radius:4px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;color:#94a3b8;font-size:9px;">
+            <span>C</span><span>🟢</span>
+          </div>
+          <div style="flex:1;background:#1e293b;border-radius:4px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;color:#94a3b8;font-size:9px;">
+            <span>D</span><span>🟢</span>
+          </div>
+          <div style="flex:1;background:#0284c7;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;">채팅</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — 발표자 뷰 + 하단 썸네일</h3>
+      <p>내 카메라를 크게 보여주고 다른 사람들은 하단에 작게. 채팅은 하단 탭으로 전환.</p>
+    </div>
+  </div>
+
+  <!-- Option C -->
+  <div class="card" data-choice="C" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="display:flex;gap:8px;height:200px;font-size:11px;">
+        <!-- 좌측 카메라 그리드 -->
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px;background:#111;border-radius:8px;padding:8px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;flex:1;">
+            <div style="background:#1e293b;border-radius:4px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;color:#94a3b8;font-size:10px;">
+              <span>나</span><span>🟢</span>
+            </div>
+            <div style="background:#1e293b;border-radius:4px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;color:#94a3b8;font-size:10px;">
+              <span>B</span><span>🔴</span>
+            </div>
+            <div style="background:#1e293b;border-radius:4px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;color:#94a3b8;font-size:10px;">
+              <span>C</span><span>🟢</span>
+            </div>
+            <div style="background:#1e293b;border-radius:4px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;color:#94a3b8;font-size:10px;">
+              <span>D</span><span>🟢</span>
+            </div>
+          </div>
+        </div>
+        <!-- 우측 패널 (채팅 + 통계) -->
+        <div style="width:110px;background:#0f172a;border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:6px;">
+          <div style="color:#94a3b8;font-size:10px;border-bottom:1px solid #1e293b;padding-bottom:4px;">채팅 / 통계</div>
+          <!-- 통계 영역 -->
+          <div style="background:#1e293b;border-radius:4px;padding:6px;font-size:9px;color:#94a3b8;">
+            <div>집중 04:12 🟢</div>
+            <div>딴짓 00:38 🔴</div>
+            <div>집중률 87% ✨</div>
+          </div>
+          <!-- 채팅 -->
+          <div style="flex:1;display:flex;flex-direction:column;gap:3px;overflow:hidden;">
+            <div style="background:#1e293b;border-radius:3px;padding:3px;font-size:9px;color:#cbd5e1;">
+              <span style="color:#60a5fa">나</span> 화이팅!
+            </div>
+            <div style="background:#1e293b;border-radius:3px;padding:3px;font-size:9px;color:#cbd5e1;">
+              <span style="color:#a78bfa">B</span> 같이해요
+            </div>
+          </div>
+          <div style="background:#1e293b;border-radius:4px;height:18px;display:flex;align-items:center;padding:0 4px;">
+            <span style="color:#475569;font-size:9px;">메시지...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — 그리드 + 우측 채팅&통계</h3>
+      <p>A와 같은 그리드지만 우측 패널에 채팅과 내 실시간 집중 통계를 함께 표시.</p>
+    </div>
+  </div>
+
+</div>
