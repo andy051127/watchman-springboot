@@ -22,14 +22,16 @@ public class StudyRoomController {
     // 입장 / 퇴장 브로드캐스트
     @MessageMapping("/room/{groupId}/join")
     public void handleJoin(@DestinationVariable Long groupId, @Payload Map<String, Object> payload) {
-        payload.put("action", "join");
-        messagingTemplate.convertAndSend("/topic/room/" + groupId + "/presence", payload);
+        Map<String, Object> out = new java.util.HashMap<>(payload);
+        out.put("action", "join");
+        messagingTemplate.convertAndSend("/topic/room/" + groupId + "/presence", out);
     }
 
     @MessageMapping("/room/{groupId}/leave")
     public void handleLeave(@DestinationVariable Long groupId, @Payload Map<String, Object> payload) {
-        payload.put("action", "leave");
-        messagingTemplate.convertAndSend("/topic/room/" + groupId + "/presence", payload);
+        Map<String, Object> out = new java.util.HashMap<>(payload);
+        out.put("action", "leave");
+        messagingTemplate.convertAndSend("/topic/room/" + groupId + "/presence", out);
     }
 
     // 집중/딴짓 상태 브로드캐스트
