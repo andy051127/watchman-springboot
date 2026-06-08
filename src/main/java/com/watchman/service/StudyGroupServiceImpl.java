@@ -12,6 +12,8 @@ import java.util.List;
 @Service
 public class StudyGroupServiceImpl implements StudyGroupService {
 
+    private static final SecureRandom RANDOM = new SecureRandom();
+
     private StudyGroupRepository studyGroupRepository;
 
     @Autowired
@@ -37,6 +39,9 @@ public class StudyGroupServiceImpl implements StudyGroupService {
     @Override
     @Transactional
     public StudyGroup createGroup(String name, String description, Long leaderId) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("그룹 이름을 입력해 주세요.");
+        }
         StudyGroup group = new StudyGroup();
         group.setName(name);
         group.setDescription(description);
@@ -51,6 +56,7 @@ public class StudyGroupServiceImpl implements StudyGroupService {
     }
 
     @Override
+    @Transactional
     public void joinGroup(String inviteCode, Long userId) {
         StudyGroup g = studyGroupRepository.findByInviteCode(inviteCode)
             .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 초대 코드입니다."));
@@ -97,10 +103,9 @@ public class StudyGroupServiceImpl implements StudyGroupService {
     // 6자리 영숫자 랜덤 초대코드 생성
     private String generateInviteCode() {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        SecureRandom random = new SecureRandom();
         StringBuilder sb = new StringBuilder(6);
         for (int i = 0; i < 6; i++) {
-            sb.append(chars.charAt(random.nextInt(chars.length())));
+            sb.append(chars.charAt(RANDOM.nextInt(chars.length())));
         }
         return sb.toString();
     }
