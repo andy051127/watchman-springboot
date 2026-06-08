@@ -58,7 +58,7 @@ public class StudyGroupController {
         try {
             StudyGroup group = studyGroupService.createGroup(
                 body.get("name"), body.get("description"), userId);
-            return ResponseEntity.ok(group);
+            return ResponseEntity.status(201).body(group);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
@@ -86,6 +86,8 @@ public class StudyGroupController {
         try {
             studyGroupService.disbandGroup(groupId, userId);
             return ResponseEntity.ok(Map.of("message", "그룹이 폐쇄되었습니다."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(404).body(Map.of("message", e.getMessage()));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(403).body(Map.of("message", e.getMessage()));
         }
@@ -100,7 +102,7 @@ public class StudyGroupController {
             studyGroupService.leaveGroup(groupId, userId);
             return ResponseEntity.ok(Map.of("message", "그룹에서 나왔습니다."));
         } catch (IllegalStateException e) {
-            return ResponseEntity.status(400).body(Map.of("message", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 
