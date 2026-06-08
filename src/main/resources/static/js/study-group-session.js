@@ -10,6 +10,7 @@ let myNickname = sessionStorage.getItem('nickname') || '나';
 let myAvatar   = sessionStorage.getItem('avatar')  || '';
 
 // ── 세션 상태 ─────────────────────────────────────────────
+let sessionEnded   = false;
 let localStream    = null;
 let timerInterval  = null;
 let totalSec       = 0;
@@ -19,6 +20,7 @@ let isFocused      = true;
 
 // ── WebRTC ────────────────────────────────────────────────
 const peerConnections = {};   // remoteUserId → RTCPeerConnection
+const iceCandidateQueues = {};  // remoteUserId → RTCIceCandidate[]
 const ICE_CONFIG = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
 // ── STOMP ─────────────────────────────────────────────────
@@ -197,19 +199,41 @@ async function handleSignal(msg) {
     const pc = createPC(remoteUserId);
     try {
       await pc.setRemoteDescription(new RTCSessionDescription(msg.data));
+      // 큐에 쌓인 ICE candidates 처리
+      if (iceCandidateQueues[remoteUserId]) {
+        for (const candidate of iceCandidateQueues[remoteUserId]) {
+          await pc.addIceCandidate(candidate).catch(() => {});
+        }
+        delete iceCandidateQueues[remoteUserId];
+      }
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
       stompClient.send(`/app/room/${groupId}/signal`, {},
         JSON.stringify({ from: myUserId, to: remoteUserId, type: 'answer', data: answer }));
     } catch (e) { console.error('[SGS] answer 생성 실패:', e); }
   } else if (msg.type === 'answer') {
-    try {
-      await peerConnections[remoteUserId]?.setRemoteDescription(new RTCSessionDescription(msg.data));
-    } catch (e) { console.error('[SGS] answer 적용 실패:', e); }
+    const pc = peerConnections[remoteUserId];
+    if (pc) {
+      try {
+        await pc.setRemoteDescription(new RTCSessionDescription(msg.data));
+        // 큐에 쌓인 ICE candidates 처리
+        if (iceCandidateQueues[remoteUserId]) {
+          for (const candidate of iceCandidateQueues[remoteUserId]) {
+            await pc.addIceCandidate(candidate).catch(() => {});
+          }
+          delete iceCandidateQueues[remoteUserId];
+        }
+      } catch (e) { console.error('[SGS] answer 적용 실패:', e); }
+    }
   } else if (msg.type === 'ice') {
-    try {
-      await peerConnections[remoteUserId]?.addIceCandidate(new RTCIceCandidate(msg.data));
-    } catch (e) { /* 무시 */ }
+    const pc = peerConnections[remoteUserId];
+    if (pc && pc.remoteDescription) {
+      await pc.addIceCandidate(new RTCIceCandidate(msg.data)).catch(() => {});
+    } else {
+      // remoteDescription 아직 없음 → 큐에 저장
+      if (!iceCandidateQueues[remoteUserId]) iceCandidateQueues[remoteUserId] = [];
+      iceCandidateQueues[remoteUserId].push(new RTCIceCandidate(msg.data));
+    }
   }
 }
 
@@ -421,8 +445,9 @@ function startDetectionLoop() {
           applyFocusState(true);
         }
       } else {
-        distractionSince = null;
-        applyFocusState(false);
+        // 얼굴 미감지 → angle 초과와 동일하게 유예 타이머 적용
+        if (distractionSince === null) distractionSince = performance.now();
+        else if (performance.now() - distractionSince >= DISTRACTION_DELAY_MS) applyFocusState(false);
       }
     }
     detectionRafId = requestAnimationFrame(detect);
@@ -475,6 +500,7 @@ async function handleExit() {
 }
 
 window.addEventListener('beforeunload', () => {
+  if (sessionEnded) return; // endSession()이 이미 leave를 보냄
   if (stompClient?.connected) {
     stompClient.send(`/app/room/${groupId}/leave`, {},
       JSON.stringify({ userId: myUserId, nickname: myNickname, avatar: myAvatar }));
@@ -482,6 +508,8 @@ window.addEventListener('beforeunload', () => {
 });
 
 async function endSession() {
+  if (sessionEnded) return;
+  sessionEnded = true;
   clearInterval(timerInterval);
   if (detectionRafId) cancelAnimationFrame(detectionRafId);
 
