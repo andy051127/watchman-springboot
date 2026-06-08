@@ -9,6 +9,8 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.List;
@@ -43,14 +45,14 @@ public class StudyGroupRepositoryImpl implements StudyGroupRepository {
             m.setNickname(rs.getString("nickname"));
             m.setAvatar(rs.getString("avatar"));
             m.setIsLeader(rs.getLong("user_id") == leaderId);
-            m.setTotalTime(rs.getInt("total_time"));
+            m.setTotalTime(rs.getLong("total_time"));
             m.setFocusRate(rs.getDouble("focus_rate"));
             return m;
         }, groupId);
     }
 
     // ── 그룹 RowMapper 헬퍼 ──────────────────────────────────────────────
-    private StudyGroup mapGroup(java.sql.ResultSet rs) throws java.sql.SQLException {
+    private StudyGroup mapGroup(ResultSet rs) throws SQLException {
         StudyGroup g = new StudyGroup();
         g.setGroupId(rs.getLong("group_id"));
         g.setName(rs.getString("name"));
@@ -98,7 +100,10 @@ public class StudyGroupRepositoryImpl implements StudyGroupRepository {
             "FROM study_groups WHERE invite_code = ?";
 
         List<StudyGroup> list = template.query(sql, (rs, row) -> mapGroup(rs), inviteCode);
-        return list.isEmpty() ? Optional.empty() : Optional.of(list.get(0));
+        if (list.isEmpty()) return Optional.empty();
+        StudyGroup g = list.get(0);
+        g.setMembers(fetchMembers(g.getGroupId(), g.getLeaderId()));
+        return Optional.of(g);
     }
 
     @Override
@@ -113,7 +118,9 @@ public class StudyGroupRepositoryImpl implements StudyGroupRepository {
             ps.setLong(4, group.getLeaderId());
             return ps;
         }, keyHolder);
-        return keyHolder.getKey().longValue();
+        Number key = keyHolder.getKey();
+        if (key == null) throw new IllegalStateException("그룹 생성 후 생성된 키를 가져올 수 없습니다.");
+        return key.longValue();
     }
 
     @Override

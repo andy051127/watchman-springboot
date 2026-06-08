@@ -8,7 +8,7 @@ public class StudyGroupMember {
 	private String nickname;
 	private String avatar;
 	private boolean isLeader;
-	private int totalTime;       // focused_time + distracted_time 합계 (초)
+	private long totalTime;       // focused_time + distracted_time 합계 (초)
 	private double focusRate;    // 평균 집중률 (%)
 
 	public StudyGroupMember() {
@@ -27,8 +27,8 @@ public class StudyGroupMember {
 	public boolean getIsLeader() { return isLeader; }
 	public void setIsLeader(boolean isLeader) { this.isLeader = isLeader; }
 
-	public int getTotalTime() { return totalTime; }
-	public void setTotalTime(int totalTime) { this.totalTime = totalTime; }
+	public long getTotalTime() { return totalTime; }
+	public void setTotalTime(long totalTime) { this.totalTime = totalTime; }
 
 	public double getFocusRate() { return focusRate; }
 	public void setFocusRate(double focusRate) { this.focusRate = focusRate; }
