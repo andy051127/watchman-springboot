@@ -11,6 +11,7 @@ public class Session {
 	private int distractedTime;
 	private BigDecimal focusRate;
 	private LocalDateTime startedAt;
+	private Long groupId;
 
 	public Session() {}
 
@@ -28,4 +29,6 @@ public class Session {
 	public void setFocusRate(BigDecimal focusRate) { this.focusRate = focusRate; }
 	public LocalDateTime getStartedAt() { return startedAt; }
 	public void setStartedAt(LocalDateTime startedAt) { this.startedAt = startedAt; }
+	public Long getGroupId() { return groupId; }
+	public void setGroupId(Long groupId) { this.groupId = groupId; }
 }

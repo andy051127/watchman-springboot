@@ -1,6 +1,8 @@
 package com.watchman.controller;
 
+import com.watchman.domain.Achievement;
 import com.watchman.domain.StudyGroup;
+import com.watchman.service.AchievementService;
 import com.watchman.service.StudyGroupService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,10 +17,16 @@ import java.util.Map;
 public class StudyGroupController {
 
     private StudyGroupService studyGroupService;
+    private AchievementService achievementService;
 
     @Autowired
     public void setStudyGroupService(StudyGroupService studyGroupService) {
         this.studyGroupService = studyGroupService;
+    }
+
+    @Autowired
+    public void setAchievementService(AchievementService achievementService) {
+        this.achievementService = achievementService;
     }
 
     private Long getUserId(HttpSession session) {
@@ -58,7 +66,8 @@ public class StudyGroupController {
         try {
             StudyGroup group = studyGroupService.createGroup(
                 body.get("name"), body.get("description"), userId);
-            return ResponseEntity.status(201).body(group);
+            List<Achievement> newAch = achievementService.checkAndAward(userId, "group_create");
+            return ResponseEntity.status(201).body(Map.of("group", group, "newAchievements", newAch));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
@@ -72,7 +81,8 @@ public class StudyGroupController {
         if (userId == null) return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
         try {
             studyGroupService.joinGroup(body.get("inviteCode"), userId);
-            return ResponseEntity.ok(Map.of("message", "그룹에 참여했습니다."));
+            List<Achievement> newAch = achievementService.checkAndAward(userId, "group_join");
+            return ResponseEntity.ok(Map.of("message", "그룹에 참여했습니다.", "newAchievements", newAch));
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }

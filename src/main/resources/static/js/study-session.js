@@ -661,8 +661,12 @@ async function endStudy(save = true) {
         window.location.href = 'login.html';
         return;
       }
+      const data = await res.json().catch(() => ({}));
+      if (data.newAchievements?.length) {
+        showAchievementToasts(data.newAchievements);
+        await new Promise(r => setTimeout(r, data.newAchievements.length * 1200 + 1000));
+      }
     } catch (err) {
-      // 저장 실패해도 메인으로 이동 (세션 데이터 유실 허용)
       console.error('세션 저장 실패:', err);
     }
   }

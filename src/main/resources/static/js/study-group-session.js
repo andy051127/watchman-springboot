@@ -709,11 +709,16 @@ async function endSession() {
 
   if ((focusedSec + distractedSec) > 0) {
     try {
-      await fetch('/watchman/api/sessions', {
+      const res = await fetch('/watchman/api/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ focusedTime: focusedSec, distractedTime: distractedSec })
+        body: JSON.stringify({ focusedTime: focusedSec, distractedTime: distractedSec, groupId: Number(groupId) })
       });
+      const data = await res.json().catch(() => ({}));
+      if (data.newAchievements?.length) {
+        showAchievementToasts(data.newAchievements);
+        await new Promise(r => setTimeout(r, data.newAchievements.length * 1200 + 1000));
+      }
     } catch (e) { console.error('[SGS] 세션 저장 실패:', e); }
   }
 

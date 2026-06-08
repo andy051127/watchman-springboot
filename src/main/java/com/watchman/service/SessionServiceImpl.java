@@ -64,6 +64,11 @@ public class SessionServiceImpl implements SessionService {
 
     @Override
     public void saveSession(Long userId, String name, int focusedTime, int distractedTime) {
+        saveSession(userId, name, focusedTime, distractedTime, null);
+    }
+
+    @Override
+    public void saveSession(Long userId, String name, int focusedTime, int distractedTime, Long groupId) {
         String sessionName = (name != null && !name.isBlank())
                 ? name
                 : LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + " 세션";
@@ -74,6 +79,7 @@ public class SessionServiceImpl implements SessionService {
         session.setFocusedTime(focusedTime);
         session.setDistractedTime(distractedTime);
         session.setFocusRate(calcFocusRate(focusedTime, distractedTime));
+        session.setGroupId(groupId);
         this.sessionRepository.save(session);
     }
 

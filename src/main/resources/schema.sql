@@ -96,6 +96,37 @@ CREATE TABLE IF NOT EXISTS group_members (
     FOREIGN KEY (user_id)  REFERENCES users(user_id)         ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- 업적 마스터 테이블
+CREATE TABLE IF NOT EXISTS achievements (
+    achievement_id VARCHAR(50)  NOT NULL,
+    name           VARCHAR(100) NOT NULL,
+    description    VARCHAR(255) NOT NULL,
+    category       VARCHAR(50)  NOT NULL,
+    icon           VARCHAR(10)  NOT NULL,
+    hidden         TINYINT(1)   NOT NULL DEFAULT 0,
+    PRIMARY KEY (achievement_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 유저 획득 업적
+CREATE TABLE IF NOT EXISTS user_achievements (
+    id             BIGINT   NOT NULL AUTO_INCREMENT,
+    user_id        BIGINT   NOT NULL,
+    achievement_id VARCHAR(50) NOT NULL,
+    earned_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_user_ach (user_id, achievement_id),
+    FOREIGN KEY (user_id)        REFERENCES users(user_id)        ON DELETE CASCADE,
+    FOREIGN KEY (achievement_id) REFERENCES achievements(achievement_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 유저 통계 (채팅 카운트 등)
+CREATE TABLE IF NOT EXISTS user_stats (
+    user_id    BIGINT NOT NULL,
+    chat_count INT    NOT NULL DEFAULT 0,
+    PRIMARY KEY (user_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- timetable_blocks: 플래너 드래그 블록 (시작시간·끝시간·색상·텍스트)
 CREATE TABLE IF NOT EXISTS timetable_blocks (
   block_id    BIGINT AUTO_INCREMENT PRIMARY KEY,

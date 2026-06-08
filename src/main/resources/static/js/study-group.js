@@ -114,6 +114,8 @@ async function handleCreateGroup() {
       body: JSON.stringify({ name, description: desc })
     });
     if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (data.newAchievements?.length) showAchievementToasts(data.newAchievements);
       await loadGroups();
       showPanel('list');
     } else {
@@ -139,6 +141,8 @@ async function handleJoinGroup() {
       body: JSON.stringify({ inviteCode: code })
     });
     if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (data.newAchievements?.length) showAchievementToasts(data.newAchievements);
       await loadGroups();
       showPanel('list');
     } else {

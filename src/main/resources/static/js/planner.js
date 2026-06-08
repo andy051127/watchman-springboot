@@ -258,6 +258,8 @@ async function toggleTodo(index) {
     });
     if (res.status === 401) { window.location.href = 'login.html'; return; }
 
+    const data = await res.json().catch(() => ({}));
+    if (data.newAchievements?.length) showAchievementToasts(data.newAchievements);
     todo.done = !todo.done;
     renderTodoList();
   } catch (err) {
@@ -310,6 +312,8 @@ async function addDday() {
     });
     if (res.status === 401) { window.location.href = 'login.html'; return; }
 
+    const data = await res.json().catch(() => ({}));
+    if (data.newAchievements?.length) showAchievementToasts(data.newAchievements);
     document.getElementById('dday-name').value = '';
     document.getElementById('dday-date').value = '';
     await loadDDays();
@@ -654,6 +658,8 @@ async function saveModalBlock() {
         body:    JSON.stringify(body)
       });
       if (res.status === 401) { window.location.href = 'login.html'; return; }
+      const data = await res.json().catch(() => ({}));
+      if (data.newAchievements?.length) showAchievementToasts(data.newAchievements);
     } else {
       const res = await fetch(`/watchman/api/planner/blocks/${modalBlockId}`, {
         method:  'PUT',

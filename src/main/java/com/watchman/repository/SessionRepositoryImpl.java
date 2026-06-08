@@ -70,14 +70,15 @@ public class SessionRepositoryImpl implements SessionRepository {
 
 	@Override
 	public void save(Session session) {
-		String sql = "INSERT INTO sessions (user_id, name, focused_time, distracted_time, focus_rate) " +
-				     "VALUES (?, ?, ?, ?, ?)";
+		String sql = "INSERT INTO sessions (user_id, name, focused_time, distracted_time, focus_rate, group_id) " +
+				     "VALUES (?, ?, ?, ?, ?, ?)";
 		this.template.update(sql,
 				session.getUserId(),
 				session.getName(),
 				session.getFocusedTime(),
 				session.getDistractedTime(),
-				session.getFocusRate());
+				session.getFocusRate(),
+				session.getGroupId());
 	}
 
 	@Override

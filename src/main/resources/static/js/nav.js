@@ -29,7 +29,8 @@
           <a href="stats.html"       class="nav-link${active('stats.html')}"       id="nav-stats">내 통계</a>
           <a href="study-group.html" class="nav-link${active('study-group.html')}" id="nav-group">스터디 그룹</a>
           <a href="planner.html"     class="nav-link${active('planner.html')}"     id="nav-planner">플래너</a>
-          <a href="notice.html"      class="nav-link${active('notice.html')}">공지사항</a>
+          <a href="notice.html"       class="nav-link${active('notice.html')}">공지사항</a>
+          <a href="achievements.html" class="nav-link${active('achievements.html')}">업적</a>
         </div>
         <div class="main-nav-right">
           <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="다크/라이트 모드 전환">

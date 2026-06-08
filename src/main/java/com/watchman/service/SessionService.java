@@ -20,6 +20,9 @@ public interface SessionService {
     // 새 세션 저장 (name 포함)
     void saveSession(Long userId, String name, int focusedTime, int distractedTime);
 
+    // 새 세션 저장 (groupId 포함)
+    void saveSession(Long userId, String name, int focusedTime, int distractedTime, Long groupId);
+
     // 이어하기 저장 (기존 세션에 누적)
     void updateSession(Long sessionId, Long userId, int focusedTime, int distractedTime);
 }

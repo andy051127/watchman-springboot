@@ -3,6 +3,7 @@ package com.watchman.controller;
 import com.watchman.domain.DDay;
 import com.watchman.domain.TimetableBlock;
 import com.watchman.domain.Todo;
+import com.watchman.service.AchievementService;
 import com.watchman.service.PlannerService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +19,16 @@ import java.util.Map;
 public class PlannerController {
 
     private PlannerService plannerService;
+    private AchievementService achievementService;
 
     @Autowired
     public void setPlannerService(PlannerService plannerService) {
         this.plannerService = plannerService;
+    }
+
+    @Autowired
+    public void setAchievementService(AchievementService achievementService) {
+        this.achievementService = achievementService;
     }
 
     private Long getSessionUserId(HttpSession session) {
@@ -93,7 +100,11 @@ public class PlannerController {
         }
 
         this.plannerService.toggleTodo(todoId, body.get("done"));
-        return ResponseEntity.ok(Map.of("message", "완료 여부가 변경되었습니다."));
+        if (Boolean.TRUE.equals(body.get("done"))) {
+            var newAch = this.achievementService.checkAndAward(userId, "todo_complete");
+            return ResponseEntity.ok(Map.of("message", "완료 여부가 변경되었습니다.", "newAchievements", newAch));
+        }
+        return ResponseEntity.ok(Map.of("message", "완료 여부가 변경되었습니다.", "newAchievements", List.of()));
     }
 
     // 할 일 삭제
@@ -139,7 +150,8 @@ public class PlannerController {
         dday.setName(body.get("name"));
         dday.setDdayDate(LocalDate.parse(body.get("ddayDate")));
         this.plannerService.addDDay(dday);
-        return ResponseEntity.ok(Map.of("message", "D-Day가 추가되었습니다."));
+        var newAch = this.achievementService.checkAndAward(userId, "dday_add");
+        return ResponseEntity.ok(Map.of("message", "D-Day가 추가되었습니다.", "newAchievements", newAch));
     }
 
     // D-Day 삭제
@@ -188,7 +200,8 @@ public class PlannerController {
         block.setColor(body.get("color"));
         block.setLabel(body.getOrDefault("label", ""));
         this.plannerService.addBlock(block);
-        return ResponseEntity.ok(Map.of("message", "블록이 생성되었습니다."));
+        var newAch = this.achievementService.checkAndAward(userId, "block_add");
+        return ResponseEntity.ok(Map.of("message", "블록이 생성되었습니다.", "newAchievements", newAch));
     }
 
     // 블록 수정

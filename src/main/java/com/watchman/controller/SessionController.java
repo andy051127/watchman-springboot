@@ -1,6 +1,8 @@
 package com.watchman.controller;
 
+import com.watchman.domain.Achievement;
 import com.watchman.domain.Session;
+import com.watchman.service.AchievementService;
 import com.watchman.service.SessionService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +18,16 @@ import java.util.Map;
 public class SessionController {
 
     private SessionService sessionService;
+    private AchievementService achievementService;
 
     @Autowired
     public void setSessionService(SessionService sessionService) {
         this.sessionService = sessionService;
+    }
+
+    @Autowired
+    public void setAchievementService(AchievementService achievementService) {
+        this.achievementService = achievementService;
     }
 
     private Long getSessionUserId(HttpSession session) {
@@ -97,15 +105,16 @@ public class SessionController {
         Object sessionIdObj = body.get("sessionId");
 
         if (sessionIdObj != null) {
-            // 이어하기: 기존 세션 업데이트
             Long sessionId = ((Number) sessionIdObj).longValue();
             this.sessionService.updateSession(sessionId, userId, focusedTime, distractedTime);
         } else {
-            // 새 세션: name이 있으면 사용, 없으면 서비스에서 자동 지정
-            String name = (String) body.get("name");
-            this.sessionService.saveSession(userId, name, focusedTime, distractedTime);
+            String name    = (String) body.get("name");
+            Object gidObj  = body.get("groupId");
+            Long groupId   = gidObj != null ? ((Number) gidObj).longValue() : null;
+            this.sessionService.saveSession(userId, name, focusedTime, distractedTime, groupId);
         }
 
-        return ResponseEntity.ok(Map.of("message", "세션이 저장되었습니다."));
+        List<Achievement> newAch = this.achievementService.checkAndAward(userId, "session");
+        return ResponseEntity.ok(Map.of("message", "세션이 저장되었습니다.", "newAchievements", newAch));
     }
 }
