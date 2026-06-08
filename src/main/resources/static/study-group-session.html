@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>스터디룸 — Watchman</title>
+  <link rel="stylesheet" href="css/global.css" />
+  <link rel="stylesheet" href="css/study-group-session.css" />
+</head>
+<body>
+<div class="sgs-page">
+
+  <!-- Navbar -->
+  <nav class="sgs-nav">
+    <a href="main.html" class="sgs-nav-logo">
+      <img src="assets/icon.svg" alt="Watchman" />
+      <span>Watchman</span>
+    </a>
+    <div class="sgs-nav-center">
+      <span class="sgs-nav-group-name" id="sgs-group-name">스터디룸</span>
+      <span class="sgs-nav-timer" id="sgs-timer" style="display:none">00:00</span>
+    </div>
+    <div class="sgs-nav-right">
+      <button class="sgs-exit-btn" id="btn-exit" onclick="handleExit()">세션 종료</button>
+    </div>
+  </nav>
+
+  <!-- Body -->
+  <div class="sgs-body">
+
+    <!-- 카메라 그리드 -->
+    <div class="sgs-grid-wrap">
+      <div class="sgs-grid" id="sgs-grid">
+        <!-- 타일은 JS로 동적 생성 -->
+      </div>
+    </div>
+
+    <!-- 우측 패널 -->
+    <div class="sgs-panel">
+
+      <!-- 통계 카드 -->
+      <div class="sgs-stats-card">
+        <div class="sgs-card-label">이번 세션</div>
+        <div class="sgs-stat-row">
+          <span class="sgs-stat-label"><span class="sgs-stat-dot green"></span>집중</span>
+          <span class="sgs-stat-val" id="sgs-stat-focused">00:00</span>
+        </div>
+        <div class="sgs-stat-row">
+          <span class="sgs-stat-label"><span class="sgs-stat-dot red"></span>딴짓</span>
+          <span class="sgs-stat-val" id="sgs-stat-distracted">00:00</span>
+        </div>
+        <div class="sgs-stat-row" style="margin-bottom:0">
+          <span class="sgs-stat-label"><span class="sgs-stat-dot orange"></span>집중률</span>
+          <span class="sgs-stat-val" id="sgs-stat-rate">0%</span>
+        </div>
+        <div class="sgs-bar-wrap">
+          <div class="sgs-bar-fill" id="sgs-bar" style="width:0%"></div>
+        </div>
+      </div>
+
+      <!-- 채팅 카드 -->
+      <div class="sgs-chat-card">
+        <div class="sgs-card-label">채팅</div>
+        <div class="sgs-chat-messages" id="sgs-chat-messages"></div>
+        <div class="sgs-chat-input-row">
+          <input class="sgs-chat-input" id="sgs-chat-input"
+                 placeholder="메시지 입력..."
+                 maxlength="200"
+                 onkeydown="if(event.key==='Enter')sendChat()" />
+          <button class="sgs-chat-send-btn" onclick="sendChat()">전송</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- SockJS + STOMP (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script src="js/auth-guard.js"></script>
+<script src="js/study-group-session.js"></script>
+</body>
+</html>

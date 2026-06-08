@@ -1,0 +1,272 @@
+/* src/main/resources/static/css/study-group-session.css */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+.sgs-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #0a0f1e;
+  color: #e2e8f0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  overflow: hidden;
+}
+
+/* ── Navbar ── */
+.sgs-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 52px;
+  background: #0f172a;
+  border-bottom: 1px solid #1e293b;
+  flex-shrink: 0;
+}
+.sgs-nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: #e2e8f0;
+  font-weight: 600;
+  font-size: 15px;
+}
+.sgs-nav-logo img { width: 22px; height: 22px; }
+.sgs-nav-center { display: flex; align-items: center; gap: 12px; }
+.sgs-nav-group-name { font-size: 14px; color: #94a3b8; }
+.sgs-nav-timer { font-size: 15px; font-variant-numeric: tabular-nums; color: #e2e8f0; font-weight: 600; }
+.sgs-nav-right { display: flex; align-items: center; gap: 10px; }
+.sgs-exit-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 13px;
+  cursor: pointer;
+}
+.sgs-exit-btn:hover { background: #1e293b; color: #e2e8f0; }
+
+/* ── Body ── */
+.sgs-body {
+  display: flex;
+  flex: 1;
+  gap: 12px;
+  padding: 12px;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ── 카메라 그리드 ── */
+.sgs-grid-wrap {
+  flex: 1;
+  overflow: hidden;
+  min-width: 0;
+}
+.sgs-grid {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  grid-template-columns: repeat(1, 1fr);
+}
+
+/* ── 참가자 타일 ── */
+.sgs-tile {
+  background: #1e293b;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+.sgs-tile video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+.sgs-tile-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: #94a3b8;
+  font-weight: 600;
+}
+.sgs-tile-info {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sgs-tile-name {
+  background: rgba(0,0,0,0.65);
+  color: #e2e8f0;
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  backdrop-filter: blur(4px);
+}
+.sgs-focus-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #94a3b8;
+  flex-shrink: 0;
+}
+.sgs-focus-dot.focused { background: #4ade80; }
+.sgs-focus-dot.distracted { background: #f87171; }
+.sgs-tile.distracted-border { outline: 2px solid #f87171; }
+.sgs-tile.focused-border { outline: 2px solid #4ade80; }
+.sgs-tile.me-tile { outline: 2px solid #60a5fa; }
+
+/* ── 우측 패널 ── */
+.sgs-panel {
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* ── 통계 카드 ── */
+.sgs-stats-card {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.sgs-card-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: #475569;
+  margin-bottom: 10px;
+}
+.sgs-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+.sgs-stat-label { color: #64748b; display: flex; align-items: center; gap: 6px; }
+.sgs-stat-dot { width: 8px; height: 8px; border-radius: 50%; }
+.sgs-stat-dot.green { background: #4ade80; }
+.sgs-stat-dot.red   { background: #f87171; }
+.sgs-stat-dot.orange{ background: #fb923c; }
+.sgs-stat-val { color: #e2e8f0; font-variant-numeric: tabular-nums; font-weight: 500; }
+.sgs-bar-wrap { background: #1e293b; border-radius: 4px; height: 4px; margin-top: 8px; overflow: hidden; }
+.sgs-bar-fill { height: 100%; border-radius: 4px; background: #4ade80; transition: width .5s; }
+
+/* ── 채팅 카드 ── */
+.sgs-chat-card {
+  flex: 1;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.sgs-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  padding-right: 4px;
+  scroll-behavior: smooth;
+}
+.sgs-chat-messages::-webkit-scrollbar { width: 4px; }
+.sgs-chat-messages::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+.sgs-chat-msg { display: flex; gap: 8px; align-items: flex-start; }
+.sgs-chat-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 600;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.sgs-chat-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.sgs-chat-bubble { flex: 1; }
+.sgs-chat-meta { font-size: 10px; color: #475569; margin-bottom: 2px; }
+.sgs-chat-meta .sgs-chat-nick { color: #94a3b8; font-weight: 600; margin-right: 4px; }
+.sgs-chat-text {
+  background: #1e293b;
+  border-radius: 0 8px 8px 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: #cbd5e1;
+  word-break: break-word;
+  line-height: 1.4;
+}
+.sgs-chat-msg.mine .sgs-chat-text { background: #1d4ed8; color: #eff6ff; }
+.sgs-chat-msg.mine { flex-direction: row-reverse; }
+.sgs-chat-msg.mine .sgs-chat-bubble { text-align: right; }
+.sgs-chat-msg.mine .sgs-chat-text { border-radius: 8px 0 8px 8px; }
+.sgs-chat-input-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-shrink: 0;
+}
+.sgs-chat-input {
+  flex: 1;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #e2e8f0;
+  font-size: 13px;
+  outline: none;
+}
+.sgs-chat-input:focus { border-color: #3b82f6; }
+.sgs-chat-send-btn {
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.sgs-chat-send-btn:hover { background: #2563eb; }
+
+/* ── 시스템 메시지 ── */
+.sgs-sys-msg {
+  text-align: center;
+  font-size: 11px;
+  color: #475569;
+  padding: 2px 0;
+}
+
+/* ── 반응형 ── */
+@media (max-width: 640px) {
+  .sgs-body { flex-direction: column; }
+  .sgs-panel { width: 100%; flex: none; height: 280px; flex-direction: row; }
+  .sgs-stats-card { flex: none; width: 160px; }
+  .sgs-chat-card { flex: 1; }
+}
