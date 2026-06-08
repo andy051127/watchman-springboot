@@ -10,6 +10,9 @@
 <body>
 <div class="sgs-page">
 
+  <!-- 내 딴짓 감지 오버레이 -->
+  <div class="sgs-distraction-overlay" id="sgs-distraction-overlay" style="display:none"></div>
+
   <!-- Calibration overlay -->
   <div class="calib-overlay" id="calib-overlay" style="display:none">
     <div class="calib-modal">
@@ -53,6 +56,8 @@
       <span class="sgs-nav-timer" id="sgs-timer" style="display:none">00:00</span>
     </div>
     <div class="sgs-nav-right">
+      <button class="sgs-cam-btn" id="btn-cam" onclick="toggleCamera()">카메라 끄기</button>
+      <button class="sgs-calib-btn" onclick="startCalibration()">보정하기</button>
       <button class="sgs-exit-btn" id="btn-exit" onclick="handleExit()">세션 종료</button>
     </div>
   </nav>

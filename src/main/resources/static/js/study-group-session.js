@@ -415,7 +415,8 @@ async function initFaceLandmarker() {
     faceLandmarker = await FaceLandmarker.createFromOptions(vision,
       { baseOptions: { modelAssetPath, delegate: 'CPU' }, ...opts });
   }
-  startCalibration();
+  // 자동 보정 없이 바로 감지 시작. 보정은 nav 버튼으로 수동 실행.
+  startDetectionLoop();
 }
 
 function startCalibration() {
@@ -591,6 +592,9 @@ function applyFocusState(focused) {
   lastFocusedState = focused;
   isFocused = focused;
   updateTileFocusUI(myUserId, focused);
+  // 내 딴짓 오버레이
+  const overlay = document.getElementById('sgs-distraction-overlay');
+  if (overlay) overlay.style.display = focused ? 'none' : 'block';
   if (stompClient?.connected) {
     stompClient.send(`/app/room/${groupId}/focus`, {},
       JSON.stringify({ userId: myUserId, focused }));
@@ -621,6 +625,57 @@ function updateTimerUI() {
   const rate  = total > 0 ? Math.round((focusedSec / total) * 100) : 0;
   document.getElementById('sgs-stat-rate').textContent = `${rate}%`;
   document.getElementById('sgs-bar').style.width       = `${rate}%`;
+}
+
+// ── 카메라 토글 ───────────────────────────────────────────
+let cameraOn = true;
+
+async function toggleCamera() {
+  const btn = document.getElementById('btn-cam');
+  if (cameraOn) {
+    // 끄기: 트랙 정지, 감지 중단, 타일 아바타 표시
+    if (localStream) localStream.getTracks().forEach(t => t.stop());
+    localStream = null;
+    const video  = document.getElementById(`tile-video-${myUserId}`);
+    const avatar = document.getElementById(`tile-avatar-${myUserId}`);
+    if (video)  { video.srcObject = null; video.style.display = 'none'; }
+    if (avatar) avatar.style.display = 'flex';
+    if (detectionRafId) { cancelAnimationFrame(detectionRafId); detectionRafId = null; }
+    // 카메라 끄면 딴짓 상태로 broadcast
+    applyFocusState(false);
+    cameraOn = false;
+    btn.textContent = '카메라 켜기';
+    btn.classList.add('cam-off');
+  } else {
+    // 켜기: 스트림 재취득, PC track 교체, 감지 재시작
+    btn.textContent = '연결 중...';
+    btn.disabled = true;
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      const video  = document.getElementById(`tile-video-${myUserId}`);
+      const avatar = document.getElementById(`tile-avatar-${myUserId}`);
+      if (video) {
+        video.srcObject = localStream;
+        video.style.display = 'block';
+        video.play().catch(() => {});
+      }
+      if (avatar) avatar.style.display = 'none';
+      // 기존 PeerConnection track 교체
+      const [newTrack] = localStream.getVideoTracks();
+      Object.values(peerConnections).forEach(pc => {
+        const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+        if (sender && newTrack) sender.replaceTrack(newTrack);
+      });
+      if (faceLandmarker) startDetectionLoop();
+      cameraOn = true;
+      btn.textContent = '카메라 끄기';
+      btn.classList.remove('cam-off');
+    } catch (e) {
+      console.warn('[SGS] 카메라 재시작 실패:', e);
+      btn.textContent = '카메라 켜기';
+    }
+    btn.disabled = false;
+  }
 }
 
 // ── 세션 종료 ─────────────────────────────────────────────

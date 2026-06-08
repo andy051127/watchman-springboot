@@ -1,4 +1,12 @@
-// nav.js — 공통 네브바 주입 + 로그아웃 처리
+// nav.js — 공통 네브바 주입 + 로그아웃 처리 + 다크모드 토글
+
+// ── 다크모드 초기화 (nav 로드 전에 적용해 깜빡임 방지) ──────
+(function () {
+  if (localStorage.getItem('watchman-theme') === 'dark') {
+    document.body.classList.add('dark');
+  }
+})();
+
 (function () {
   const page = location.pathname.split('/').pop() || 'main.html';
 
@@ -24,6 +32,12 @@
           <a href="notice.html"      class="nav-link${active('notice.html')}">공지사항</a>
         </div>
         <div class="main-nav-right">
+          <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="다크/라이트 모드 전환">
+            <span class="theme-toggle-icon" id="theme-icon">🌙</span>
+            <div class="theme-toggle-track">
+              <div class="theme-toggle-thumb"></div>
+            </div>
+          </button>
           <a href="mypage.html" class="nav-avatar" id="nav-avatar">
             <span id="nav-avatar-emoji">😊</span>
             <img id="nav-avatar-img" src="" alt="프로필"
@@ -34,7 +48,21 @@
         </div>
       </div>
     </nav>`;
+
+  // 아이콘 초기 상태
+  _updateThemeIcon();
 })();
+
+function toggleTheme() {
+  const isDark = document.body.classList.toggle('dark');
+  localStorage.setItem('watchman-theme', isDark ? 'dark' : 'light');
+  _updateThemeIcon();
+}
+
+function _updateThemeIcon() {
+  const icon = document.getElementById('theme-icon');
+  if (icon) icon.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+}
 
 // 공통 로그아웃 — 페이지별 JS에서 개별 정의 불필요
 async function handleExit() {
