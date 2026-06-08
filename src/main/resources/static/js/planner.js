@@ -406,7 +406,10 @@ function minutesToTime(min) {
   return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
 }
 
-// 그리드 렌더링: 엑셀 셀 방식 (24행 × 12셀, 각 셀 = 5분)
+// 타임테이블 표시 순서: 06시 시작 → 23시 → 00시 → 02시 종료
+const DISPLAY_HOURS = [6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,0,1,2];
+
+// 그리드 렌더링: 엑셀 셀 방식 (21행 × 12셀, 각 셀 = 5분)
 function renderBlockGrid() {
   const container = document.getElementById('timetable-grid');
   const dayBlocks = blocks[selectedDate] || [];
@@ -429,12 +432,12 @@ function renderBlockGrid() {
   });
 
   // 헤더 (분 눈금)
-  const minuteLabels = [0,5,10,15,20,25,30,35,40,45,50,55]
+  const minuteLabels = [5,10,15,20,25,30,35,40,45,50,55,60]
     .map(m => `<div class="tt-header-cell">${String(m).padStart(2,'0')}</div>`).join('');
 
-  // 24행 렌더링
+  // 21행 렌더링 (06~23 → 00~02)
   let rowsHtml = '';
-  for (let h = 0; h < 24; h++) {
+  for (const h of DISPLAY_HOURS) {
     let cellsHtml = '';
     for (let c = 0; c < 12; c++) {
       const min  = h * 60 + c * 5;
@@ -469,13 +472,14 @@ function renderBlockGrid() {
       ${rowsHtml}
     </div>`;
 
-  // 현재 시각 근처로 자동 스크롤
+  // 현재 시각 근처로 자동 스크롤 (DISPLAY_HOURS 기준 행 인덱스)
   const wrap = document.getElementById('tt-wrap');
   if (wrap) {
-    const now = new Date();
-    const rowH = 30; // .tt-cell height
+    const curHour = new Date().getHours();
+    const rowIndex = DISPLAY_HOURS.indexOf(curHour);
+    const rowH = 30;
     const headerH = 22;
-    wrap.scrollTop = Math.max(0, now.getHours() * rowH - 90 + headerH);
+    wrap.scrollTop = Math.max(0, rowIndex * rowH - 90 + headerH);
   }
 
   initGridDrag();
