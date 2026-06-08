@@ -17,12 +17,13 @@ CREATE TABLE IF NOT EXISTS users (
 
 
 CREATE TABLE IF NOT EXISTS sessions (
-    session_id      BIGINT   NOT NULL AUTO_INCREMENT,
-    user_id         BIGINT   NOT NULL,
-    focused_time    INT      NOT NULL DEFAULT 0,
-    distracted_time INT      NOT NULL DEFAULT 0,
-    focus_rate      DOUBLE   NOT NULL DEFAULT 0,
-    started_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    session_id      BIGINT       NOT NULL AUTO_INCREMENT,
+    user_id         BIGINT       NOT NULL,
+    name            VARCHAR(100) NOT NULL DEFAULT '',
+    focused_time    INT          NOT NULL DEFAULT 0,
+    distracted_time INT          NOT NULL DEFAULT 0,
+    focus_rate      DOUBLE       NOT NULL DEFAULT 0,
+    started_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (session_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

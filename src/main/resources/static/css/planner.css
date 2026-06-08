@@ -334,106 +334,134 @@
 
 /* Timetable */
 .notebook-timetable { padding: 16px 20px 20px; }
+.notebook-timetable .notebook-section-title { margin-bottom: 12px; }
+.tt-hint { font-size: 11px; color: var(--text-light); margin-bottom: 8px; }
 
-/* ─── Timetable : 수평 바 타임라인 ─────────────────────── */
+/* ─── Timetable : 엑셀 셀 그리드 ──────────────────────── */
 .timetable-grid-wrap {
   overflow-y: auto;
-  max-height: 400px;
+  max-height: 480px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: #fff;
   user-select: none;
+  -webkit-user-select: none;
 }
 
-.tt-hour-row {
+/* 헤더: 5분 단위 눈금 (00 ~ 55) */
+.tt-header-row {
   display: flex;
-  align-items: stretch;
-  height: 22px;
-  border-bottom: 1px solid #f0ebe4;
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f5f2ee;
+  border-bottom: 1.5px solid var(--border);
 }
-.tt-hour-row:nth-child(even) { background: #fdfcf9; }
-
-.tt-row-label {
-  width: 28px;
-  min-width: 28px;
-  font-size: 10px;
+.tt-header-spacer {
+  width: 44px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+}
+.tt-header-cells {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+}
+.tt-header-cell {
+  font-size: 9px;
   font-weight: 700;
   color: #b0a89e;
+  text-align: center;
+  padding: 3px 0;
+  border-right: 1px solid #e8e2d9;
+}
+.tt-header-cell:nth-child(7) { border-left: 1.5px solid #d6cfc7; } /* 30분 구분 */
+
+/* 시간 행 */
+.tt-row {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid #f0ebe4;
+}
+.tt-row:last-child { border-bottom: none; }
+.tt-row:nth-child(even) > .tt-cells { background: #fdfcf9; }
+
+/* 시간 라벨 */
+.tt-time-label {
+  width: 44px;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: #a09890;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding-right: 6px;
-  border-right: 1px solid #e8e2d9;
-  flex-shrink: 0;
+  padding-right: 8px;
+  border-right: 1px solid var(--border);
+  background: #fafaf8;
+  white-space: nowrap;
 }
 
-.tt-row-area {
+/* 셀 그리드 */
+.tt-cells {
   flex: 1;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
   position: relative;
-  cursor: crosshair;
 }
-
-/* 30분 구분선 */
-.tt-row-area::after {
-  content: '';
-  position: absolute;
-  top: 0; bottom: 0;
-  left: 50%;
-  width: 1px;
-  background: #f0ebe4;
-  pointer-events: none;
-}
-
-/* 스냅 셀 (보이지 않음, 드래그용) */
 .tt-cell {
-  position: absolute;
-  top: 0; bottom: 0;
+  height: 30px;
+  border-right: 1px solid #f0ebe4;
   cursor: crosshair;
+  box-sizing: border-box;
+  position: relative;
+  transition: background 0.05s;
+}
+/* 30분 구분선 (7번째 셀 왼쪽) */
+.tt-cell:nth-child(7) { border-left: 1.5px solid #e0dbd4; }
+/* 마지막 셀 오른쪽 없음 */
+.tt-cell:last-child { border-right: none; }
+
+/* 드래그 선택 하이라이트 */
+.tt-cell.selecting {
+  background: rgba(59,130,246,0.18) !important;
+  border-color: rgba(59,130,246,0.25);
 }
 
-/* 수평 바 */
-.tt-bar {
-  position: absolute;
-  top: 3px;
-  height: 16px;
-  border-radius: 3px;
-  opacity: 0.85;
+/* 저장된 블록 셀 */
+.tt-cell.has-block {
+  opacity: 0.88;
   cursor: pointer;
-  font-size: 10px;
-  font-weight: 600;
-  color: #1e293b;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  display: flex;
-  align-items: center;
-  padding: 0 4px;
-  box-sizing: border-box;
 }
-
-/* 드래그 미리보기 바 */
-.tt-drag-preview {
+/* 블록 시작/끝 시간 표기 */
+.tt-cell-time {
   position: absolute;
-  top: 3px;
-  height: 16px;
-  border-radius: 3px;
-  background: rgba(96,165,250,0.35);
-  border: 1px dashed rgba(96,165,250,0.8);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 9px;
+  font-weight: 800;
+  color: rgba(0,0,0,0.55);
   pointer-events: none;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  padding: 0 5px;
-  overflow: hidden;
+  white-space: nowrap;
+  line-height: 1;
 }
-.tt-drag-time {
-  font-size: 10px;
+.tt-cell-start { left: 3px; }
+.tt-cell-end   { right: 3px; }
+
+/* 블록 이름 (시작 셀 바로 옆 셀의 왼쪽) */
+.tt-cell-name {
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  transform: translateY(-50%);
+  font-size: 9px;
   font-weight: 700;
-  color: #1d4ed8;
+  color: rgba(0,0,0,0.65);
+  pointer-events: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: calc(100% - 6px);
 }
 
 /* ─── Block Modal ──────────────────────────────────────── */

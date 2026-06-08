@@ -368,6 +368,26 @@ let distractedSec = 0;
 let isFocused = true;
 const isGuest = new URLSearchParams(window.location.search).get('guest') === '1';
 
+// 이어하기 세션 ID — URL ?sessionId=123 이면 이어하기, 없으면 새 세션
+const _urlSessionId = new URLSearchParams(window.location.search).get('sessionId');
+let currentSessionId = _urlSessionId ? Number(_urlSessionId) : null;
+
+// 이어하기인 경우 서버에서 기존 누적 시간을 로드해 초기값으로 세팅
+async function loadInitialSessionData() {
+  if (!currentSessionId) return;
+  try {
+    const res = await fetch(`/watchman/api/sessions/${currentSessionId}`);
+    if (!res.ok) { currentSessionId = null; return; }
+    const s = await res.json();
+    focusedSec    = s.focusedTime    || 0;
+    distractedSec = s.distractedTime || 0;
+    totalSec      = focusedSec + distractedSec;
+    updateTimerDisplay();
+  } catch {
+    currentSessionId = null;
+  }
+}
+
 // ── 카메라 버튼 ────────────────────────────────────────────
 
 async function handleCamBtn() {
@@ -598,8 +618,6 @@ function skipCalibration() {
 // ── 스터디 시작 ────────────────────────────────────────────
 
 function startStudy() {
-  // 보정은 calibration.html에서 미리 수행합니다.
-  // sessionStorage에 저장된 보정값은 파일 상단에서 이미 로드되었습니다.
   beginActualStudy();
 }
 
@@ -629,15 +647,14 @@ async function endStudy(save = true) {
 
   if (!isGuest && save && (focusedSec + distractedSec) > 0) {
     try {
-      // POST /api/sessions { focusedTime, distractedTime }
-      // focusRate는 백엔드에서 계산: focusedTime / (focusedTime + distractedTime) × 100
+      const payload = currentSessionId
+        ? { sessionId: currentSessionId, focusedTime: focusedSec, distractedTime: distractedSec }
+        : { focusedTime: focusedSec, distractedTime: distractedSec };
+
       const res = await fetch('/watchman/api/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          focusedTime:    focusedSec,
-          distractedTime: distractedSec,
-        })
+        body: JSON.stringify(payload)
       });
 
       if (res.status === 401) {
@@ -777,8 +794,9 @@ function setState(state) {
 // ── 디버그 패널 (임시 분석용) ──────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
-  // 페이지 로드 시 디버그 패널에 sessionStorage 상태와 현재 임계값을 표시합니다.
   refreshDebugStatic();
+  // 이어하기 세션이면 기존 누적 시간 로드
+  loadInitialSessionData();
 });
 
 function toggleDebug() {

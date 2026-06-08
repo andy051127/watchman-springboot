@@ -4,6 +4,7 @@ import com.watchman.domain.Session;
 import com.watchman.service.SessionService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,74 +26,86 @@ public class SessionController {
         return (Long) session.getAttribute("userId");
     }
 
-    // 전체 세션 목록 조회 (stats 페이지 히스토리)
     // GET /api/sessions
     @GetMapping
     public ResponseEntity<?> getSessions(HttpSession session) {
         Long userId = getSessionUserId(session);
-        if (userId == null) {
-            return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
-        }
-
-        List<Session> sessions = this.sessionService.getSessions(userId);
-        return ResponseEntity.ok(sessions);
+        if (userId == null) return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
+        return ResponseEntity.ok(this.sessionService.getSessions(userId));
     }
 
-    // 오늘 세션 조회 (대시보드 오늘 통계)
     // GET /api/sessions/today
     @GetMapping("/today")
     public ResponseEntity<?> getTodaySessions(HttpSession session) {
         Long userId = getSessionUserId(session);
-        if (userId == null) {
-            return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
-        }
-
-        List<Session> sessions = this.sessionService.getTodaySessions(userId);
-        return ResponseEntity.ok(sessions);
+        if (userId == null) return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
+        return ResponseEntity.ok(this.sessionService.getTodaySessions(userId));
     }
 
-    // 최근 7일 세션 조회 (주간 바 차트)
     // GET /api/sessions/week
     @GetMapping("/week")
     public ResponseEntity<?> getWeekSessions(HttpSession session) {
         Long userId = getSessionUserId(session);
-        if (userId == null) {
-            return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
-        }
-
-        List<Session> sessions = this.sessionService.getWeekSessions(userId);
-        return ResponseEntity.ok(sessions);
+        if (userId == null) return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
+        return ResponseEntity.ok(this.sessionService.getWeekSessions(userId));
     }
 
-    // 최근 N개 세션 조회
     // GET /api/sessions/recent?limit=3
     @GetMapping("/recent")
     public ResponseEntity<?> getRecentSessions(
             @RequestParam(defaultValue = "3") int limit,
             HttpSession session) {
         Long userId = getSessionUserId(session);
-        if (userId == null) {
-            return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
-        }
-
-        List<Session> sessions = this.sessionService.getRecentSessions(userId, limit);
-        return ResponseEntity.ok(sessions);
+        if (userId == null) return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
+        return ResponseEntity.ok(this.sessionService.getRecentSessions(userId, limit));
     }
 
-    // 세션 저장 (공부 종료 시 호출)
-    // POST /api/sessions
-    // body: { "focusedTime": 3600, "distractedTime": 600 }
-    // focusRate는 SessionServiceImpl에서 자동 계산
-    @PostMapping
-    public ResponseEntity<?> saveSession(@RequestBody Map<String, Integer> body, HttpSession session) {
+    // GET /api/sessions/list?page=0&size=5  (세션 선택 모달용)
+    @GetMapping("/list")
+    public ResponseEntity<?> getSessionsPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            HttpSession session) {
         Long userId = getSessionUserId(session);
-        if (userId == null) {
-            return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
+        if (userId == null) return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
+        return ResponseEntity.ok(this.sessionService.getSessionsPaged(userId, page, size));
+    }
+
+    // GET /api/sessions/{sessionId}  (이어하기 초기값 로드)
+    @GetMapping("/{sessionId}")
+    public ResponseEntity<?> getSession(@PathVariable Long sessionId, HttpSession session) {
+        Long userId = getSessionUserId(session);
+        if (userId == null) return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
+        try {
+            Session s = this.sessionService.getSession(sessionId, userId);
+            return ResponseEntity.ok(s);
+        } catch (EmptyResultDataAccessException e) {
+            return ResponseEntity.status(404).body(Map.of("message", "세션을 찾을 수 없습니다."));
+        }
+    }
+
+    // POST /api/sessions
+    // body: { focusedTime, distractedTime, name? }           → 새 세션 생성
+    // body: { sessionId, focusedTime, distractedTime }        → 기존 세션 이어하기
+    @PostMapping
+    public ResponseEntity<?> saveSession(@RequestBody Map<String, Object> body, HttpSession session) {
+        Long userId = getSessionUserId(session);
+        if (userId == null) return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
+
+        int focusedTime    = ((Number) body.get("focusedTime")).intValue();
+        int distractedTime = ((Number) body.get("distractedTime")).intValue();
+        Object sessionIdObj = body.get("sessionId");
+
+        if (sessionIdObj != null) {
+            // 이어하기: 기존 세션 업데이트
+            Long sessionId = ((Number) sessionIdObj).longValue();
+            this.sessionService.updateSession(sessionId, userId, focusedTime, distractedTime);
+        } else {
+            // 새 세션: name이 있으면 사용, 없으면 서비스에서 자동 지정
+            String name = (String) body.get("name");
+            this.sessionService.saveSession(userId, name, focusedTime, distractedTime);
         }
 
-        int focusedTime    = body.get("focusedTime");
-        int distractedTime = body.get("distractedTime");
-        this.sessionService.saveSession(userId, focusedTime, distractedTime);
         return ResponseEntity.ok(Map.of("message", "세션이 저장되었습니다."));
     }
 }

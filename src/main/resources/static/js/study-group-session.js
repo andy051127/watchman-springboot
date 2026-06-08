@@ -436,7 +436,8 @@ function startCalibration() {
 }
 
 function runCalibrationLoop() {
-  const video = document.getElementById(`tile-video-${myUserId}`);
+  let lastSampleTime = 0;
+  const SAMPLE_INTERVAL_MS = 100; // 10fps 샘플링 — currentTime 의존 제거
 
   function sample(ts) {
     if (!calibStartTime) calibStartTime = ts;
@@ -452,16 +453,22 @@ function runCalibrationLoop() {
     if (step >= 1) document.getElementById('calib-tip-center').classList.add('done');
     if (step >= 2) document.getElementById('calib-tip-side').classList.add('done');
 
-    if (faceLandmarker && video && video.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) {
-      try {
-        const res = faceLandmarker.detectForVideo(video, performance.now());
-        if (res.faceLandmarks?.length > 0) {
-          const { yaw, pitch } = computeHeadAngles(res.faceLandmarks[0]);
-          calibYawSamples.push(yaw);
-          calibPitchSamples.push(pitch);
-        }
-      } catch (_) {}
+    // 100ms마다 한 번씩 샘플 수집 (매 프레임 조회로 stale DOM 방어)
+    if (ts - lastSampleTime >= SAMPLE_INTERVAL_MS) {
+      lastSampleTime = ts;
+      const video = document.getElementById(`tile-video-${myUserId}`);
+      if (faceLandmarker && video && video.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) {
+        try {
+          const res = faceLandmarker.detectForVideo(video, performance.now());
+          if (res.faceLandmarks?.length > 0) {
+            const { yaw, pitch } = computeHeadAngles(res.faceLandmarks[0]);
+            calibYawSamples.push(yaw);
+            calibPitchSamples.push(pitch);
+          }
+        } catch (_) {}
+      }
     }
+
     document.getElementById('calib-status').textContent =
       `측정 중... (샘플 ${calibYawSamples.length}개)`;
 
@@ -533,42 +540,47 @@ function computeHeadAngles(landmarks) {
 }
 
 function startDetectionLoop() {
-  const video = document.getElementById(`tile-video-${myUserId}`);
-  let lastVideoTime = -1;
+  let lastDetectTime = 0;
+  const DETECT_INTERVAL_MS = 50; // ~20fps — currentTime 의존 제거, 시간 기반 throttle
 
-  function detect() {
-    if (!faceLandmarker || !video) { detectionRafId = requestAnimationFrame(detect); return; }
-    if (video.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA &&
-        video.currentTime !== lastVideoTime) {
-      lastVideoTime = video.currentTime;
-      let results;
-      try {
-        results = faceLandmarker.detectForVideo(video, performance.now());
-      } catch {
-        detectionRafId = requestAnimationFrame(detect);
-        return;
-      }
-      if (results.faceLandmarks?.length > 0) {
-        const { yaw, pitch } = computeHeadAngles(results.faceLandmarks[0]);
-        const rawDistracted =
-          yaw   >  calibYawLeft   ||
-          yaw   < -calibYawRight  ||
-          pitch >  calibPitchDown ||
-          pitch < -calibPitchUp;
-        if (rawDistracted) {
-          if (distractionSince === null) distractionSince = performance.now();
-          else if (performance.now() - distractionSince >= DISTRACTION_DELAY_MS) applyFocusState(false);
-        } else {
-          distractionSince = null;
-          applyFocusState(true);
-        }
-      } else {
-        // 얼굴 미감지 → angle 초과와 동일하게 유예 타이머 적용
+  function detect(ts) {
+    // rAF를 최상단에 등록해 오류/early-return 시에도 루프가 끊기지 않음
+    detectionRafId = requestAnimationFrame(detect);
+
+    // video를 매 프레임 새로 조회 (renderGrid 재호출 방어)
+    const video = document.getElementById(`tile-video-${myUserId}`);
+    if (!faceLandmarker || !video) return;
+    if (video.readyState < HTMLMediaElement.HAVE_ENOUGH_DATA) return;
+    if (ts - lastDetectTime < DETECT_INTERVAL_MS) return;
+    lastDetectTime = ts;
+
+    let results;
+    try {
+      results = faceLandmarker.detectForVideo(video, performance.now());
+    } catch (e) {
+      console.warn('[SGS] detectForVideo 오류:', e);
+      return;
+    }
+
+    if (results.faceLandmarks?.length > 0) {
+      const { yaw, pitch } = computeHeadAngles(results.faceLandmarks[0]);
+      const rawDistracted =
+        yaw   >  calibYawLeft   ||
+        yaw   < -calibYawRight  ||
+        pitch >  calibPitchDown ||
+        pitch < -calibPitchUp;
+      if (rawDistracted) {
         if (distractionSince === null) distractionSince = performance.now();
         else if (performance.now() - distractionSince >= DISTRACTION_DELAY_MS) applyFocusState(false);
+      } else {
+        distractionSince = null;
+        applyFocusState(true);
       }
+    } else {
+      // 얼굴 미감지 → 유예 타이머 적용
+      if (distractionSince === null) distractionSince = performance.now();
+      else if (performance.now() - distractionSince >= DISTRACTION_DELAY_MS) applyFocusState(false);
     }
-    detectionRafId = requestAnimationFrame(detect);
   }
   detectionRafId = requestAnimationFrame(detect);
 }

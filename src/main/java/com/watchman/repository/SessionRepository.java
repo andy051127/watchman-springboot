@@ -1,22 +1,26 @@
 package com.watchman.repository;
 
 import com.watchman.domain.Session;
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface SessionRepository {
 
-	// 해당 유저의 전체 세션 목록 조회 (stats 페이지 전체 히스토리)
 	List<Session> findByUserId(Long userId);
-
-	// 오늘 날짜의 세션만 조회 (대시보드 오늘 통계)
 	List<Session> findTodayByUserId(Long userId);
-
-	// 최근 7일간의 세션 조회 (주간 바 차트)
 	List<Session> findWeekByUserId(Long userId);
-
-	// 최근 N개 세션 조회 (대시보드 최근 세션 목록, limit=3)
 	List<Session> findRecentByUserId(Long userId, int limit);
 
-	// 새 세션 저장 (공부 종료 시 호출)
+	// 페이지네이션 조회 (세션 선택 모달)
+	List<Session> findByUserIdPaged(Long userId, int limit, int offset);
+	int countByUserId(Long userId);
+
+	// 단건 조회 (이어하기 시 초기값 로드)
+	Session findById(Long sessionId, Long userId);
+
+	// 새 세션 INSERT
 	void save(Session session);
+
+	// 이어하기 UPDATE (focused_time, distracted_time, focus_rate 덮어쓰기)
+	void update(Long sessionId, Long userId, int focusedTime, int distractedTime, BigDecimal focusRate);
 }

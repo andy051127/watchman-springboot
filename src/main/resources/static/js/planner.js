@@ -42,18 +42,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // ── 월별 할 일 일괄 로드 (달력 미리보기용) ────────────────────────────────────
-// 현재 달의 모든 할 일을 한 번에 가져와 todos 캐시에 날짜별로 저장한다.
 async function loadMonthTodos() {
   try {
     const res = await fetch(`/watchman/api/planner/todos/month?year=${currentYear}&month=${currentMonth + 1}`);
     if (res.status === 401) { window.location.href = 'login.html'; return; }
     const data = await res.json();
 
-    // 기존 이 달의 캐시를 초기화하고 날짜별로 재구성
     data.forEach(t => {
-      const dateStr = t.todoDate; // "YYYY-MM-DD"
+      const dateStr = t.todoDate;
       if (!todos[dateStr]) todos[dateStr] = [];
-      // 중복 방지: 같은 todoId가 없을 때만 추가
       if (!todos[dateStr].find(x => x.id === t.todoId)) {
         todos[dateStr].push({ id: t.todoId, text: t.content, done: t.done });
       }
@@ -65,7 +62,6 @@ async function loadMonthTodos() {
 
 // ── 달력 ──────────────────────────────────────────────────────────────────────
 
-// 이전/다음 달로 이동한다.
 async function changeMonth(delta) {
   currentMonth += delta;
   if (currentMonth < 0)  { currentMonth = 11; currentYear--; }
@@ -74,8 +70,6 @@ async function changeMonth(delta) {
   initCalendar();
 }
 
-// 달력 그리드를 렌더링한다.
-// 할 일이 있는 날짜에는 점(dot)을 표시한다.
 function initCalendar() {
   document.getElementById('cal-month-label').textContent
     = `${currentYear}년 ${currentMonth + 1}월`;
@@ -89,7 +83,6 @@ function initCalendar() {
   const daysInPrev  = new Date(currentYear, currentMonth, 0).getDate();
   const today       = toDateStr(new Date());
 
-  // 이전 달 빈 칸
   for (let i = firstDay - 1; i >= 0; i--) {
     html += `<div class="cal-day other-month"><span class="cal-day-num">${daysInPrev - i}</span></div>`;
   }
@@ -106,7 +99,6 @@ function initCalendar() {
       isSel ? 'selected' : ''
     ].filter(Boolean).join(' ');
 
-    // 미리보기: 최대 2개 표시, 초과분은 "+N개" 표시
     const preview = dayTodos.slice(0, 2).map(t =>
       `<div class="cal-preview-item${t.done ? ' done' : ''}">${escHtml(t.text)}</div>`
     ).join('');
@@ -119,7 +111,6 @@ function initCalendar() {
     </div>`;
   }
 
-  // 다음 달 빈 칸
   const total     = firstDay + daysInMonth;
   const remaining = total % 7 === 0 ? 0 : 7 - (total % 7);
   for (let d = 1; d <= remaining; d++) {
@@ -129,11 +120,9 @@ function initCalendar() {
   grid.innerHTML = html;
 }
 
-// 날짜를 선택하면 해당 날짜의 할 일·시간표를 로드하고 노트북을 다시 그린다.
 async function selectDate(dateStr) {
   selectedDate = dateStr;
 
-  // 이미 캐시된 날짜라도 시간표는 항상 서버에서 최신 데이터를 가져온다
   await Promise.all([
     loadTodos(dateStr),
     loadBlocks(dateStr)
@@ -147,7 +136,7 @@ async function selectDate(dateStr) {
 async function showCalendar() {
   document.getElementById('view-calendar').style.display = 'block';
   document.getElementById('view-notebook').style.display = 'none';
-  await loadMonthTodos(); // 노트북에서 변경된 할 일 반영
+  await loadMonthTodos();
   initCalendar();
 }
 
@@ -156,7 +145,6 @@ function showNotebook() {
   document.getElementById('view-notebook').style.display = 'block';
 }
 
-// Date → 'YYYY-MM-DD' 문자열 변환 유틸
 function toDateStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
@@ -166,7 +154,6 @@ function toDateStr(d) {
 const WEEKDAYS  = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
 const MONTHS_KR = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 
-// 선택된 날짜 정보를 노트북 헤더에 표시하고 할 일·시간표를 렌더링한다.
 function renderNotebook() {
   const d = new Date(selectedDate + 'T00:00:00');
   document.getElementById('nb-day').textContent        = d.getDate();
@@ -179,7 +166,6 @@ function renderNotebook() {
 }
 
 // ── 하루 메모 ─────────────────────────────────────────────────────────────────
-// 메모는 localStorage에 날짜별로 저장된다 (서버 저장 없음).
 
 function renderMemo() {
   const el = document.getElementById('nb-memo');
@@ -201,15 +187,11 @@ function saveMemo(value) {
 
 // ── 할 일 ─────────────────────────────────────────────────────────────────────
 
-// GET /api/planner/todos?date=YYYY-MM-DD
-// 서버 응답: [{ todoId, content, done, todoDate }]
-// 클라이언트 형태: [{ id, text, done }]
 async function loadTodos(date) {
   try {
     const res = await fetch(`/watchman/api/planner/todos?date=${date}`);
     if (res.status === 401) { window.location.href = 'login.html'; return; }
     const data = await res.json();
-    // 서버 필드명을 클라이언트 필드명으로 변환
     todos[date] = data.map(t => ({ id: t.todoId, text: t.content, done: t.done }));
   } catch (err) {
     console.error('할 일 로드 실패:', err);
@@ -217,8 +199,6 @@ async function loadTodos(date) {
   }
 }
 
-// 할 일 목록을 화면에 렌더링한다.
-// 체크박스·삭제 버튼은 배열 인덱스로 toggleTodo/deleteTodo를 호출한다.
 function renderTodoList() {
   const list      = todos[selectedDate] || [];
   const container = document.getElementById('todo-list');
@@ -233,7 +213,6 @@ function renderTodoList() {
       <button class="todo-delete-btn" onclick="deleteTodo(${i})">✕</button>
     </div>`).join('');
 
-  // 완료 카운트 표시
   const countEl = document.getElementById('todo-count-display');
   if (countEl) {
     const done = list.filter(t => t.done).length;
@@ -244,8 +223,6 @@ function renderTodoList() {
   updateStats();
 }
 
-// POST /api/planner/todos { todoDate, content }
-// 추가 후 서버 목록을 다시 불러와 todoId를 동기화한다.
 async function addTodo() {
   const input = document.getElementById('todo-input');
   const text  = input.value.trim();
@@ -260,17 +237,14 @@ async function addTodo() {
     if (res.status === 401) { window.location.href = 'login.html'; return; }
 
     input.value = '';
-    // 서버에서 부여된 todoId를 반영하기 위해 목록 재로드
     await loadTodos(selectedDate);
     renderTodoList();
-    initCalendar(); // 할 일 점 업데이트
+    initCalendar();
   } catch (err) {
     console.error('할 일 추가 실패:', err);
   }
 }
 
-// PATCH /api/planner/todos/{todoId} { done: boolean }
-// index로 todoId를 찾아 완료 여부를 서버에 전달한다.
 async function toggleTodo(index) {
   const list = todos[selectedDate];
   if (!list || !list[index]) return;
@@ -284,7 +258,6 @@ async function toggleTodo(index) {
     });
     if (res.status === 401) { window.location.href = 'login.html'; return; }
 
-    // 서버 반영 성공 시 인메모리 업데이트 후 재렌더링
     todo.done = !todo.done;
     renderTodoList();
   } catch (err) {
@@ -292,7 +265,6 @@ async function toggleTodo(index) {
   }
 }
 
-// DELETE /api/planner/todos/{todoId}
 async function deleteTodo(index) {
   const list = todos[selectedDate];
   if (!list || !list[index]) return;
@@ -302,10 +274,9 @@ async function deleteTodo(index) {
     const res = await fetch(`/watchman/api/planner/todos/${todo.id}`, { method: 'DELETE' });
     if (res.status === 401) { window.location.href = 'login.html'; return; }
 
-    // 서버 삭제 성공 시 인메모리에서도 제거
     list.splice(index, 1);
     renderTodoList();
-    initCalendar(); // 점 업데이트
+    initCalendar();
   } catch (err) {
     console.error('할 일 삭제 실패:', err);
   }
@@ -313,9 +284,6 @@ async function deleteTodo(index) {
 
 // ── D-Day ─────────────────────────────────────────────────────────────────────
 
-// GET /api/planner/ddays
-// 서버 응답: [{ ddayId, name, ddayDate }]
-// 클라이언트 형태: [{ id: ddayId, name, date: ddayDate }]
 async function loadDDays() {
   try {
     const res = await fetch('/watchman/api/planner/ddays');
@@ -329,8 +297,6 @@ async function loadDDays() {
   }
 }
 
-// POST /api/planner/ddays { name, ddayDate }
-// 추가 후 서버 목록을 재로드하여 ddayId를 동기화한다.
 async function addDday() {
   const name = document.getElementById('dday-name').value.trim();
   const date = document.getElementById('dday-date').value;
@@ -346,13 +312,12 @@ async function addDday() {
 
     document.getElementById('dday-name').value = '';
     document.getElementById('dday-date').value = '';
-    await loadDDays(); // 서버에서 ddayId 포함 재로드
+    await loadDDays();
   } catch (err) {
     console.error('D-Day 추가 실패:', err);
   }
 }
 
-// DELETE /api/planner/ddays/{ddayId}
 async function removeDday(id) {
   try {
     const res = await fetch(`/watchman/api/planner/ddays/${id}`, { method: 'DELETE' });
@@ -366,8 +331,6 @@ async function removeDday(id) {
   }
 }
 
-// D-Day 배지 목록을 렌더링한다.
-// diff > 0: D-N (N일 남음), diff === 0: D-Day, diff < 0: D+N (N일 지남)
 function renderDdays() {
   const container = document.getElementById('dday-list');
   if (ddays.length === 0) {
@@ -390,7 +353,7 @@ function renderDdays() {
 }
 
 // ── 통계 칩 업데이트 ──────────────────────────────────────────────────────────
-// 선택된 날짜의 할 일 통계와 가장 가까운 D-Day를 헤더 칩에 표시한다.
+
 function updateStats() {
   const list = todos[selectedDate] || [];
   document.getElementById('stat-todo-total').textContent = `${list.length}개`;
@@ -410,7 +373,6 @@ function updateStats() {
 // ── 타임테이블 블록 ───────────────────────────────────────────────────────────
 
 const BLOCK_COLORS = ['#fecaca','#fed7aa','#fef08a','#bbf7d0','#bfdbfe','#e9d5ff'];
-const ROW_HEIGHT   = 22; // px per hour row
 
 // GET /api/planner/blocks?date=YYYY-MM-DD
 async function loadBlocks(date) {
@@ -444,166 +406,159 @@ function minutesToTime(min) {
   return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
 }
 
-// 그리드 렌더링: 수평 바 타임라인 (시간 행 × 가로 바)
+// 그리드 렌더링: 엑셀 셀 방식 (24행 × 12셀, 각 셀 = 5분)
 function renderBlockGrid() {
   const container = document.getElementById('timetable-grid');
   const dayBlocks = blocks[selectedDate] || [];
 
-  let html = '<div class="timetable-grid-wrap">';
-
-  for (let h = 0; h < 24; h++) {
-    html += `<div class="tt-hour-row">`;
-    html += `<div class="tt-row-label">${h}</div>`;
-    html += `<div class="tt-row-area" data-hour="${h}">`;
-
-    // 5분 단위 스냅 셀 (보이지 않음)
-    for (let m = 0; m < 12; m++) {
-      const leftPct  = (m / 12) * 100;
-      const widthPct = 100 / 12;
-      html += `<div class="tt-cell" data-min="${h * 60 + m * 5}"
-        style="left:${leftPct}%;width:${widthPct}%"></div>`;
+  // 각 5분 셀(288개)에 어떤 블록이 걸려있는지 매핑
+  // cellMap[min] = { blockId, color, label, isStart, isEnd, startTime, endTime }
+  const cellMap = {};
+  dayBlocks.forEach(b => {
+    const s = timeToMinutes(b.startTime);
+    const e = timeToMinutes(b.endTime);
+    for (let m = s; m < e; m += 5) {
+      cellMap[m] = {
+        blockId: b.blockId, color: b.color, label: b.label,
+        isStart:  m === s,
+        isSecond: m === s + 5,
+        isEnd:    m === e - 5,
+        startTime: b.startTime.substring(0,5), endTime: b.endTime.substring(0,5)
+      };
     }
+  });
 
-    // 이 시간대에 걸친 블록을 가로 바로 렌더링
-    dayBlocks.forEach(b => {
-      const startMin  = timeToMinutes(b.startTime);
-      const endMin    = timeToMinutes(b.endTime);
-      const hourStart = h * 60;
-      const hourEnd   = (h + 1) * 60;
-      if (endMin <= hourStart || startMin >= hourEnd) return;
+  // 헤더 (분 눈금)
+  const minuteLabels = [0,5,10,15,20,25,30,35,40,45,50,55]
+    .map(m => `<div class="tt-header-cell">${String(m).padStart(2,'0')}</div>`).join('');
 
-      const barStart  = Math.max(startMin, hourStart);
-      const barEnd    = Math.min(endMin, hourEnd);
-      const leftPct   = ((barStart - hourStart) / 60) * 100;
-      const widthPct  = ((barEnd - barStart) / 60) * 100;
-
-      html += `<div class="tt-bar"
-        style="background:${b.color};left:${leftPct}%;width:${widthPct}%"
-        data-block-id="${b.blockId}"
-        onclick="openBlockModal(${b.blockId})"
-      >${escHtml(b.label)}</div>`;
-    });
-
-    html += '</div></div>';
+  // 24행 렌더링
+  let rowsHtml = '';
+  for (let h = 0; h < 24; h++) {
+    let cellsHtml = '';
+    for (let c = 0; c < 12; c++) {
+      const min  = h * 60 + c * 5;
+      const info = cellMap[min];
+      if (info) {
+        const startTag = info.isStart
+          ? `<span class="tt-cell-time tt-cell-start">${info.startTime}</span>` : '';
+        const endTag = info.isEnd
+          ? `<span class="tt-cell-time tt-cell-end">${info.endTime}</span>` : '';
+        const nameTag = info.isSecond && info.label
+          ? `<span class="tt-cell-name">${escHtml(info.label)}</span>` : '';
+        cellsHtml += `<div class="tt-cell has-block" data-min="${min}"
+          style="background:${info.color}"
+          data-block-id="${info.blockId}">${startTag}${endTag}${nameTag}</div>`;
+      } else {
+        cellsHtml += `<div class="tt-cell" data-min="${min}"></div>`;
+      }
+    }
+    rowsHtml += `<div class="tt-row">
+      <div class="tt-time-label">${String(h).padStart(2,'0')}</div>
+      <div class="tt-cells">${cellsHtml}</div>
+    </div>`;
   }
 
-  html += '</div>';
-  container.innerHTML = html;
+  container.innerHTML = `
+    <p class="tt-hint">셀을 드래그해서 일정을 추가하고, 색칠된 블록을 클릭하면 수정할 수 있어요.</p>
+    <div class="timetable-grid-wrap" id="tt-wrap">
+      <div class="tt-header-row">
+        <div class="tt-header-spacer"></div>
+        <div class="tt-header-cells">${minuteLabels}</div>
+      </div>
+      ${rowsHtml}
+    </div>`;
+
+  // 현재 시각 근처로 자동 스크롤
+  const wrap = document.getElementById('tt-wrap');
+  if (wrap) {
+    const now = new Date();
+    const rowH = 30; // .tt-cell height
+    const headerH = 22;
+    wrap.scrollTop = Math.max(0, now.getHours() * rowH - 90 + headerH);
+  }
+
   initGridDrag();
 }
 
-// ── 드래그로 블록 범위 선택 ───────────────────────────────────────────────────
+// ── 엑셀 드래그 선택 ──────────────────────────────────────────────────────────
 
-let dragStartMin = null;
-let dragEndMin   = null;
-let dragActive   = false;
+let dragStartMin     = null;
+let dragEndMin       = null;
+let dragActive       = false;
+let _dragUpHandler   = null;
+let _dragMoveHandler = null;
 
-function getMinFromRowEvent(e) {
-  const area = e.target.closest('.tt-row-area');
-  if (!area) return null;
-  const rect  = area.getBoundingClientRect();
-  const x     = Math.max(0, Math.min(rect.width - 1, e.clientX - rect.left));
-  const pct   = x / rect.width;
-  const h     = parseInt(area.dataset.hour);
-  const snap  = Math.round(pct * 60); // 1분 단위 스냅
-  return h * 60 + Math.min(snap, 59);
+function getMinFromCell(e) {
+  const cell = e.target.closest('.tt-cell');
+  if (!cell) return null;
+  return parseInt(cell.dataset.min);
 }
 
-let _dragUpHandler = null;
+function applySelectHighlight(minA, minB) {
+  const lo = Math.min(minA, minB);
+  const hi = Math.max(minA, minB);
+  document.querySelectorAll('#tt-wrap .tt-cell').forEach(cell => {
+    const m = parseInt(cell.dataset.min);
+    cell.classList.toggle('selecting', m >= lo && m <= hi);
+  });
+}
+
+function clearSelectHighlight() {
+  document.querySelectorAll('#tt-wrap .tt-cell.selecting')
+    .forEach(c => c.classList.remove('selecting'));
+}
 
 function initGridDrag() {
-  const wrap = document.querySelector('.timetable-grid-wrap');
+  const wrap = document.getElementById('tt-wrap');
   if (!wrap) return;
 
-  // 이전 mouseup 핸들러 제거
-  if (_dragUpHandler) document.removeEventListener('mouseup', _dragUpHandler);
+  if (_dragUpHandler)   document.removeEventListener('mouseup',   _dragUpHandler);
+  if (_dragMoveHandler) document.removeEventListener('mousemove', _dragMoveHandler);
 
   wrap.addEventListener('mousedown', e => {
-    if (e.target.closest('.tt-bar')) return; // 바 클릭은 드래그 시작 안 함
-    const min = getMinFromRowEvent(e);
-    if (min === null) return;
+    // 블록 셀 클릭은 드래그 시작 안 함
+    const cell = e.target.closest('.tt-cell');
+    if (!cell) return;
+    if (cell.classList.contains('has-block')) {
+      // 블록 클릭 → 모달 오픈
+      openBlockModal(parseInt(cell.dataset.blockId));
+      return;
+    }
+    const min = parseInt(cell.dataset.min);
     dragActive   = true;
     dragStartMin = min;
     dragEndMin   = min;
+    applySelectHighlight(min, min);
     e.preventDefault();
-    document.querySelectorAll('.tt-bar').forEach(b => b.style.pointerEvents = 'none');
   });
 
-  wrap.addEventListener('mousemove', e => {
+  _dragMoveHandler = e => {
     if (!dragActive) return;
-    const area = e.target.closest('.tt-row-area');
-    if (!area) {
-      // 행 사이 이동 시 Y좌표로 시간 추정
-      const wrapRect = wrap.getBoundingClientRect();
-      const y   = e.clientY - wrapRect.top + wrap.scrollTop;
-      const h   = Math.min(23, Math.max(0, Math.floor(y / ROW_HEIGHT)));
-      const a2  = wrap.querySelector(`.tt-row-area[data-hour="${h}"]`);
-      if (a2) {
-        const r   = a2.getBoundingClientRect();
-        const x   = Math.max(0, Math.min(r.width - 1, e.clientX - r.left));
-        const snap = Math.round((x / r.width) * 60);
-        dragEndMin = h * 60 + Math.min(snap, 59);
-      }
-    } else {
-      dragEndMin = getMinFromRowEvent(e);
-    }
-    renderDragPreview();
-  });
+    const min = getMinFromCell(e);
+    if (min === null) return;
+    dragEndMin = min;
+    applySelectHighlight(dragStartMin, dragEndMin);
+  };
+  document.addEventListener('mousemove', _dragMoveHandler);
 
   _dragUpHandler = () => {
     if (!dragActive) return;
     dragActive = false;
-    clearDragPreview();
-    document.querySelectorAll('.tt-bar').forEach(b => b.style.pointerEvents = '');
+    clearSelectHighlight();
 
-    const s = dragStartMin;
-    const e = dragEndMin;
+    const s  = dragStartMin;
+    const en = dragEndMin;
     dragStartMin = null;
     dragEndMin   = null;
 
-    // 실제로 드래그가 이동한 경우(시작 ≠ 끝)에만 새 블록 모달 열기
-    if (s !== null && e !== null && s !== e) {
-      const startMin = Math.min(s, e);
-      const endMin   = Math.max(s, e) + 5;
+    if (s !== null && en !== null) {
+      const startMin = Math.min(s, en);
+      const endMin   = Math.max(s, en) + 5; // 마지막 셀의 끝(+5분)
       openNewBlockModal(startMin, endMin);
     }
   };
   document.addEventListener('mouseup', _dragUpHandler);
-}
-
-function renderDragPreview() {
-  clearDragPreview();
-  if (dragStartMin === null || dragEndMin === null) return;
-  const minA = Math.min(dragStartMin, dragEndMin);
-  const minB = Math.max(dragStartMin, dragEndMin) + 5;
-  const timeLabel = `${minutesToTime(minA)} ~ ${minutesToTime(minB)}`;
-  let labelAdded = false;
-
-  for (let h = 0; h < 24; h++) {
-    const hourStart = h * 60, hourEnd = (h + 1) * 60;
-    if (minB <= hourStart || minA >= hourEnd) continue;
-    const barStart = Math.max(minA, hourStart);
-    const barEnd   = Math.min(minB, hourEnd);
-    const leftPct  = ((barStart - hourStart) / 60) * 100;
-    const widthPct = ((barEnd - barStart) / 60) * 100;
-    const area = document.querySelector(`.tt-row-area[data-hour="${h}"]`);
-    if (!area) continue;
-    const el = document.createElement('div');
-    el.className = 'tt-drag-preview';
-    el.style.cssText = `left:${leftPct}%;width:${widthPct}%`;
-    if (!labelAdded) {
-      const span = document.createElement('span');
-      span.className = 'tt-drag-time';
-      span.textContent = timeLabel;
-      el.appendChild(span);
-      labelAdded = true;
-    }
-    area.appendChild(el);
-  }
-}
-
-function clearDragPreview() {
-  document.querySelectorAll('.tt-drag-preview').forEach(el => el.remove());
 }
 
 // ── 블록 모달 ─────────────────────────────────────────────────────────────────
@@ -727,9 +682,7 @@ async function deleteBlock(blockId) {
   }
 }
 
-
 // ── 유틸: HTML 이스케이프 ─────────────────────────────────────────────────────
-// XSS 방지를 위해 사용자 입력 텍스트를 HTML에 삽입하기 전에 반드시 이스케이프한다.
 function escHtml(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }

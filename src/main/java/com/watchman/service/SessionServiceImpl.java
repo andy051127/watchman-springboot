@@ -7,7 +7,11 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class SessionServiceImpl implements SessionService {
@@ -19,48 +23,72 @@ public class SessionServiceImpl implements SessionService {
         this.sessionRepository = sessionRepository;
     }
 
-    // 전체 세션 목록 조회
     @Override
     public List<Session> getSessions(Long userId) {
         return this.sessionRepository.findByUserId(userId);
     }
 
-    // 오늘 세션 조회
     @Override
     public List<Session> getTodaySessions(Long userId) {
         return this.sessionRepository.findTodayByUserId(userId);
     }
 
-    // 최근 7일 세션 조회
     @Override
     public List<Session> getWeekSessions(Long userId) {
         return this.sessionRepository.findWeekByUserId(userId);
     }
 
-    // 최근 N개 세션 조회
     @Override
     public List<Session> getRecentSessions(Long userId, int limit) {
         return this.sessionRepository.findRecentByUserId(userId, limit);
     }
 
-    // 세션 저장: focusRate를 직접 계산해서 Session 객체에 세팅 후 저장
-    // 총 시간이 0이면 집중률 0으로 처리 (0 나누기 방지)
     @Override
-    public void saveSession(Long userId, int focusedTime, int distractedTime) {
-        int total = focusedTime + distractedTime;
-        BigDecimal focusRate = BigDecimal.ZERO;
-        if (total > 0) {
-            focusRate = BigDecimal.valueOf(focusedTime)
-                    .divide(BigDecimal.valueOf(total), 4, RoundingMode.HALF_UP)
-                    .multiply(BigDecimal.valueOf(100))
-                    .setScale(2, RoundingMode.HALF_UP);
-        }
+    public Map<String, Object> getSessionsPaged(Long userId, int page, int size) {
+        int offset = page * size;
+        List<Session> sessions = this.sessionRepository.findByUserIdPaged(userId, size, offset);
+        int total = this.sessionRepository.countByUserId(userId);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("sessions", sessions);
+        result.put("total", total);
+        result.put("page", page);
+        result.put("size", size);
+        return result;
+    }
+
+    @Override
+    public Session getSession(Long sessionId, Long userId) {
+        return this.sessionRepository.findById(sessionId, userId);
+    }
+
+    @Override
+    public void saveSession(Long userId, String name, int focusedTime, int distractedTime) {
+        String sessionName = (name != null && !name.isBlank())
+                ? name
+                : LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + " 세션";
 
         Session session = new Session();
         session.setUserId(userId);
+        session.setName(sessionName);
         session.setFocusedTime(focusedTime);
         session.setDistractedTime(distractedTime);
-        session.setFocusRate(focusRate);
+        session.setFocusRate(calcFocusRate(focusedTime, distractedTime));
         this.sessionRepository.save(session);
+    }
+
+    @Override
+    public void updateSession(Long sessionId, Long userId, int focusedTime, int distractedTime) {
+        BigDecimal focusRate = calcFocusRate(focusedTime, distractedTime);
+        this.sessionRepository.update(sessionId, userId, focusedTime, distractedTime, focusRate);
+    }
+
+    private BigDecimal calcFocusRate(int focusedTime, int distractedTime) {
+        int total = focusedTime + distractedTime;
+        if (total == 0) return BigDecimal.ZERO;
+        return BigDecimal.valueOf(focusedTime)
+                .divide(BigDecimal.valueOf(total), 4, RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(100))
+                .setScale(2, RoundingMode.HALF_UP);
     }
 }
