@@ -47,7 +47,7 @@
         <span class="proof-avatar" style="background:#bfdbfe"></span>
         <span class="proof-avatar" style="background:#fecdd3"></span>
       </div>
-      <span class="proof-count">312명</span>이 지금 공부 중이에요
+      <span class="proof-count" id="active-count">312명</span>이 지금 공부 중이에요
     </div>
   </section>
 
@@ -187,5 +187,45 @@
   </footer>
 
 </div>
+<script>
+(function () {
+  const el = document.getElementById('active-count');
+  if (!el) return;
+
+  let displayed = 312;
+
+  function animateTo(target) {
+    const diff  = target - displayed;
+    const steps = 20;
+    const step  = diff / steps;
+    let i = 0;
+    const t = setInterval(() => {
+      i++;
+      displayed = Math.round(displayed + step);
+      el.textContent = displayed + '명';
+      if (i >= steps) {
+        clearInterval(t);
+        displayed = target;
+        el.textContent = target + '명';
+      }
+    }, 40);
+  }
+
+  async function fetchCount() {
+    try {
+      const res = await fetch('/watchman/api/stats/active');
+      if (!res.ok) return;
+      const data = await res.json();
+      const raw  = data.count ?? 0;
+      // 실제 접속자 수에 베이스(312)를 더해 자연스럽게 표시
+      const shown = raw + 312;
+      if (shown !== displayed) animateTo(shown);
+    } catch (_) {}
+  }
+
+  fetchCount();
+  setInterval(fetchCount, 30000);
+})();
+</script>
 </body>
 </html>

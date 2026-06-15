@@ -360,6 +360,25 @@ function applyFocusState(focused) {
 // ── 세션 상태 ──────────────────────────────────────────────
 
 let sessionState = 'idle'; // 'idle' | 'camera_on' | 'studying'
+
+// ── 실시간 접속자 heartbeat ────────────────────────────────
+const _presenceKey = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
+let _pingInterval  = null;
+
+function startPresencePing() {
+  fetch('/watchman/api/stats/ping', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ key: _presenceKey }) }).catch(()=>{});
+  _pingInterval = setInterval(() => {
+    fetch('/watchman/api/stats/ping', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ key: _presenceKey }) }).catch(()=>{});
+  }, 30000);
+}
+
+function stopPresencePing() {
+  clearInterval(_pingInterval);
+  fetch('/watchman/api/stats/leave', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ key: _presenceKey }) }).catch(()=>{});
+}
 let stream = null;
 let timerInterval = null;
 let totalSec = 0;
@@ -627,6 +646,7 @@ function beginActualStudy() {
   updateFocusUI(true);
   startTimer();
   startDetectionLoop();
+  startPresencePing();
 }
 
 function pauseSession() {
@@ -644,6 +664,7 @@ async function endStudy(save = true) {
   timerInterval = null;
   stopDetectionLoop();
   stopCamera();
+  stopPresencePing();
 
   if (!isGuest && save && (focusedSec + distractedSec) > 0) {
     try {

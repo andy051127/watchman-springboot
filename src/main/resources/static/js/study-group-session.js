@@ -11,6 +11,25 @@ let myAvatar   = sessionStorage.getItem('avatar')  || '';
 
 // ── 세션 상태 ─────────────────────────────────────────────
 let sessionEnded   = false;
+
+// ── 실시간 접속자 heartbeat ────────────────────────────────
+const _presenceKey = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
+let _pingInterval  = null;
+
+function startPresencePing() {
+  fetch('/watchman/api/stats/ping', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ key: _presenceKey }) }).catch(()=>{});
+  _pingInterval = setInterval(() => {
+    fetch('/watchman/api/stats/ping', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ key: _presenceKey }) }).catch(()=>{});
+  }, 30000);
+}
+
+function stopPresencePing() {
+  clearInterval(_pingInterval);
+  fetch('/watchman/api/stats/leave', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ key: _presenceKey }) }).catch(()=>{});
+}
 let localStream    = null;
 let timerInterval  = null;
 let totalSec       = 0;
@@ -37,6 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   connectWebSocket();
   startTimer();
   loadGroupName();
+  startPresencePing();
 });
 
 async function ensureMyInfo() {
@@ -706,6 +726,7 @@ async function endSession() {
 
   Object.keys(peerConnections).forEach(uid => closePC(uid));
   localStream?.getTracks().forEach(t => t.stop());
+  stopPresencePing();
 
   if ((focusedSec + distractedSec) > 0) {
     try {

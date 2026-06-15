@@ -68,6 +68,19 @@
       <p id="contact-error" style="display:none;color:var(--bad);font-size:14px;font-weight:600">✗ 문의 전송에 실패했습니다. 다시 시도해 주세요.</p>
       <button type="submit" id="c-submit" class="fp-form-submit">문의 보내기</button>
     </form>
+
+    <!-- 내 문의 내역 확인 -->
+    <div class="fp-my-contact">
+      <h2 class="fp-my-contact-title">내 문의 내역 확인</h2>
+      <p class="fp-my-contact-desc">문의 시 입력한 이메일 주소로 접수 내역과 답변을 확인할 수 있습니다.</p>
+      <div class="fp-my-contact-form">
+        <input type="email" id="check-email" class="fp-form-input" placeholder="문의 시 입력한 이메일 주소" />
+        <button class="fp-form-submit fp-check-btn" onclick="checkMyContacts()">확인하기</button>
+      </div>
+      <div id="my-contacts-result" style="display:none">
+        <div id="my-contacts-list"></div>
+      </div>
+    </div>
   </div>
   <footer class="app-footer">
     <nav class="footer-links">
@@ -87,6 +100,60 @@
   </footer>
 </div>
 <script>
+const TYPE_LABELS = { bug:'버그 신고', feature:'기능 제안', account:'계정 문의', general:'일반 문의', other:'기타' };
+
+async function checkMyContacts() {
+  const email = document.getElementById('check-email').value.trim();
+  if (!email) { alert('이메일을 입력해 주세요.'); return; }
+
+  const btn = document.querySelector('.fp-check-btn');
+  btn.disabled = true; btn.textContent = '조회 중...';
+
+  try {
+    const res = await fetch(`/watchman/api/contact/my?email=${encodeURIComponent(email)}`);
+    const data = await res.json();
+    renderMyContacts(Array.isArray(data) ? data : []);
+  } catch {
+    renderMyContacts([]);
+  } finally {
+    btn.disabled = false; btn.textContent = '확인하기';
+  }
+}
+
+function renderMyContacts(contacts) {
+  const result = document.getElementById('my-contacts-result');
+  const list   = document.getElementById('my-contacts-list');
+  result.style.display = 'block';
+
+  if (contacts.length === 0) {
+    list.innerHTML = '<p class="fp-my-empty">해당 이메일로 접수된 문의가 없습니다.</p>';
+    return;
+  }
+
+  list.innerHTML = contacts.map(c => {
+    const date     = c.createdAt ? c.createdAt.split('T')[0] : '';
+    const answered = c.status === 'answered';
+    const typeLabel = TYPE_LABELS[c.type] || '기타';
+    const replyHtml = answered && c.replyContent
+      ? `<div class="fp-my-reply"><span class="fp-my-reply-label">💬 관리자 답변</span><p class="fp-my-reply-text">${escHtml(c.replyContent)}</p><span class="fp-my-reply-date">${c.repliedAt ? c.repliedAt.split('T')[0] : ''}</span></div>`
+      : `<div class="fp-my-pending">⏳ 답변 대기 중입니다. 영업일 1-2일 내 답변 드리겠습니다.</div>`;
+    return `
+      <div class="fp-my-card">
+        <div class="fp-my-card-header">
+          <span class="fp-my-type">${escHtml(typeLabel)}</span>
+          <span class="fp-my-date">${date}</span>
+          <span class="fp-my-status ${answered ? 'answered' : 'pending'}">${answered ? '답변완료' : '미처리'}</span>
+        </div>
+        <p class="fp-my-content">${escHtml(c.content)}</p>
+        ${replyHtml}
+      </div>`;
+  }).join('');
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 async function handleContactSubmit(e) {
   e.preventDefault();
   const btn = document.getElementById('c-submit');

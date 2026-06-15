@@ -48,12 +48,15 @@ CREATE TABLE IF NOT EXISTS ddays (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS contacts (
-    contact_id BIGINT       NOT NULL AUTO_INCREMENT,
-    name       VARCHAR(100) NOT NULL,
-    email      VARCHAR(200) NOT NULL,
-    type       VARCHAR(50)  NOT NULL,
-    content    TEXT         NOT NULL,
-    created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    contact_id    BIGINT       NOT NULL AUTO_INCREMENT,
+    name          VARCHAR(100) NOT NULL,
+    email         VARCHAR(200) NOT NULL,
+    type          VARCHAR(50)  NOT NULL,
+    content       TEXT         NOT NULL,
+    status        VARCHAR(20)  NOT NULL DEFAULT 'pending',
+    reply_content TEXT         NULL,
+    replied_at    DATETIME     NULL,
+    created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (contact_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

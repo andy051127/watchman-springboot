@@ -26,6 +26,7 @@ public class DataInitializer implements ApplicationRunner {
         migrateAdminPassword();
         migrateSessionsNameColumn();
         migrateSessionsGroupIdColumn();
+        migrateContactsReplyColumns();
         insertAchievementData();
     }
 
@@ -47,6 +48,18 @@ public class DataInitializer implements ApplicationRunner {
     private void migrateSessionsGroupIdColumn() {
         if (columnMissing("sessions", "group_id")) {
             jdbcTemplate.execute("ALTER TABLE sessions ADD COLUMN group_id BIGINT NULL AFTER started_at");
+        }
+    }
+
+    private void migrateContactsReplyColumns() {
+        if (columnMissing("contacts", "status")) {
+            jdbcTemplate.execute("ALTER TABLE contacts ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'pending' AFTER content");
+        }
+        if (columnMissing("contacts", "reply_content")) {
+            jdbcTemplate.execute("ALTER TABLE contacts ADD COLUMN reply_content TEXT NULL AFTER status");
+        }
+        if (columnMissing("contacts", "replied_at")) {
+            jdbcTemplate.execute("ALTER TABLE contacts ADD COLUMN replied_at DATETIME NULL AFTER reply_content");
         }
     }
 

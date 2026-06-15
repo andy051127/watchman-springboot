@@ -68,6 +68,88 @@
 }
 .fp-form-submit:hover { background: #292524; }
 
+/* ── 내 문의 내역 확인 ────────────────────────────────── */
+.fp-my-contact {
+  margin-top: 56px;
+  padding-top: 40px;
+  border-top: 1px solid var(--border);
+}
+.fp-my-contact-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+.fp-my-contact-desc { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; }
+.fp-my-contact-form { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+.fp-my-contact-form .fp-form-input { flex: 1; min-width: 240px; }
+.fp-check-btn { align-self: auto !important; white-space: nowrap; }
+
+.fp-my-empty { font-size: 14px; color: var(--text-muted); padding: 20px 0; }
+
+.fp-my-card {
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.fp-my-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.fp-my-type {
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--primary-light);
+  color: var(--primary);
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius-full);
+  padding: 2px 10px;
+}
+.fp-my-date { font-size: 12px; color: var(--text-light); margin-left: auto; }
+.fp-my-status {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: var(--radius-full);
+}
+.fp-my-status.answered { background: #dcfce7; color: #16a34a; }
+.fp-my-status.pending  { background: #fef9c3; color: #ca8a04; }
+.fp-my-content {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.fp-my-reply {
+  background: var(--primary-light);
+  border-left: 3px solid var(--primary);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.fp-my-reply-label { font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: .05em; }
+.fp-my-reply-text  { font-size: 14px; color: var(--text); line-height: 1.6; white-space: pre-wrap; word-break: break-word; margin: 0; }
+.fp-my-reply-date  { font-size: 11px; color: var(--text-light); }
+.fp-my-pending {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 10px 12px;
+  background: #fafaf8;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
 /* Contact Info Cards */
 .fp-contact-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 32px; }
 .fp-contact-card {

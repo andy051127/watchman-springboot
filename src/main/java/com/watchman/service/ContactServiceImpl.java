@@ -28,7 +28,17 @@ public class ContactServiceImpl implements ContactService {
     }
 
     @Override
+    public List<Contact> getByEmail(String email) {
+        return this.contactRepository.findByEmail(email);
+    }
+
+    @Override
     public void delete(Long contactId) {
         this.contactRepository.delete(contactId);
+    }
+
+    @Override
+    public void reply(Long contactId, String replyContent) {
+        this.contactRepository.reply(contactId, replyContent);
     }
 }
